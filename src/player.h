@@ -4,17 +4,20 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-/* Weapons, indexed by the A/B/C buttons held (A=1, B=2, C=4). */
+/* Guns are indexed by the A/B/C buttons held (A=1, B=2, C=4). The swords
+ * have buttons of their own. */
 enum
 {
     WP_NONE = 0,
-    WP_VULCAN = 1,   /* A */
-    WP_HOMING = 2,   /* B */
-    WP_BACKWIDE = 3, /* A+B */
-    WP_SPREAD = 4,   /* C */
-    WP_SWORD = 5,    /* A+C */
-    WP_PLASMA = 6,   /* B+C */
-    WP_HYPER = 7,    /* A+B+C */
+    WP_VULCAN = 1,  /* A */
+    WP_HOMING = 2,  /* B */
+    WP_PLASMA = 3,  /* A+B homing plasma */
+    WP_SPREAD = 4,  /* C */
+    WP_WIDE = 5,    /* A+C wide shot */
+    WP_HSPREAD = 6, /* B+C homing spread */
+    WP_ALL = 7,     /* A+B+C: fires the Vulcan */
+    WP_SWORD = 8,
+    WP_HYPER = 9,
 };
 
 #define SWORD_GAUGE_MAX 48

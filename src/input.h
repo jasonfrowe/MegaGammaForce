@@ -4,33 +4,38 @@
 #include <stdint.h>
 
 /*
- * Controls
+ * Controls. A, B and C are the three guns; holding two of them combines
+ * them. Every combination also has a button of its own.
  *
- *            Keyboard           Gamepad
- * Move       arrows / WASD      d-pad / left stick
- * A Vulcan   Z or J             X
- * B Homing   X or K             A
- * C Spread   C or L             B
- * A+B        V                  L1          back wide
- * B+C        B                  R1          homing plasma
- * A+C        N or Space         Y           radiant sword
- * A+B+C      M                  L2 / R2     hyper sword (when charged)
- * Start      Enter / P          Start
+ *                   Keyboard        Gamepad
+ * Move              WASD / arrows   d-pad / left stick
+ * A   Vulcan        Y               A
+ * B   Homing        U               B
+ * C   Spread        I               C or R1
+ * A+B Homing Plasma H               X
+ * A+C Wide Shot     J               Y
+ * B+C Homing Spread K               Z or L1
+ * Radiant Sword     N               R2
+ * Hyper Sword       M               L2
+ * Start / pause     Enter / P       Start
  */
 
-#define IN_UP 0x01
-#define IN_DOWN 0x02
-#define IN_LEFT 0x04
-#define IN_RIGHT 0x08
-#define IN_A 0x10
-#define IN_B 0x20
-#define IN_C 0x40
-#define IN_START 0x80
+#define IN_UP 0x0001
+#define IN_DOWN 0x0002
+#define IN_LEFT 0x0004
+#define IN_RIGHT 0x0008
+#define IN_A 0x0010
+#define IN_B 0x0020
+#define IN_C 0x0040
+#define IN_START 0x0080
+#define IN_SWORD 0x0100
+#define IN_HYPER 0x0200
 
-#define IN_FIRE (IN_A | IN_B | IN_C)
+#define IN_GUNS (IN_A | IN_B | IN_C)
+#define IN_FIRE (IN_GUNS | IN_SWORD | IN_HYPER)
 
-extern uint8_t in_held;
-extern uint8_t in_pressed; /* went down this frame */
+extern uint16_t in_held;
+extern uint16_t in_pressed; /* went down this frame */
 
 void input_init(void);
 void input_update(void);

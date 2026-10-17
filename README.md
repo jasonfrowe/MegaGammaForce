@@ -16,19 +16,24 @@ frames: 120
 
 ### Controls
 
+A, B and C are the three guns. Hold two at once to combine them, or use
+the combination's own button.
+
 | Action | Keyboard | Gamepad |
 |---|---|---|
-| Move | Arrows or WASD | D-pad or left stick |
-| **A** Vulcan | Z or J | X |
-| **B** Homing | X or K | A |
-| **C** Spread | C or L | B |
-| **A+B** Back Wide | V (or hold Z+X) | L1 |
-| **B+C** Homing Plasma | B (or hold X+C) | R1 |
-| **A+C** Radiant Sword | N or Space (or hold Z+C) | Y |
-| **A+B+C** Hyper Sword | M (or hold all three) | L2 / R2 |
+| Move | WASD or arrows | D-pad or left stick |
+| **A** Vulcan | Y | A |
+| **B** Homing | U | B |
+| **C** Spread | I | C or R1 |
+| **A+B** Homing Plasma | H (or Y+U) | X (or A+B) |
+| **A+C** Wide Shot | J (or Y+I) | Y (or A+C/R1) |
+| **B+C** Homing Spread | K (or U+I) | Z or L1 (or B+C/R1) |
+| Radiant Sword | N | R2 |
+| Hyper Sword | M | L2 |
 | Start / pause | Enter or P | Start |
 
 The ship slows down while it fires, and slows further with the sword out.
+Holding all three guns fires the Vulcan.
 
 ### Weapons
 
@@ -40,19 +45,21 @@ From strongest to weakest:
   more of the fan connects.
 - **Radiant Sword**: a blade arc above the ship that cuts anything it
   touches and **absorbs pink bullets**. Blue bullets pass through it.
-- **Back Wide**: a forward bolt plus weak shots to the sides and behind.
+- **Wide Shot**: a forward bolt plus weak shots to the sides and behind.
+- **Homing Spread**: four darts fanned wide that then home in.
 - **Homing**: lock-on darts from the wingtips. They never miss, so they
   hit softly.
 - **Homing Plasma**: a crackling link that latches onto the nearest target
   ahead. The weakest: it does the aiming for you.
 - **Hyper Sword**: every absorbed bullet charges the SWORD gauge. When it
-  reads HYPER!, hold all three buttons: every bullet on screen is cancelled
-  for points, and for a few seconds the blade grows, a beam lances up the
-  screen, and the ship cannot be hit.
+  reads HYPER!, press the Hyper Sword button: every bullet on screen is
+  cancelled for points, and for a few seconds the blade grows, a beam
+  lances up the screen, and the ship cannot be hit. Filling the gauge while
+  holding the sword never sets it off.
 
 Damage per second, against the Vulcan's 45: Spread 30 (all five orbs
-hitting), Sword 22, Homing 10, Homing Plasma 7.5. The table is in
-`src/shots.c` and `src/player.c`.
+hitting), Sword 22, Homing Spread 15, Homing 10, Homing Plasma 7.5. The
+table is in `src/shots.c` and `src/player.c`.
 
 ### The chain
 
@@ -133,9 +140,15 @@ change is in the game. Running `gen_art.py` again overwrites them.
 
 The music uses style 9, **silvergun**, written for this game in
 `tools/musicgen/silvergun.py`: orchestral-epic instead of RPDemo's
-electronic styles. That means brass and string leads playing phrases,
-string ostinatos, choir pads, pitched timpani, a march snare and orchestra
-hits, chromatic "epic minor" harmony, and optional 6/8 time. Track moods
+electronic styles, but with a rock kit underneath for drive. That means
+brass and string leads playing phrases and 16th-note runs, galloping
+string ostinatos, octave-jumping bass, choir pads, timpani, a bass drum and
+hi-hat groove, crashes and orchestra hits, chromatic "epic minor" harmony,
+and optional 6/8 time. Tempo comes in steps, because a 16th note is a whole
+number of 60 Hz ticks: 6 ticks is 150 bpm, 5 is 180.
+
+The base mix already includes the `--vol -3,3,0,0,0,0,12` balance that
+RPDemo's tracks always needed, so `vol` offsets in the manifest start at 0. Track moods
 (key, tempo, meter, intensity) are in `tools/musicgen/tracks.py`.
 
 Every generated track is recorded in `music/music_manifest.json`: its

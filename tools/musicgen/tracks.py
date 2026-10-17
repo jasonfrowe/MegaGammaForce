@@ -64,22 +64,22 @@ TRACKS: list = [
         resource="Title",
         description="Title / attract screen",
         aliases=["title"],
-        # Slow heroic 6/8; bpm counts dotted quarters.
-        mood=MoodPreset(key_root=2, scale="minor", bpm=60, intensity=0.30, target_seconds=100.0, lead_octave=5,
-                         meter="6/8"),
+        # Heroic major fanfare.
+        mood=MoodPreset(key_root=2, scale="major", bpm=150, intensity=0.55, target_seconds=100.0, lead_octave=5),
     ),
     TrackSpec(
         resource="Stage1",
         description="Stage 1, Sky Fortress",
         aliases=["stage1", "level1"],
-        mood=MoodPreset(key_root=9, scale="minor", bpm=150, intensity=0.60, target_seconds=150.0, lead_octave=5),
+        # 180 bpm: 5 ticks a 16th at 60 Hz (6 ticks would be 150).
+        mood=MoodPreset(key_root=9, scale="minor", bpm=180, intensity=0.70, target_seconds=150.0, lead_octave=5),
     ),
     TrackSpec(
         resource="Boss",
         description="Boss battle, GAMMA CORE",
         aliases=["boss"],
         # Galloping 6/8; bpm counts dotted quarters.
-        mood=MoodPreset(key_root=4, scale="minor", bpm=96, intensity=0.95, target_seconds=110.0,
+        mood=MoodPreset(key_root=4, scale="minor", bpm=120, intensity=0.95, target_seconds=110.0,
                          lead_octave=5, arp_octave=4, meter="6/8"),
     ),
 ]

@@ -13,8 +13,12 @@ its actual music:
 - The arp channel is a string ostinato: repeated notes in gallop and
   pulse rhythms, not an arpeggio cycle.
 - The pad is choir or strings, voice-leading to the nearest chord tone.
-- Percussion is orchestral: pitched timpani on the "kick" channel, a march
-  snare with rolls, and orchestra hits / cymbals on the "hat" channel.
+- Percussion is an orchestra over a rock kit, for drive: the "kick"
+  channel mixes a bass drum groove with tuned timpani on the downbeats and
+  rolls; the snare is a backbeat with 16th fills; the "hat" channel plays
+  8th-note hats, with crashes and orchestra hits on phrase starts.
+- Energy comes from MoodPreset.intensity: hot tracks (0.5 and up) get
+  octave-jumping 8th bass, 16th ostinatos and 16th-note lead runs.
 - Optional 6/8 time (MoodPreset.meter), for galloping themes.
 """
 
@@ -60,6 +64,8 @@ POOLS = {
     "bass": [42, 43, 58, 70],                        # cello, contrabass, tuba, bassoon
     "pad": [52, 53, 48, 49, 50],                     # choir aahs, voice oohs, strings, synth strings
 }
+KICK = 253        # RPTracker's custom kit, known to sound right on OPL2
+HAT = 255
 TIMPANI = 47
 ORCH_HIT = 55
 SNARE = 254       # RPTracker's custom snare, known to sound right on OPL2
@@ -151,6 +157,10 @@ def _nearest_chord_tone(pitch: int, tones: List[int]) -> int:
     return best
 
 
+# Busier phrases for energetic tracks: 16th-note runs into held notes.
+DRIVE_44 = [[2, 2, 2, 2, 4, 4], [3, 3, 2, 2, 2, 4], [4, 2, 2, 2, 2, 4], [2, 2, 4, 2, 2, 4], [6, 2, 4, 4],
+            [2, 2, 2, 2, 2, 2, 4]]
+DRIVE_68 = [[2, 2, 2, 2, 2, 2], [3, 1, 2, 6], [2, 2, 2, 6], [4, 2, 2, 2, 2], [6, 2, 2, 2]]
 RHYTHMS_44 = [[8, 4, 4], [12, 2, 2], [6, 2, 8], [4, 4, 8], [16], [3, 1, 4, 8], [8, 8], [4, 2, 2, 8], [2, 2, 4, 8]]
 RHYTHMS_68 = [[6, 6], [4, 2, 6], [12], [6, 4, 2], [3, 3, 6], [2, 2, 2, 6], [6, 2, 2, 2]]
 CADENCE_44 = [[16], [12, 4], [4, 12]]
@@ -164,6 +174,7 @@ def generate_chunk(rng: random.Random, mood, ins: Dict[str, int], chords: List[C
     major = mood.scale in ("major", "mixolydian")
     rows: Dict[str, Dict[int, RowCell]] = {r: {} for r in ("lead", "arp", "bass", "pad", "kick", "snare", "hat")}
     hot = mood.intensity >= 0.75
+    drive = mood.intensity >= 0.5
 
     def put(role, row, note, ins_idx=None, vol_add=0):
         j = jitter.get(role, 3)
@@ -182,13 +193,14 @@ def generate_chunk(rng: random.Random, mood, ins: Dict[str, int], chords: List[C
         ost = rng.choice([
             [0, 2, 3, 4, 6, 7, 8, 10, 11, 12, 14, 15],   # gallop
             list(range(16)),                              # driving 16ths
+        ] + ([] if drive else [
             [0, 3, 6, 8, 11, 14],                         # 3+3+2
             [0, 2, 4, 6, 8, 10, 12, 14],                  # 8ths
-        ])
+        ]))
     ost_shape = rng.choice([[0] * 7 + [1], [0, 0, 2, 0, 0, 1, 0, 2], [0, 1, 0, 2]])
 
     # Lead motif: rhythm and contour picked once, then sequenced.
-    rhythms = RHYTHMS_68 if six8 else RHYTHMS_44
+    rhythms = (DRIVE_68 if six8 else DRIVE_44) if drive else (RHYTHMS_68 if six8 else RHYTHMS_44)
     motif_rhythm = rng.choice(rhythms)
     motif_steps = [rng.choice([-2, -1, 1, 2, 3, -3, 4]) for _ in motif_rhythm]
     lead_oct = mood.lead_octave
@@ -204,9 +216,10 @@ def generate_chunk(rng: random.Random, mood, ins: Dict[str, int], chords: List[C
 
         # Bass: root held, a fifth or octave leap mid-bar; pedalling 8ths when hot.
         broot = tones[0] % 12
-        if hot and rng.random() < 0.6:
+        if drive:
+            # Octave-jumping 8ths: the engine of the track.
             for r in range(0, rpb, 2):
-                put("bass", base + r, _n(mood.bass_octave + (1 if (r // 2) % 4 == 3 else 0), broot))
+                put("bass", base + r, _n(mood.bass_octave + ((r // 2) & 1), broot), vol_add=(2 if r % beat == 0 else -2))
         else:
             put("bass", base, _n(mood.bass_octave, broot))
             half = rpb // 2
@@ -232,6 +245,8 @@ def generate_chunk(rng: random.Random, mood, ins: Dict[str, int], chords: List[C
         elif bar == 2 and rng.random() < 0.6:
             rhythm = rng.choice(rhythms)
             steps = [rng.choice([-2, -1, 1, 2]) for _ in rhythm]
+            if drive:
+                steps = [rng.choice([-1, 1]) * (1 if d < beat else 2) for d in rhythm]  # scalar runs
         else:
             rhythm, steps = motif_rhythm, motif_steps
         # Each bar starts on a chord tone near where the line is.
@@ -256,19 +271,25 @@ def generate_chunk(rng: random.Random, mood, ins: Dict[str, int], chords: List[C
         if last:
             pitch = _nearest_chord_tone(pitch, [tones[0]])
 
-        # Timpani on the "kick" channel, tuned to the chord.
         troot = tones[0] % 12
-        put("kick", base, _n(2, troot))
-        put("kick", base + rpb // 2, _n(2, (troot + 7) % 12), vol_add=-6)
+        # "kick" channel: timpani on the downbeat, a bass drum groove when driving.
+        put("kick", base, _n(2, troot), ins_idx=ins["kick"])
+        if drive:
+            if six8:
+                kicks = [3, 6, 9]  # gallop pushes
+            else:
+                kicks = [6, 8, 10] if rng.random() < 0.5 else [8, 11, 14]  # rock / syncopated
+            for rr in kicks:
+                if rr < rpb and not (last and rr >= rpb // 2):
+                    put("kick", base + rr, _n(3, 0), ins_idx=KICK)
+        else:
+            put("kick", base + rpb // 2, _n(2, (troot + 7) % 12), ins_idx=ins["kick"], vol_add=-6)
         if last:
             for rr in range(rpb // 2, rpb):
-                put("kick", base + rr, _n(2, troot), vol_add=-12 + (rr - rpb // 2))
+                put("kick", base + rr, _n(2, troot), ins_idx=ins["kick"], vol_add=-12 + (rr - rpb // 2))
 
-        # March snare: backbeat, ghost notes, a roll into the next chunk.
-        if six8:
-            backs = [beat]
-        else:
-            backs = [beat, 3 * beat]
+        # Snare: backbeat, ghost notes, a roll into the next chunk.
+        backs = [beat] if six8 else [beat, 3 * beat]
         if last and rng.random() < 0.7:
             for rr in range(rpb // 2, rpb):
                 put("snare", base + rr, _n(3, 0), vol_add=-14 + (rr - rpb // 2) * 2)
@@ -276,21 +297,23 @@ def generate_chunk(rng: random.Random, mood, ins: Dict[str, int], chords: List[C
             for b in backs:
                 put("snare", base + b, _n(3, 0))
             for rr in range(rpb):
-                if rr not in backs and rng.random() < (0.22 if hot else 0.1):
+                if rr not in backs and rng.random() < (0.25 if drive else 0.1):
                     put("snare", base + rr, _n(3, 0), vol_add=-18)
 
-        # Orchestral colour: an orchestra hit or crash on the downbeat of the
-        # phrase, a ride on the beats when the music is hot, tom fills.
+        # "hat" channel: crash or orchestra hit on the phrase, tom fills, hats.
         if bar == 0:
             if rng.random() < 0.6:
-                put("hat", base, _n(4, troot), vol_add=4)
+                put("hat", base, _n(4, troot), ins_idx=ins["hat"], vol_add=4)
             else:
                 put("hat", base, _n(3, 0), ins_idx=CRASH)
-        elif last and rng.random() < 0.5:
+        if last and rng.random() < 0.5:
             for k, rr in enumerate(range(rpb // 2, rpb, 2)):
                 put("hat", base + rr, _n(3, 0), ins_idx=HIGH_TOM if k % 2 == 0 else LOW_TOM)
+        elif drive:
+            for rr in range(0 if bar else 2, rpb, 2):
+                if rng.random() < 0.95:
+                    put("hat", base + rr, _n(3, 0), ins_idx=HAT, vol_add=(0 if rr % beat else 4) - 6)
         elif hot:
-            for rr in range(0, rpb, beat // 2 if not six8 else 3):
-                if rng.random() < 0.85:
-                    put("hat", base + rr, _n(3, 0), ins_idx=RIDE, vol_add=-14)
+            for rr in range(0, rpb, 3):
+                put("hat", base + rr, _n(3, 0), ins_idx=RIDE, vol_add=-14)
     return rows

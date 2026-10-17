@@ -85,6 +85,21 @@ class Sfx:
         self.w(0x40 + CAR[self.ch], level)
         return self
 
+    def modtl(self, level):
+        """Modulator level: lower is brighter, higher is darker and purer."""
+        self.w(0x40 + MOD[self.ch], level)
+        return self
+
+    def boom(self, a, b, ms, steps, tl0, tl1):
+        """Pitch drop that also darkens as it falls: the body of an explosion."""
+        for i in range(steps + 1):
+            t = i / steps
+            self.modtl(round(tl0 + (tl1 - tl0) * t))
+            self.on(a + (b - a) * t)
+            if i < steps:
+                self.wait(ms / steps)
+        return self
+
     def stream(self):
         out = bytearray()
         for r, v, w in self.ev:
@@ -97,40 +112,49 @@ class Sfx:
         return bytes(out)
 
 
-# Laser-ish chirps keep feedback low so they sit cleanly over the music.
+# Everything here is tonal, for a full sound under the orchestral music:
+# sine carriers, modulator multiples of 1-3 (saw- and square-like
+# harmonics), feedback no higher than 5. RPDemo's noise recipe (pulse-sine
+# waveforms with feedback 7) comes out as thin scratching on this mix.
+# Explosions are low booms whose brightness fades as the pitch falls.
+
 def vulcan():
-    return Sfx(7).patch(mod_tl=30, mod_dr=11, car_dr=10, car_sl=3, car_rr=11, feedback=1).sweep(1400, 700, 40, 5).off()
+    return Sfx(7).patch(mod_tl=18, mod_dr=6, car_dr=6, car_sl=4, car_rr=8, feedback=4).sweep(880, 330, 60, 6).off()
 
 
 def homing():
-    return Sfx(7).patch(mod_mult=2, mod_tl=24, car_dr=8, car_sl=3, feedback=3, mod_wave=1).sweep(500, 1200, 80, 8).off()
+    return (Sfx(7).patch(mod_mult=2, mod_tl=14, mod_dr=5, car_dr=5, car_sl=3, car_rr=7, feedback=2, connection=1)
+            .sweep(330, 990, 80, 8).off())
 
 
 def spread():
-    return Sfx(7).patch(mod_mult=3, mod_tl=22, mod_wave=2, car_dr=10, car_sl=4, car_rr=10, feedback=4).sweep(900, 400, 60, 6).off()
+    return Sfx(7).patch(mod_tl=14, mod_dr=5, car_dr=5, car_sl=4, car_rr=7, feedback=5).sweep(520, 180, 90, 8).off()
 
 
 def plasma():
-    s = Sfx(7).patch(mod_mult=7, mod_tl=12, mod_wave=3, car_mult=2, car_tl=6, car_dr=12, car_sl=6, feedback=7)
-    for f in (1800, 1300, 2100, 1500):
-        s.on(f).wait(12)
+    s = Sfx(7).patch(mod_mult=3, mod_tl=20, car_dr=4, car_sl=2, car_rr=6, feedback=4)
+    for f in (220, 233, 220, 247, 220):
+        s.on(f).wait(14)
     return s.off()
 
 
 def sword():
-    return Sfx(7).patch(mod_mult=1, mod_tl=18, mod_wave=1, car_mult=2, car_dr=6, car_sl=2, car_rr=6, feedback=5).sweep(300, 900, 120, 10).off()
+    s = Sfx(7).patch(mod_tl=22, car_ar=12, car_dr=3, car_sl=2, car_rr=6, feedback=3)
+    return s.sweep(180, 520, 90, 8).sweep(520, 260, 80, 6).off()
 
 
 def hyper():
-    s = Sfx(7).patch(mod_mult=1, mod_tl=8, mod_wave=1, car_mult=1, car_dr=3, car_sl=1, car_rr=4, feedback=6)
-    s.sweep(150, 1600, 450, 24)
-    s.sweep(1600, 1200, 200, 8)
+    s = Sfx(7).patch(mod_tl=10, car_dr=2, car_sl=1, car_rr=3, feedback=5)
+    s.sweep(110, 880, 500, 24)
+    for _ in range(6):
+        s.on(860).wait(25).on(900).wait(25)
     return s.off()
 
 
 def player_die():
-    return Sfx(7).patch(mod_mult=5, mod_tl=8, mod_dr=8, mod_sl=6, mod_rr=6, mod_wave=3, car_mult=2, car_dr=7, car_sl=5,
-                        car_rr=5, car_wave=3, feedback=7).sweep(700, 50, 700, 22).off()
+    s = Sfx(7).patch(mod_tl=8, mod_dr=2, car_dr=2, car_sl=2, car_rr=3, feedback=5)
+    s.boom(160, 150, 30, 2, 4, 6)
+    return s.boom(300, 30, 900, 30, 8, 40).off()
 
 
 def chain():
@@ -143,7 +167,8 @@ def chain():
 
 
 def absorb():
-    return Sfx(7).patch(mod_mult=4, mod_tl=26, car_mult=4, car_tl=6, car_dr=12, car_sl=6, feedback=2).sweep(2400, 3200, 30, 4).off()
+    return (Sfx(7).patch(mod_mult=2, mod_tl=24, car_mult=2, car_dr=8, car_sl=6, feedback=2, connection=1)
+            .sweep(1200, 1600, 30, 4).off())
 
 
 def clear():
@@ -159,28 +184,32 @@ def clear():
 
 
 def enemy_fire():
-    return Sfx(8).patch(mod_tl=26, mod_dr=10, mod_rr=10, car_dr=9, car_sl=2, car_rr=10, feedback=1).sweep(450, 200, 90, 8).off()
+    return Sfx(8).patch(mod_mult=2, mod_tl=22, car_dr=6, car_sl=4, car_rr=8, feedback=2).sweep(600, 260, 70, 7).off()
 
 
 def explode():
-    return Sfx(8).patch(mod_mult=4, mod_tl=10, mod_dr=12, mod_sl=4, mod_rr=12, mod_wave=3, car_mult=3, car_dr=11,
-                        car_sl=3, car_rr=11, car_wave=3, feedback=7).sweep(500, 120, 160, 10).off()
+    s = Sfx(8).patch(mod_tl=6, mod_dr=3, car_dr=4, car_sl=3, car_rr=5, feedback=5)
+    s.boom(170, 150, 25, 2, 4, 8)
+    return s.boom(140, 45, 280, 14, 10, 36).off()
 
 
 def big_explode():
-    return Sfx(8).patch(mod_mult=6, mod_tl=6, mod_dr=7, mod_sl=5, mod_rr=5, mod_wave=3, car_mult=1, car_dr=6, car_sl=4,
-                        car_rr=4, car_wave=3, feedback=7).sweep(380, 40, 600, 20).off()
+    s = Sfx(8).patch(mod_tl=4, mod_dr=2, car_dr=2, car_sl=2, car_rr=3, feedback=5)
+    s.boom(150, 130, 30, 2, 2, 6)
+    s.boom(120, 40, 350, 14, 8, 30)
+    s.boom(110, 28, 450, 16, 10, 42)
+    return s.off()
 
 
 def warning():
-    s = Sfx(8).patch(mod_mult=2, mod_tl=14, mod_wave=1, car_mult=1, car_dr=2, car_sl=1, car_rr=8, car_wave=1, feedback=4)
+    s = Sfx(8).patch(mod_tl=16, car_dr=2, car_sl=1, car_rr=8, feedback=4)
     for _ in range(2):
         s.sweep(440, 880, 250, 10).sweep(880, 440, 250, 10)
     return s.off()
 
 
 def boss_hit():
-    return Sfx(8).patch(mod_mult=1, mod_tl=20, mod_wave=2, car_dr=14, car_sl=8, car_rr=14, feedback=6).sweep(260, 180, 30, 3).off()
+    return Sfx(8).patch(mod_mult=3, mod_tl=18, car_dr=9, car_sl=6, car_rr=9, feedback=3).sweep(230, 200, 40, 3).off()
 
 
 SFX = [

@@ -22,25 +22,25 @@ enum
     SFX_COUNT,
 };
 
-#define SFX_BLOB_SIZE 2736
+#define SFX_BLOB_SIZE 3372
 
 #ifdef SFX_OFFSETS
 static const uint16_t sfx_offsets[SFX_COUNT] = {
     0, /* VULCAN */
-    88, /* HOMING */
-    203, /* SPREAD */
-    300, /* PLASMA */
-    373, /* SWORD */
-    506, /* HYPER */
-    843, /* PLAYER_DIE */
-    1084, /* CHAIN */
-    1178, /* ABSORB */
-    1257, /* CLEAR */
-    1774, /* ENEMY_FIRE */
-    1889, /* EXPLODE */
-    2022, /* BIG_EXPLODE */
-    2245, /* WARNING */
-    2666, /* BOSS_HIT */
+    97, /* HOMING */
+    212, /* SPREAD */
+    327, /* PLASMA */
+    409, /* SWORD */
+    584, /* HYPER */
+    951, /* PLAYER_DIE */
+    1390, /* CHAIN */
+    1484, /* ABSORB */
+    1563, /* CLEAR */
+    2080, /* ENEMY_FIRE */
+    2186, /* EXPLODE */
+    2433, /* BIG_EXPLODE */
+    2881, /* WARNING */
+    3302, /* BOSS_HIT */
 };
 #endif
 

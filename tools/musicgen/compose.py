@@ -153,7 +153,9 @@ ROLE_TO_CHANNEL = {"lead": 0, "arp": 1, "bass": 2, "pad": 6, "kick": 3, "snare":
 # Furnace's UI suggest). A rough mix: lead upfront, bass/arp driving but
 # under it, pad present (not buried), drums punchy but not burying the
 # sequencer.
-ROLE_VOLUME = {"lead": 56, "arp": 48, "bass": 58, "pad": 48, "kick": 63, "snare": 54, "hat": 38}
+# MegaGammaForce: lead -3, arp +3, hat +12 from RPDemo's mix -- the offsets
+# that always had to be passed as --vol -3,3,0,0,0,0,12 to balance the patches.
+ROLE_VOLUME = {"lead": 53, "arp": 51, "bass": 58, "pad": 48, "kick": 63, "snare": 54, "hat": 50}
 
 # Small per-note random jitter around each role's base volume (still
 # clamped into 0-63) -- without this every note in a role plays at

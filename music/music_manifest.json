@@ -8,15 +8,15 @@
     "roles": "lead,arp,bass,pad,kick,snare,hat",
     "mood": {
       "key_root": 2,
-      "scale": "minor",
-      "bpm": 60,
-      "intensity": 0.3,
+      "scale": "major",
+      "bpm": 150,
+      "intensity": 0.55,
       "target_seconds": 100.0,
       "lead_octave": 5,
       "arp_octave": 4,
       "bass_octave": 2,
       "use_drums": true,
-      "meter": "6/8"
+      "meter": "4/4"
     },
     "exported_vgm": true,
     "date": "2026-10-17",
@@ -32,8 +32,8 @@
     "mood": {
       "key_root": 9,
       "scale": "minor",
-      "bpm": 150,
-      "intensity": 0.6,
+      "bpm": 180,
+      "intensity": 0.7,
       "target_seconds": 150.0,
       "lead_octave": 5,
       "arp_octave": 4,
@@ -55,7 +55,7 @@
     "mood": {
       "key_root": 4,
       "scale": "minor",
-      "bpm": 96,
+      "bpm": 120,
       "intensity": 0.95,
       "target_seconds": 110.0,
       "lead_octave": 5,

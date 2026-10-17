@@ -84,11 +84,12 @@ static void enter_title(void)
         s->x_pos_px = PF_X + k * 64;
         s->y_pos_px = 34;
     }
-    hud_center(13, "IN THE SPIRIT OF", HC_GRAY);
-    hud_center(14, "RADIANT SILVERGUN", HC_GRAY);
-    hud_center(20, "Z VULCAN  X HOMING", HC_GRAY);
-    hud_center(21, "C SPREAD  N SWORD", HC_GRAY);
-    hud_center(22, "COMBINE FOR MORE", HC_GRAY);
+    hud_center(13, "THE GAMMA CORE RISES.", HC_GRAY);
+    hud_center(14, "ONE SHIP. NO RETREAT.", HC_GRAY);
+    hud_center(20, "Y VULCAN U HOMING", HC_GRAY);
+    hud_center(21, "I SPREAD  N SWORD", HC_GRAY);
+    hud_center(22, "M HYPER SWORD", HC_GRAY);
+    hud_center(23, "COMBINE Y U I FOR MORE", HC_GRAY);
     hud_text(0, 5, "HISCORE", HC_CYAN, HC_PANEL);
     hud_digits(0, 6, hiscore_d, SCORE_DIGITS, HC_YELLOW);
     music_play("ROM:Title.vgm");

@@ -6,3 +6,4 @@ __pycache__
 /tools/rp6502-emu.*
 /.venv
 /compile_commands.json
+/.cache

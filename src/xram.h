@@ -238,7 +238,7 @@ typedef struct
 #define HUD_COLS 40
 #define HUD_ROWS 30
 
-#define SFX_DATA_MAX 3072
+#define SFX_DATA_MAX 4096
 
 typedef struct
 {

@@ -121,6 +121,17 @@ static void fire(uint8_t w)
             sfx_player(SFX_VULCAN, SFX_PRI_FIRE);
         }
         break;
+    case WP_HSPREAD:
+        /* Four darts fanned wide, then homing: 1 x 4 every 16 frames = 15/s. */
+        if (fire_cd == 0 && shots_count(SK_HOMING) < 12) {
+            shot_fire(SK_HOMING, (uint8_t)(pl_bx - 6), ny, ANG_UP - 20, 56);
+            shot_fire(SK_HOMING, (uint8_t)(pl_bx + 6), ny, ANG_UP + 20, 56);
+            shot_fire(SK_HOMING, (uint8_t)(pl_bx - 10), pl_by, ANG_UP - 56, 56);
+            shot_fire(SK_HOMING, (uint8_t)(pl_bx + 10), pl_by, ANG_UP + 56, 56);
+            fire_cd = 16;
+            sfx_player(SFX_HOMING, SFX_PRI_FIRE);
+        }
+        break;
     case WP_HOMING:
         if (fire_cd == 0 && shots_count(SK_HOMING) < 8) {
             shot_fire(SK_HOMING, (uint8_t)(pl_bx - 10), pl_by, ANG_UP - 40, 60);
@@ -137,7 +148,7 @@ static void fire(uint8_t w)
             sfx_player(SFX_SPREAD, SFX_PRI_FIRE);
         }
         break;
-    case WP_BACKWIDE:
+    case WP_WIDE:
         if (fire_cd == 0) {
             shot_fire(SK_VULCAN, nx, (uint8_t)(ny - 4), ANG_UP, 128);
             shot_fire(SK_BACK, (uint8_t)(pl_bx - 6), pl_by, ANG_DOWN + 36, 80);
@@ -181,7 +192,7 @@ static void update_sword(uint8_t w, int16_t sx, int16_t sy)
 {
     mode5_csprite_t *s = &spr[SPR_SWORD];
     bool hyper = hyper_timer != 0;
-    sword_active = hyper || w == WP_SWORD || w == WP_HYPER;
+    sword_active = hyper || w == WP_SWORD;
     if (!hyper)
         beam_hide();
     if (!sword_active) {
@@ -200,8 +211,8 @@ static void update_sword(uint8_t w, int16_t sx, int16_t sy)
         sword_x1 = pl_bx < 207 ? (uint8_t)(pl_bx + 48) : 255;
         sword_y0 = pl_by > 72 ? (uint8_t)(pl_by - 72) : 0;
         sword_y1 = (uint8_t)(pl_by - 4);
-        if ((sword_tick & 7) == 0)
-            sword_strike(3); /* 22/s; it also absorbs pink bullets */ /* 45/s */
+        if ((sword_tick & 3) == 0)
+            sword_strike(3); /* 45/s */
         /* The blade's energy also lances up the screen as a beam. */
         int16_t top = sy - 16 - 128;
         for (uint8_t k = 0; k < SPR_BEAM_N; k++) {
@@ -240,11 +251,17 @@ void player_update(bool controls)
         return;
     }
 
-    uint8_t held = controls ? in_held : 0;
+    uint16_t held = controls ? in_held : 0;
+    uint16_t pressed = controls ? in_pressed : 0;
     uint8_t w = (uint8_t)((held >> 4) & 7);
+    if (w == WP_ALL)
+        w = WP_VULCAN;
+    if (held & IN_SWORD)
+        w = WP_SWORD;
 
-    /* Hyper sword: all three buttons with a full gauge. */
-    if (w == WP_HYPER && sword_gauge >= SWORD_GAUGE_MAX && hyper_timer == 0) {
+    /* Hyper sword: its own button, and only with a full gauge. Holding the
+     * sword while the gauge fills never sets it off. */
+    if ((pressed & IN_HYPER) && sword_gauge >= SWORD_GAUGE_MAX && hyper_timer == 0) {
         hyper_timer = 150;
         sword_gauge = 0;
         uint8_t n = bullets_cancel_all();
@@ -295,8 +312,6 @@ void player_update(bool controls)
 
     if (w)
         pl_weapon = w;
-    if (w == WP_HYPER && hyper_timer == 0)
-        w = WP_SWORD; /* not charged: just the sword */
     fire(w);
 
     /* Sprites. */
@@ -328,20 +343,22 @@ void player_update(bool controls)
     update_sword(w, sx + 12, sy + 12);
 }
 
-static const char *const weapon_name[8][2] = {
+static const char *const weapon_name[10][2] = {
     {"", ""},
     {"VULCAN", ""},
     {"HOMING", ""},
-    {"BACK", "WIDE"},
-    {"SPREAD", ""},
-    {"RADIANT", "SWORD"},
     {"HOMING", "PLASMA"},
+    {"SPREAD", ""},
+    {"WIDE", "SHOT"},
+    {"HOMING", "SPREAD"},
+    {"VULCAN", ""},
+    {"RADIANT", "SWORD"},
     {"HYPER", "SWORD"},
 };
 
 void player_hud(bool force)
 {
-    uint8_t w = hyper_timer ? WP_HYPER : (pl_weapon == WP_HYPER ? WP_SWORD : pl_weapon);
+    uint8_t w = hyper_timer ? WP_HYPER : pl_weapon;
     if (w != shown_weapon || force) {
         shown_weapon = w;
         hud_fill(33, 3, 7, ' ', HC_WHITE, HC_PANEL);

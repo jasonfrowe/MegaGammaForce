@@ -34,22 +34,22 @@ KEEP_ALIVE = "poke {invuln} 0xC8\npoke {pl_lives} 3\n"
 
 BUILTIN = {
     "boss": (
-        "run 60\npress z\nrun 2\nrelease z\nrun 100\n"
+        "run 60\npress y\nrun 2\nrelease y\nrun 100\n"
         # View near the top of the map, distance near the end, no waves left.
         "poke {view_top} 0x40 0x01\npoke {bg_distance} 0x00 0x0B\npoke {next_wave} 99\n"
         "run 200\nshot \"{out}/boss_warning.png\"\nrun 260\n"
         + "".join(
             f"press {k}\n" + (KEEP_ALIVE + "run 100\n") * 4 + f"dump {{lag_frames}} 2\nshot \"{{out}}/boss_{i}.png\"\nrelease {k}\n"
-            for i, k in enumerate("zcxnzcbv")
+            for i, k in enumerate("yiunyihk")
         )
         + (KEEP_ALIVE + "run 100\n") * 8
         + "shot \"{out}/boss_end.png\"\ndump {lag_frames} 2\ndump {gstate} 1\n"
     ),
     "soak": (
-        "run 60\npress z\nrun 2\nrelease z\nrun 10\n"
+        "run 60\npress y\nrun 2\nrelease y\nrun 10\n"
         + "".join(
             f"press {k}\n" + (KEEP_ALIVE + "run 100\n") * 8 + f"dump {{lag_frames}} 2\nshot \"{{out}}/soak_{i}.png\"\nrelease {k}\n"
-            for i, k in enumerate("zxcvbnzc")
+            for i, k in enumerate("yuihjkny")
         )
     ),
 }
