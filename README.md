@@ -72,7 +72,7 @@ table is in `src/shots.c` and `src/player.c`.
 
 Enemies come in red, blue and yellow (gray ones don't count). Destroy
 three of the **same color in a row** to complete a set: the chain goes up
-and pays the chain times 10: 10, 20, 30 … up to 990 points. Each further kill of that
+and pays 100, 200, 500, 750, 1,000 … up 250 a step to 10,000 points. Each further kill of that
 same color pays again, one step higher. Switching color starts a new set:
 if the run you left was complete, the chain carries on once you get three
 of the new color; if you switch in the middle of a set, the chain breaks.

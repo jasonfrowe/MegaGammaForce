@@ -20,8 +20,15 @@ static uint8_t next_extend;
 
 static bool score_dirty, chain_dirty;
 
-/* Each step of the chain pays 10 more: 10, 20, 30 ... 990 at chain 99. */
-#define CHAIN_STEP 10
+/* The chain's bonus: 100, 200, 500, then 250 more a step, up to 10,000. */
+static uint16_t chain_bonus(uint8_t level)
+{
+    if (level <= 2)
+        return level * 100;
+    if (level >= 41)
+        return 10000;
+    return 500 + (uint16_t)(level - 3) * 250;
+}
 
 void score_reset(void)
 {
@@ -93,7 +100,7 @@ uint16_t chain_kill(uint8_t color)
         chain_level++;
     if (chain_level > chain_max)
         chain_max = chain_level;
-    chain_last_bonus = (uint16_t)chain_level * CHAIN_STEP;
+    chain_last_bonus = chain_bonus(chain_level);
     score_add(chain_last_bonus);
     return chain_last_bonus;
 }
