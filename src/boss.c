@@ -133,7 +133,7 @@ static void destroy_part(uint8_t i, bool scored)
     sfx_enemy(SFX_BIG_EXPLODE, SFX_PRI_EVENT);
     if (scored) {
         boss_destruction += parts[i].weight;
-        score_add(i == BP_CORE ? 20000 : 3000);
+        score_add(i == BP_CORE ? 10000 : 2000);
     }
     /* Turrets ride on the wings. */
     if (i == BP_WING_L) {

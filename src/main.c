@@ -116,9 +116,9 @@ static void enter_results(void)
     gtimer = 0;
     bullets_reset();
     clear_playfield();
-    results_bonus = (uint16_t)boss_destruction * 300;
+    results_bonus = (uint16_t)boss_destruction * 100;
     if (boss_destruction >= 100)
-        results_bonus += 20000;
+        results_bonus += 10000;
     hud_center(6, boss_escaped ? "BOSS ESCAPED" : "STAGE CLEAR", boss_escaped ? HC_RED : HC_YELLOW);
     hud_text(10, 10, "DESTRUCTION", HC_CYAN, HC_CLEAR);
     hud_u16(23, 10, boss_destruction, 3, HC_WHITE, HC_CLEAR);

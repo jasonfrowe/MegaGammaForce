@@ -14,6 +14,7 @@ Built-in scripts (pass the name instead of a file):
 Usage:
   tools/playtest.py boss [--out DIR]
   tools/playtest.py my_script.txt [--out DIR]
+  tools/playtest.py boss --phi2 4000     # the 6502 at half speed: does it still keep up?
 """
 
 import argparse
@@ -70,6 +71,7 @@ def main():
     ap.add_argument("script")
     ap.add_argument("--out", default=tempfile.gettempdir())
     ap.add_argument("--seed", default="3")
+    ap.add_argument("--phi2", help="6502 clock in kHz (default 8000); lower it to measure CPU headroom")
     args = ap.parse_args()
     text = BUILTIN.get(args.script)
     if text is None:
@@ -87,7 +89,10 @@ def main():
     text = re.sub(r"\{(\w+)(?:\+(\d+))?\}", sub, text)
     with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as f:
         f.write(text)
-    r = subprocess.run([str(EMU), str(ROM), "--seed", args.seed, "--mute", "--script", f.name])
+    cmd = [str(EMU), str(ROM), "--seed", args.seed, "--mute", "--script", f.name]
+    if args.phi2:
+        cmd += ["--phi2", args.phi2]
+    r = subprocess.run(cmd)
     sys.exit(r.returncode)
 
 
