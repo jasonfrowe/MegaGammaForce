@@ -183,6 +183,12 @@ def clear():
     return s.off()
 
 
+def lock():
+    """Lock-on blip: two quick rising pips."""
+    s = Sfx(7).patch(mod_mult=2, mod_tl=20, car_mult=2, car_dr=8, car_sl=5, car_rr=9, feedback=2, connection=1)
+    return s.on(1320).wait(25).off().wait(10).on(1760).wait(30).off()
+
+
 def enemy_fire():
     return Sfx(8).patch(mod_mult=2, mod_tl=22, car_dr=6, car_sl=4, car_rr=8, feedback=2).sweep(600, 260, 70, 7).off()
 
@@ -223,6 +229,7 @@ SFX = [
     ("CHAIN", chain),
     ("ABSORB", absorb),
     ("CLEAR", clear),
+    ("LOCK", lock),
     ("ENEMY_FIRE", enemy_fire),
     ("EXPLODE", explode),
     ("BIG_EXPLODE", big_explode),

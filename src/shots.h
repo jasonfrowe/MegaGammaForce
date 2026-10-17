@@ -11,7 +11,8 @@ enum
     SK_SPREAD,
     SK_HOMING,
     SK_BACK,
-    SK_SPARK, /* homing plasma link, drawn for one frame */
+    SK_SPARK,   /* homing plasma link, drawn for one frame */
+    SK_MISSILE, /* homing missile, chases one locked target */
 };
 
 void shots_reset(void);
@@ -19,6 +20,8 @@ void shots_reset(void);
 void shot_fire(uint8_t kind, uint8_t bx, uint8_t by, uint8_t angle, uint8_t speed);
 /* A plasma link segment at a bullet-space point. */
 void shot_spark(uint8_t bx, uint8_t by);
+/* A missile that chases the target whose tgt_ref is ref. */
+void shot_missile(uint8_t bx, uint8_t by, uint8_t angle, uint8_t ref);
 uint8_t shots_count(uint8_t kind);
 void shots_update(void);
 

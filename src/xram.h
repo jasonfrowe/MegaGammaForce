@@ -225,7 +225,10 @@ typedef struct
 #define SPR_SWORD (SPR_FLAME + 2)
 #define SPR_BEAM (SPR_SWORD + 1)
 #define SPR_BEAM_N 3
-#define SPR_FX (SPR_BEAM + SPR_BEAM_N)
+#define SPR_LOCK (SPR_BEAM + SPR_BEAM_N) /* lock-on ring dots, then reticles */
+#define SPR_LOCK_RING 8
+#define SPR_LOCK_N 14
+#define SPR_FX (SPR_LOCK + SPR_LOCK_N)
 #define SPR_FX_N 14
 #define SPR_BULLET (SPR_FX + SPR_FX_N)
 #define SPR_BULLET_N 64
@@ -267,6 +270,8 @@ typedef struct
     uint8_t img_shot8[SHOT8_FRAMES][SHOT8_FRAME_BYTES];
     uint8_t img_sword[SWORD_FRAMES][SWORD_FRAME_BYTES];
     uint8_t img_beam[BEAM_FRAMES][BEAM_FRAME_BYTES];
+    uint8_t img_missile[MISSILE_FRAMES][MISSILE_FRAME_BYTES];
+    uint8_t img_lock[LOCK_FRAMES][LOCK_FRAME_BYTES];
     uint8_t img_logo[LOGO_FRAMES][LOGO_FRAME_BYTES];
     uint8_t img_enemy16[ENEMY16_FRAMES][ENEMY16_FRAME_BYTES];
     uint8_t img_enemy32[ENEMY32_FRAMES][ENEMY32_FRAME_BYTES];
@@ -302,6 +307,8 @@ _Static_assert((XRAM_OPL & 0xFF) == 0, "The OPL2 registers must start on a page 
 #define XRAM_IMG_SHOT8 offsetof(xram_layout_t, img_shot8)
 #define XRAM_IMG_SWORD offsetof(xram_layout_t, img_sword)
 #define XRAM_IMG_BEAM offsetof(xram_layout_t, img_beam)
+#define XRAM_IMG_MISSILE offsetof(xram_layout_t, img_missile)
+#define XRAM_IMG_LOCK offsetof(xram_layout_t, img_lock)
 #define XRAM_IMG_LOGO offsetof(xram_layout_t, img_logo)
 #define XRAM_IMG_ENEMY16 offsetof(xram_layout_t, img_enemy16)
 #define XRAM_IMG_ENEMY32 offsetof(xram_layout_t, img_enemy32)

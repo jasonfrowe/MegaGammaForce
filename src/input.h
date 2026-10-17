@@ -14,7 +14,7 @@
  * C   Spread        C or L          C or R1
  * A+B Homing Plasma V               X
  * A+C Wide Shot     (Z+C)           Y
- * B+C Homing Spread B               Z or L1
+ * B+C Homing Missile B              Z or L1
  * Radiant Sword     N or Space      R2
  * Hyper Sword       M               L2
  * Start / pause     Enter / P       Start

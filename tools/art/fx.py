@@ -188,3 +188,46 @@ def beam_frames():
                 f[y, x] = 15 if rng.random() < 0.5 else 14
         out.append(f)
     return out
+
+
+def missile_frames():
+    """8x8 missile pointing in 8 directions, k*32 of 256 (0 right, 64 down). Shots palette."""
+    out = []
+    for k in range(8):
+        a = k * 2 * math.pi / 8
+        dx, dy = math.cos(a), math.sin(a)
+        f = np.zeros((8, 8), dtype=np.uint8)
+
+        def plot(t, idx, w=0.0):
+            x = 3.5 + dx * t
+            y = 3.5 + dy * t
+            for ox, oy in ((0, 0), (-dy * w, dx * w), (dy * w, -dx * w)):
+                xi, yi = int(round(x + ox)), int(round(y + oy))
+                if 0 <= xi < 8 and 0 <= yi < 8 and f[yi, xi] < idx or (0 <= xi < 8 and 0 <= yi < 8 and idx == 5):
+                    f[yi, xi] = idx
+        for t in (-3.5, -3.0):
+            plot(t, 3)       # exhaust
+        for t in (-2.5, -2.0, -1.5):
+            plot(t, 7, 0.7)  # fins
+        for t in (-1.0, -0.5, 0.0, 0.5, 1.0, 1.5):
+            plot(t, 8)       # body
+        plot(2.0, 9)
+        plot(2.6, 5)         # warhead
+        out.append(f)
+    return out
+
+
+def lock_frames():
+    """16x16 lock-on reticle, 2 frames (brackets pulse in). Shots palette."""
+    out = []
+    for inset in (0, 2):
+        f = np.zeros((16, 16), dtype=np.uint8)
+        lo, hi = inset, 15 - inset
+        for (cx, cy, sx, sy) in ((lo, lo, 1, 1), (hi, lo, -1, 1), (lo, hi, 1, -1), (hi, hi, -1, -1)):
+            for i in range(5):
+                f[cy, cx + sx * i] = 4
+                f[cy + sy * i, cx] = 4
+            f[cy, cx] = 5
+        f[7:9, 7:9] = 8
+        out.append(f)
+    return out

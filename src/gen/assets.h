@@ -36,6 +36,16 @@
 #define BEAM_FRAMES 2
 #define BEAM_FRAME_BYTES 1024
 
+#define MISSILE_W 8
+#define MISSILE_H 8
+#define MISSILE_FRAMES 8
+#define MISSILE_FRAME_BYTES 32
+
+#define LOCK_W 16
+#define LOCK_H 16
+#define LOCK_FRAMES 2
+#define LOCK_FRAME_BYTES 128
+
 #define LOGO_W 64
 #define LOGO_H 64
 #define LOGO_FRAMES 3

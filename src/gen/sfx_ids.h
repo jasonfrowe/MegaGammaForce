@@ -14,6 +14,7 @@ enum
     SFX_CHAIN,
     SFX_ABSORB,
     SFX_CLEAR,
+    SFX_LOCK,
     SFX_ENEMY_FIRE,
     SFX_EXPLODE,
     SFX_BIG_EXPLODE,
@@ -22,7 +23,7 @@ enum
     SFX_COUNT,
 };
 
-#define SFX_BLOB_SIZE 3372
+#define SFX_BLOB_SIZE 3434
 
 #ifdef SFX_OFFSETS
 static const uint16_t sfx_offsets[SFX_COUNT] = {
@@ -36,11 +37,12 @@ static const uint16_t sfx_offsets[SFX_COUNT] = {
     1390, /* CHAIN */
     1484, /* ABSORB */
     1563, /* CLEAR */
-    2080, /* ENEMY_FIRE */
-    2186, /* EXPLODE */
-    2433, /* BIG_EXPLODE */
-    2881, /* WARNING */
-    3302, /* BOSS_HIT */
+    2080, /* LOCK */
+    2141, /* ENEMY_FIRE */
+    2247, /* EXPLODE */
+    2494, /* BIG_EXPLODE */
+    2942, /* WARNING */
+    3363, /* BOSS_HIT */
 };
 #endif
 

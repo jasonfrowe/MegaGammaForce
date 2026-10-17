@@ -14,7 +14,7 @@ enum
     WP_PLASMA = 3,  /* A+B homing plasma */
     WP_SPREAD = 4,  /* C */
     WP_WIDE = 5,    /* A+C wide shot */
-    WP_HSPREAD = 6, /* B+C homing spread */
+    WP_MISSILE = 6, /* B+C homing missiles */
     WP_ALL = 7,     /* A+B+C: fires the Vulcan */
     WP_SWORD = 8,
     WP_HYPER = 9,

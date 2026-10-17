@@ -27,7 +27,7 @@ the combination's own button.
 | **C** Spread | C or L | C or R1 |
 | **A+B** Homing Plasma | V (or Z+X) | X (or A+B) |
 | **A+C** Wide Shot | Z+C | Y (or A+C/R1) |
-| **B+C** Homing Spread | B (or X+C) | Z or L1 (or B+C/R1) |
+| **B+C** Homing Missiles | B (or X+C) | Z or L1 (or B+C/R1) |
 | Radiant Sword | N or Space | R2 |
 | Hyper Sword | M | L2 |
 | Start / pause | Enter or P | Start |
@@ -46,7 +46,11 @@ From strongest to weakest:
 - **Radiant Sword**: a blade arc above the ship that cuts anything it
   touches and **absorbs pink bullets**. Blue bullets pass through it.
 - **Wide Shot**: a forward bolt plus weak shots to the sides and behind.
-- **Homing Spread**: four darts fanned wide that then home in.
+- **Homing Missiles**: hold it and a lock-on ring grows out from the ship.
+  Everything the ring sweeps over gets a reticle and, a moment later, a
+  missile of its own that chases that target and no other. Up to six locks
+  a sweep, then the ring starts again. Strong against bosses with many
+  parts, slow against a lone target.
 - **Homing**: lock-on darts from the wingtips. They never miss, so they
   hit softly.
 - **Homing Plasma**: a crackling link that latches onto the nearest target
@@ -58,7 +62,8 @@ From strongest to weakest:
   holding the sword never sets it off.
 
 Damage per second, against the Vulcan's 45: Spread 30 (all five orbs
-hitting), Sword 22, Homing Spread 15, Homing 10, Homing Plasma 7.5. The
+hitting), Sword 22, Homing Plasma 7.5, Homing 5. Homing Missiles do 3 per
+locked target per sweep of the ring, about a second. The
 table is in `src/shots.c` and `src/player.c`.
 
 ### The chain

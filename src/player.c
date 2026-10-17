@@ -28,6 +28,112 @@ static uint8_t fire_cd;
 static uint8_t sword_tick;
 static uint8_t shown_weapon = 0xFF, shown_gauge = 0xFF, shown_lives = 0xFF;
 
+/*
+ * Homing missiles: while the button is held, a lock-on ring grows out from
+ * the ship. Each target it sweeps over is locked, marked with a reticle,
+ * and LOCK_DELAY frames later gets a missile of its own. After a full sweep
+ * the ring starts again with fresh locks.
+ */
+#define LOCK_N (SPR_LOCK_N - SPR_LOCK_RING)
+#define LOCK_DELAY 12
+#define RING_MIN 10
+#define RING_MAX 96
+#define RING_REST 16 /* frames at full size before the next sweep */
+static uint8_t ring_r, ring_rest;
+static uint8_t lock_n;
+static uint8_t lock_ref[LOCK_N], lock_timer[LOCK_N]; /* timer 0 = missile away */
+static uint8_t lock_side;
+
+static void lock_hide(void)
+{
+    for (uint8_t k = 0; k < SPR_LOCK_N; k++)
+        spr_hide(&spr[SPR_LOCK + k]);
+}
+
+static void lock_reset(void)
+{
+    ring_r = 0;
+    ring_rest = 0;
+    lock_n = 0;
+    lock_hide();
+}
+
+static bool locked(uint8_t ref)
+{
+    for (uint8_t k = 0; k < lock_n; k++)
+        if (lock_ref[k] == ref)
+            return true;
+    return false;
+}
+
+static void missiles(void)
+{
+    /* Sweep the ring out, then rest, then start a new sweep. */
+    if (ring_r == 0) {
+        ring_r = RING_MIN;
+        lock_n = 0;
+    } else if (ring_r < RING_MAX) {
+        ring_r += 3;
+    } else if (++ring_rest >= RING_REST) {
+        ring_rest = 0;
+        ring_r = RING_MIN;
+        lock_n = 0;
+    }
+
+    /* Lock anything inside the ring. Distance is max + min/2, near enough a circle. */
+    for (uint8_t i = 0; i < tgt_n && lock_n < LOCK_N; i++) {
+        uint8_t cx = (uint8_t)((tgt_x0[i] >> 1) + (tgt_x1[i] >> 1));
+        uint8_t cy = (uint8_t)((tgt_y0[i] >> 1) + (tgt_y1[i] >> 1));
+        uint8_t ax = absdiff8(cx, pl_bx), ay = absdiff8(cy, pl_by);
+        uint16_t d = ax > ay ? (uint16_t)ax + (ay >> 1) : (uint16_t)ay + (ax >> 1);
+        if (d <= ring_r && !locked(tgt_ref[i])) {
+            lock_ref[lock_n] = tgt_ref[i];
+            lock_timer[lock_n] = LOCK_DELAY;
+            lock_n++;
+            sfx_player(SFX_LOCK, SFX_PRI_FIRE);
+        }
+    }
+
+    /* Count down each lock, then launch, alternating sides. */
+    for (uint8_t k = 0; k < lock_n; k++) {
+        if (lock_timer[k] && --lock_timer[k] == 0) {
+            lock_side ^= 1;
+            shot_missile((uint8_t)(pl_bx + (lock_side ? 8 : -8)), pl_by, lock_side ? ANG_UP + 48 : ANG_UP - 48,
+                         lock_ref[k]);
+            sfx_player(SFX_HOMING, SFX_PRI_FIRE);
+        }
+    }
+
+    /* The ring: dots turning around the ship. */
+    int16_t sx = PF_X + (pl_bx - BS_X), sy = pl_by - BS_Y;
+    uint8_t spin = (uint8_t)(frame_count << 1);
+    for (uint8_t k = 0; k < SPR_LOCK_RING; k++) {
+        mode5_csprite_t *s = &spr[SPR_LOCK + k];
+        uint8_t a = (uint8_t)(spin + k * 32);
+        spr_setup(s, XRAM_IMG_SHOT8 + (SHOT8_HOMING + 1) * SHOT8_FRAME_BYTES, PAL_ADDR(PAL_SHOTS), WH(8, 8), OPT4);
+        s->x_pos_px = sx + (((int16_t)COS8(a) * ring_r) >> 7) - 4;
+        s->y_pos_px = sy + (((int16_t)SIN8(a) * ring_r) >> 7) - 4;
+    }
+    /* Reticles on the locked targets that are still there. */
+    for (uint8_t k = 0; k < LOCK_N; k++) {
+        mode5_csprite_t *s = &spr[SPR_LOCK + SPR_LOCK_RING + k];
+        int8_t t = -1;
+        if (k < lock_n)
+            for (uint8_t i = 0; i < tgt_n; i++)
+                if (tgt_ref[i] == lock_ref[k])
+                    t = (int8_t)i;
+        if (t < 0) {
+            spr_hide(s);
+            continue;
+        }
+        uint8_t cx = (uint8_t)((tgt_x0[(uint8_t)t] >> 1) + (tgt_x1[(uint8_t)t] >> 1));
+        uint8_t cy = (uint8_t)((tgt_y0[(uint8_t)t] >> 1) + (tgt_y1[(uint8_t)t] >> 1));
+        spr_setup(s, XRAM_IMG_LOCK + ((frame_count >> 2) & 1) * LOCK_FRAME_BYTES, PAL_ADDR(PAL_SHOTS), WH(16, 16), OPT4);
+        s->x_pos_px = (int16_t)cx + (PF_X - BS_X - 8);
+        s->y_pos_px = (int16_t)cy - (BS_Y + 8);
+    }
+}
+
 #define X_MIN Q4(10)
 #define X_MAX Q4(PF_W - 10)
 #define Y_MIN Q4(16)
@@ -42,6 +148,7 @@ static void beam_hide(void)
 void player_hide(void)
 {
     beam_hide();
+    lock_reset();
     spr_hide(&spr[SPR_PLAYER]);
     spr_hide(&spr[SPR_FLAME]);
     spr_hide(&spr[SPR_FLAME + 1]);
@@ -109,6 +216,8 @@ static void sword_strike(uint8_t dmg)
 
 static void fire(uint8_t w)
 {
+    if (w != WP_MISSILE && (ring_r || lock_n))
+        lock_reset(); /* letting go cancels the sweep and any pending locks */
     uint8_t nx = pl_bx, ny = (uint8_t)(pl_by - 10);
     if (fire_cd)
         fire_cd--;
@@ -121,22 +230,14 @@ static void fire(uint8_t w)
             sfx_player(SFX_VULCAN, SFX_PRI_FIRE);
         }
         break;
-    case WP_HSPREAD:
-        /* Four darts fanned wide, then homing: 1 x 4 every 16 frames = 15/s. */
-        if (fire_cd == 0 && shots_count(SK_HOMING) < 12) {
-            shot_fire(SK_HOMING, (uint8_t)(pl_bx - 6), ny, ANG_UP - 20, 56);
-            shot_fire(SK_HOMING, (uint8_t)(pl_bx + 6), ny, ANG_UP + 20, 56);
-            shot_fire(SK_HOMING, (uint8_t)(pl_bx - 10), pl_by, ANG_UP - 56, 56);
-            shot_fire(SK_HOMING, (uint8_t)(pl_bx + 10), pl_by, ANG_UP + 56, 56);
-            fire_cd = 16;
-            sfx_player(SFX_HOMING, SFX_PRI_FIRE);
-        }
+    case WP_MISSILE:
+        missiles();
         break;
     case WP_HOMING:
         if (fire_cd == 0 && shots_count(SK_HOMING) < 8) {
             shot_fire(SK_HOMING, (uint8_t)(pl_bx - 10), pl_by, ANG_UP - 40, 60);
             shot_fire(SK_HOMING, (uint8_t)(pl_bx + 10), pl_by, ANG_UP + 40, 60);
-            fire_cd = 12;
+            fire_cd = 24; /* 1 x 2 darts every 24 frames = 5/s */
             sfx_player(SFX_HOMING, SFX_PRI_FIRE);
         }
         break;
@@ -350,7 +451,7 @@ static const char *const weapon_name[10][2] = {
     {"HOMING", "PLASMA"},
     {"SPREAD", ""},
     {"WIDE", "SHOT"},
-    {"HOMING", "SPREAD"},
+    {"HOMING", "MISSILE"},
     {"VULCAN", ""},
     {"RADIANT", "SWORD"},
     {"HYPER", "SWORD"},

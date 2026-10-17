@@ -9,17 +9,18 @@
 
 static uint16_t sx[SH_N], sy[SH_N]; /* bullet space 8.8 */
 static int16_t svx[SH_N], svy[SH_N];
-static uint8_t skind[SH_N], slife[SH_N], sang[SH_N], sspeed[SH_N];
+static uint8_t skind[SH_N], slife[SH_N], sang[SH_N], sspeed[SH_N], sref[SH_N];
 static uint8_t snext;
 
 /*
  * Damage per hit. Tuned against the Vulcan (3 per bolt every 4 frames,
  * 45 per second), the strongest weapon:
  *   Spread  1 x 5 orbs every 10 frames  30/s if all hit, ~18/s typical
- *   Homing  1 x 2 darts every 12 frames 10/s, but it never misses
+ *   Homing  1 x 2 darts every 24 frames  5/s, but it never misses
  *   Back    1 per side shot
+ *   Missile 3 per locked target, one sweep of the lock-on ring at a time
  */
-static const uint8_t kind_dmg[] = {0, 3, 1, 1, 1, 0};
+static const uint8_t kind_dmg[] = {0, 3, 1, 1, 1, 0, 3};
 
 void shots_reset(void)
 {
@@ -103,6 +104,45 @@ void shot_spark(uint8_t bx, uint8_t by)
     s->y_pos_px = (int16_t)by - (BS_Y + 4);
 }
 
+void shot_missile(uint8_t bx, uint8_t by, uint8_t angle, uint8_t ref)
+{
+    int8_t j = alloc();
+    if (j < 0)
+        return;
+    uint8_t i = (uint8_t)j;
+    skind[i] = SK_MISSILE;
+    sx[i] = (uint16_t)bx << 8;
+    sy[i] = (uint16_t)by << 8;
+    sang[i] = angle;
+    sspeed[i] = 24; /* launches slow, then accelerates */
+    slife[i] = 120;
+    sref[i] = ref;
+    set_velocity(i);
+    spr_setup(&spr[SPR_SHOT + i], XRAM_IMG_MISSILE, PAL_ADDR(PAL_SHOTS), WH(8, 8), OPT4);
+}
+
+/* Index of the target box belonging to ref this frame, or -1. */
+static int8_t find_ref(uint8_t ref)
+{
+    for (uint8_t t = 0; t < tgt_n; t++)
+        if (tgt_ref[t] == ref)
+            return (int8_t)t;
+    return -1;
+}
+
+static void steer(uint8_t i, int8_t t, int8_t turn)
+{
+    int16_t tx = (int16_t)((tgt_x0[(uint8_t)t] + tgt_x1[(uint8_t)t]) >> 1);
+    int16_t ty = (int16_t)((tgt_y0[(uint8_t)t] + tgt_y1[(uint8_t)t]) >> 1);
+    uint8_t want = angle_to(tx - (int16_t)(sx[i] >> 8), ty - (int16_t)(sy[i] >> 8));
+    int8_t diff = (int8_t)(want - sang[i]);
+    if (diff > turn)
+        diff = turn;
+    else if (diff < -turn)
+        diff = (int8_t)-turn;
+    sang[i] = (uint8_t)(sang[i] + diff);
+}
+
 static void kill(uint8_t i)
 {
     skind[i] = SK_NONE;
@@ -121,6 +161,22 @@ void shots_update(void)
                 kill(i);
             continue;
         }
+        if (k == SK_MISSILE) {
+            if (--slife[i] == 0) {
+                kill(i);
+                continue;
+            }
+            /* Its own target first; if that is gone, whatever is nearest. */
+            int8_t t = find_ref(sref[i]);
+            if (t < 0)
+                t = tgt_nearest((uint8_t)(sx[i] >> 8), (uint8_t)(sy[i] >> 8));
+            if (t >= 0)
+                steer(i, t, 18);
+            if (sspeed[i] < 96)
+                sspeed[i] += 4;
+            set_velocity(i);
+            spr[SPR_SHOT + i].xram_sprite_ptr = XRAM_IMG_MISSILE + (((uint8_t)(sang[i] + 16) >> 5) & 7) * MISSILE_FRAME_BYTES;
+        }
         if (k == SK_HOMING) {
             if (--slife[i] == 0) {
                 kill(i);
@@ -130,15 +186,7 @@ void shots_update(void)
             if ((i ^ frame_count) & 1) {
                 int8_t t = tgt_nearest((uint8_t)(sx[i] >> 8), (uint8_t)(sy[i] >> 8));
                 if (t >= 0) {
-                    int16_t tx = (int16_t)((tgt_x0[(uint8_t)t] + tgt_x1[(uint8_t)t]) >> 1);
-                    int16_t ty = (int16_t)((tgt_y0[(uint8_t)t] + tgt_y1[(uint8_t)t]) >> 1);
-                    uint8_t want = angle_to(tx - (int16_t)(sx[i] >> 8), ty - (int16_t)(sy[i] >> 8));
-                    int8_t diff = (int8_t)(want - sang[i]);
-                    if (diff > 14)
-                        diff = 14;
-                    else if (diff < -14)
-                        diff = -14;
-                    sang[i] = (uint8_t)(sang[i] + diff);
+                    steer(i, t, 14);
                     set_velocity(i);
                 }
             }

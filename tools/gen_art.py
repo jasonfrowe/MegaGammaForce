@@ -53,6 +53,8 @@ def main():
         ("shot8", palettes.SHOTS, shot8, {"SPREAD": 0, "HOMING": 2, "SPARK": 4, "BACK": 6}),
         ("sword", palettes.SHOTS, fx.sword_frames(), {}),
         ("beam", palettes.SHOTS, fx.beam_frames(), {}),
+        ("missile", palettes.SHOTS, fx.missile_frames(), {}),
+        ("lock", palettes.SHOTS, fx.lock_frames(), {}),
         ("logo", palettes.BOSS, logo.logo(), {}),
         ("enemy16", palettes.ENEMY_RED, dart + saucer + drone + turret,
          {"DART": 0, "SAUCER": 2, "DRONE": 6, "TURRET": 8}),
