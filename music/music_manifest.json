@@ -1,10 +1,10 @@
 {
   "Title": {
-    "seed": 7,
+    "seed": 1634767060,
     "style": 9,
     "style_name": "silvergun",
     "vol": "0,0,0,0,0,0,0",
-    "patch": "3C,2D,46,34,2F,FE,37",
+    "patch": "28,30,46,32,2F,FE,37",
     "roles": "lead,arp,bass,pad,kick,snare,hat",
     "mood": {
       "key_root": 2,
@@ -20,7 +20,7 @@
     },
     "exported_vgm": true,
     "date": "2026-10-17",
-    "command": ".venv/bin/python tools/generate_music.py --track title --seed 7 --style 9 --vol 0,0,0,0,0,0,0 --patch 3C,2D,46,34,2F,FE,37 --export-vgm"
+    "command": ".venv/bin/python tools/generate_music.py --track title --seed 1634767060 --style 9 --vol 0,0,0,0,0,0,0 --patch 28,30,46,32,2F,FE,37 --export-vgm"
   },
   "Stage1": {
     "seed": 1998,

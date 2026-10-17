@@ -234,14 +234,21 @@ int main(void)
                 enter_title();
             }
             break;
-        case GS_GAMEOVER:
-            bg_update();
-            fx_update(0);
+        case GS_GAMEOVER: {
+            /* The world carries on without the player, so ground targets
+             * stay pinned to the scrolling map. Nothing fires at a dead ship. */
+            uint8_t scroll = bg_update();
+            tgt_clear();
+            enemies_update(scroll);
+            boss_update();
+            shots_update();
             bullets_update();
+            fx_update(0);
             gtimer++;
             if (gtimer > 300 || (gtimer > 90 && (in_pressed & (IN_START | IN_FIRE))))
                 enter_title();
             break;
+        }
         }
     }
 }
