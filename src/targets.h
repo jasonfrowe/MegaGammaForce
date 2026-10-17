@@ -9,7 +9,7 @@
  * bullet space so a hit test is four byte compares. ref says what the
  * box belongs to: an enemy slot, or TGT_BOSS + a boss part.
  */
-#define TGT_N 32
+#define TGT_N 48
 #define TGT_BOSS 0x40
 
 extern uint8_t tgt_n;

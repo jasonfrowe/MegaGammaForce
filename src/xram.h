@@ -215,9 +215,9 @@ typedef struct
 
 /* Plane 1 sprite list, back to front. */
 #define SPR_BOSS 0
-#define SPR_BOSS_N 12
+#define SPR_BOSS_N 16
 #define SPR_ENEMY (SPR_BOSS + SPR_BOSS_N)
-#define SPR_ENEMY_N 16
+#define SPR_ENEMY_N 24
 #define SPR_SHOT (SPR_ENEMY + SPR_ENEMY_N)
 #define SPR_SHOT_N 24
 #define SPR_PLAYER (SPR_SHOT + SPR_SHOT_N)
@@ -234,8 +234,9 @@ typedef struct
 #define SPR_BULLET_N 64
 #define SPR_COUNT (SPR_BULLET + SPR_BULLET_N)
 
-/* Plane 0 sprite list: ground targets, under everything airborne. */
-#define GSPR_N 8
+/* Plane 0 sprite list: ground units, under everything airborne. Each stage
+ * shows as many of them as it needs (stage_def_t.gspr_n), up to this. */
+#define GSPR_MAX 16
 
 /* HUD text grid, 8x8 font on the 320x240 canvas. */
 #define HUD_COLS 40
@@ -255,15 +256,16 @@ typedef struct
 
     keyboard_t keyboard;
     gamepad_t gamepad;
-    mode2_config_t bg_config;
+    mode2_config_t bg_config;    /* plane 0 fill: the ground */
+    mode2_config_t layer_config; /* plane 1 fill: parallax sky, or a boss */
     mode1_config_t hud_config;
     mode5_csprite_t spr[SPR_COUNT];
-    mode5_csprite_t gspr[GSPR_N];
+    mode5_csprite_t gspr[GSPR_MAX];
     mode1_4bpp_data_t hud[HUD_ROWS][HUD_COLS];
 
-    /* Loaded from the ROM by CMakeLists.txt. */
+    /* Loaded from the ROM by CMakeLists.txt. The last PAL_STAGE_N
+     * palettes are replaced by each stage's own. */
     palette_t palettes[PAL_COUNT];
-    uint8_t stage_map[STAGE1_MAP_ROWS][STAGE1_MAP_COLS];
     uint8_t img_player[PLAYER_FRAMES][PLAYER_FRAME_BYTES];
     uint8_t img_flame[FLAME_FRAMES][FLAME_FRAME_BYTES];
     uint8_t img_vulcan[VULCAN_FRAMES][VULCAN_FRAME_BYTES];
@@ -272,21 +274,15 @@ typedef struct
     uint8_t img_beam[BEAM_FRAMES][BEAM_FRAME_BYTES];
     uint8_t img_missile[MISSILE_FRAMES][MISSILE_FRAME_BYTES];
     uint8_t img_lock[LOCK_FRAMES][LOCK_FRAME_BYTES];
-    uint8_t img_logo[LOGO_FRAMES][LOGO_FRAME_BYTES];
     uint8_t img_enemy16[ENEMY16_FRAMES][ENEMY16_FRAME_BYTES];
     uint8_t img_enemy32[ENEMY32_FRAMES][ENEMY32_FRAME_BYTES];
     uint8_t img_bullet8[BULLET8_FRAMES][BULLET8_FRAME_BYTES];
     uint8_t img_bullet16[BULLET16_FRAMES][BULLET16_FRAME_BYTES];
     uint8_t img_expl16[EXPL16_FRAMES][EXPL16_FRAME_BYTES];
     uint8_t img_expl32[EXPL32_FRAMES][EXPL32_FRAME_BYTES];
-    uint8_t img_boss_core[BOSS_CORE_FRAMES][BOSS_CORE_FRAME_BYTES];
-    uint8_t img_boss_wing[BOSS_WING_FRAMES][BOSS_WING_FRAME_BYTES];
-    uint8_t img_boss_cannon[BOSS_CANNON_FRAMES][BOSS_CANNON_FRAME_BYTES];
-    uint8_t img_boss_turret[BOSS_TURRET_FRAMES][BOSS_TURRET_FRAME_BYTES];
-    uint8_t img_tiles[TILES_FRAMES][TILES_FRAME_BYTES];
-
-    /* Last, so regenerating the SFX never moves anything else. */
     uint8_t sfx_data[SFX_DATA_MAX];
+    /* XRAM_BANK, the rest of XRAM, follows: the current stage's own art,
+     * loaded from the ROM when the stage starts (see stage.c). */
 } xram_layout_t;
 
 #define XRAM_OPL offsetof(xram_layout_t, opl)
@@ -295,12 +291,12 @@ _Static_assert((XRAM_OPL & 0xFF) == 0, "The OPL2 registers must start on a page 
 #define XRAM_KEYBOARD offsetof(xram_layout_t, keyboard)
 #define XRAM_GAMEPAD offsetof(xram_layout_t, gamepad)
 #define XRAM_BG_CONFIG offsetof(xram_layout_t, bg_config)
+#define XRAM_LAYER_CONFIG offsetof(xram_layout_t, layer_config)
 #define XRAM_HUD_CONFIG offsetof(xram_layout_t, hud_config)
 #define XRAM_SPR offsetof(xram_layout_t, spr)
 #define XRAM_GSPR offsetof(xram_layout_t, gspr)
 #define XRAM_HUD offsetof(xram_layout_t, hud)
 #define XRAM_PALETTES offsetof(xram_layout_t, palettes)
-#define XRAM_STAGE_MAP offsetof(xram_layout_t, stage_map)
 #define XRAM_IMG_PLAYER offsetof(xram_layout_t, img_player)
 #define XRAM_IMG_FLAME offsetof(xram_layout_t, img_flame)
 #define XRAM_IMG_VULCAN offsetof(xram_layout_t, img_vulcan)
@@ -309,23 +305,22 @@ _Static_assert((XRAM_OPL & 0xFF) == 0, "The OPL2 registers must start on a page 
 #define XRAM_IMG_BEAM offsetof(xram_layout_t, img_beam)
 #define XRAM_IMG_MISSILE offsetof(xram_layout_t, img_missile)
 #define XRAM_IMG_LOCK offsetof(xram_layout_t, img_lock)
-#define XRAM_IMG_LOGO offsetof(xram_layout_t, img_logo)
 #define XRAM_IMG_ENEMY16 offsetof(xram_layout_t, img_enemy16)
 #define XRAM_IMG_ENEMY32 offsetof(xram_layout_t, img_enemy32)
 #define XRAM_IMG_BULLET8 offsetof(xram_layout_t, img_bullet8)
 #define XRAM_IMG_BULLET16 offsetof(xram_layout_t, img_bullet16)
 #define XRAM_IMG_EXPL16 offsetof(xram_layout_t, img_expl16)
 #define XRAM_IMG_EXPL32 offsetof(xram_layout_t, img_expl32)
-#define XRAM_IMG_BOSS_CORE offsetof(xram_layout_t, img_boss_core)
-#define XRAM_IMG_BOSS_WING offsetof(xram_layout_t, img_boss_wing)
-#define XRAM_IMG_BOSS_CANNON offsetof(xram_layout_t, img_boss_cannon)
-#define XRAM_IMG_BOSS_TURRET offsetof(xram_layout_t, img_boss_turret)
-#define XRAM_IMG_TILES offsetof(xram_layout_t, img_tiles)
 #define XRAM_SFX_DATA offsetof(xram_layout_t, sfx_data)
+#define XRAM_BANK sizeof(xram_layout_t)
+/* The top page of XRAM is left free. */
+#define XRAM_BANK_SIZE (0xFF00 - XRAM_BANK)
 
 #define PAL_ADDR(p) (XRAM_PALETTES + (p) * sizeof(palette_t))
 
+/* The FPGA VGA caches 1 KB of palettes: keep them all together, within it. */
 _Static_assert(sizeof(palette_t) * PAL_COUNT / sizeof(uint16_t) <= 512,
                "palettes hold more than 512 colors.");
+_Static_assert(STAGE_BANK_MAX <= XRAM_BANK_SIZE, "a stage bank does not fit in XRAM.");
 
 #endif

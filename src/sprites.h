@@ -8,7 +8,8 @@
 /* RAM mirrors of the sprite lists. Game code edits these, and
  * spr_commit() copies them to XRAM once per frame, right after VSYNC. */
 extern mode5_csprite_t spr[SPR_COUNT];
-extern mode5_csprite_t gspr[GSPR_N];
+extern mode5_csprite_t gspr[GSPR_MAX];
+extern uint8_t gspr_n; /* ground sprites the current stage shows */
 
 #define WH(w, h) MODE5_SIZE(w, h)
 #define OPT4 MODE5_4BPP
@@ -16,6 +17,8 @@ extern mode5_csprite_t gspr[GSPR_N];
 void spr_init(void);
 void spr_hide_all(void);
 void spr_commit(void);
+/* Show the first n ground sprites (each stage sets its own count). */
+void spr_ground_count(uint8_t n);
 
 static inline void spr_hide(mode5_csprite_t *s)
 {

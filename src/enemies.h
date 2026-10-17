@@ -2,6 +2,7 @@
 #define ENEMIES_H
 
 #include <stdint.h>
+#include "xram.h"
 
 enum
 {
@@ -11,9 +12,14 @@ enum
     ET_DRONE,   /* stops, fires rings, leaves */
     ET_GUNSHIP, /* big, strafes, needles */
     ET_TURRET,  /* ground emplacement, scrolls with the map */
+    ET_TANK,    /* ground, drives along a road; param: speed, bit 7 = left */
+    ET_WASP,    /* weaves down, stings with aimed needles */
+    ET_GUNBOAT, /* on the sea, sails up the screen, heavy guns */
 };
 
-#define EN_N 16
+/* Slots below gspr_n can hold ground units, on plane 0's sprites. */
+#define EN_N SPR_ENEMY_N
+#define EN_GROUND(type) ((type) == ET_TURRET || (type) == ET_TANK || (type) == ET_GUNBOAT)
 
 void enemies_reset(void);
 /* Position in game pixels. Returns the slot, or -1 if full. */

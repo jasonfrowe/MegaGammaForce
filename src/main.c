@@ -17,6 +17,7 @@
 #include "targets.h"
 #include "util.h"
 #include "xram.h"
+#include "gen/stage1.h"
 
 uint8_t frame_count;
 
@@ -35,6 +36,7 @@ static uint8_t gstate;
 static uint16_t gtimer;
 static bool paused;
 static uint16_t results_bonus;
+static bool all_clear; /* the results of the last stage, then the ending */
 
 static void clear_playfield(void)
 {
@@ -61,7 +63,7 @@ static void draw_labels(void)
     hud_text(0, 9, "CHAIN", HC_CYAN, HC_PANEL);
     hud_text(0, 12, "BONUS", HC_GRAY, HC_PANEL);
     hud_text(0, 26, "STAGE", HC_GRAY, HC_PANEL);
-    hud_text(0, 27, " 1", HC_WHITE, HC_PANEL);
+    hud_u16(0, 27, (uint16_t)(stage_num + 1), 2, HC_WHITE, HC_PANEL);
     hud_text(33, 2, "WEAPON", HC_CYAN, HC_PANEL);
     hud_text(33, 6, "SWORD", HC_CYAN, HC_PANEL);
     hud_text(33, 10, "LIVES", HC_CYAN, HC_PANEL);
@@ -74,13 +76,14 @@ static void enter_title(void)
     gstate = GS_TITLE;
     gtimer = 0;
     reset_world();
+    stage_load(0); /* the title flies over stage 1, and its bank has the logo */
     bg_reset();
     bg_set_speed(96);
     hud_frame();
     clear_playfield();
     for (uint8_t k = 0; k < 3; k++) {
         mode5_csprite_t *s = &spr[SPR_BOSS + k];
-        spr_setup(s, XRAM_IMG_LOGO + k * LOGO_FRAME_BYTES, PAL_ADDR(PAL_BOSS), WH(64, 64), OPT4);
+        spr_setup(s, XRAM_BANK + S1_LOGO + k * S1_LOGO_FRAME_BYTES, PAL_ADDR(PAL_BOSS), WH(64, 64), OPT4);
         s->x_pos_px = PF_X + k * 64;
         s->y_pos_px = 34;
     }
@@ -95,7 +98,8 @@ static void enter_title(void)
     music_play("ROM:Title.vgm");
 }
 
-static void enter_play(void)
+/* Start the current stage; score, lives and the chain carry over. */
+static void begin_stage(void)
 {
     gstate = GS_PLAY;
     gtimer = 0;
@@ -103,11 +107,25 @@ static void enter_play(void)
     reset_world();
     clear_playfield();
     bg_reset();
-    bg_set_speed(160);
-    score_reset();
-    player_reset();
+    bg_set_speed(stage->speed);
+    player_respawn();
     draw_labels();
     stage_reset();
+}
+
+static void enter_play(void)
+{
+    music_stop();
+    score_reset();
+    player_reset();
+    stage_load(first_stage);
+    begin_stage();
+}
+
+static void next_stage(void)
+{
+    stage_load((uint8_t)(stage_num + 1));
+    begin_stage();
 }
 
 static void enter_results(void)
@@ -119,6 +137,8 @@ static void enter_results(void)
     results_bonus = (uint16_t)boss_destruction * 100;
     if (boss_destruction >= 100)
         results_bonus += 10000;
+    all_clear = stage_is_last();
+    hud_center(4, stage->name, HC_WHITE);
     hud_center(6, boss_escaped ? "BOSS ESCAPED" : "STAGE CLEAR", boss_escaped ? HC_RED : HC_YELLOW);
     hud_text(10, 10, "DESTRUCTION", HC_CYAN, HC_CLEAR);
     hud_u16(23, 10, boss_destruction, 3, HC_WHITE, HC_CLEAR);
@@ -231,7 +251,21 @@ int main(void)
             score_hud(false);
             if (gtimer > 240 && (in_pressed & (IN_START | IN_FIRE))) {
                 hiscore_save();
-                enter_title();
+                if (!all_clear) {
+                    next_stage();
+                } else if (gtimer < 0x8000) {
+                    /* The ending: one more screen, then the title. */
+                    gtimer = 0x8000;
+                    clear_playfield();
+                    hud_center(8, "ALL CLEAR!", HC_YELLOW);
+                    hud_center(11, "THE GAMMA FLEET IS SUNK.", HC_WHITE);
+                    hud_center(13, "THE SKY IS QUIET AGAIN.", HC_GRAY);
+                    hud_center(17, "FINAL SCORE", HC_CYAN);
+                    hud_digits(16, 19, score_d, SCORE_DIGITS, HC_YELLOW);
+                    sfx_player(SFX_CLEAR, SFX_PRI_TOP);
+                } else if (gtimer > 0x8000 + 120) {
+                    enter_title();
+                }
             }
             break;
         case GS_GAMEOVER: {

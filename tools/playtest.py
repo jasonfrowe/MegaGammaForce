@@ -12,7 +12,7 @@ Built-in scripts (pass the name instead of a file):
            dropped frames as it goes
 
 Usage:
-  tools/playtest.py boss [--out DIR]
+  tools/playtest.py boss [--out DIR] [--stage N]
   tools/playtest.py my_script.txt [--out DIR]
   tools/playtest.py boss --phi2 4000     # the 6502 at half speed: does it still keep up?
 """
@@ -35,9 +35,10 @@ KEEP_ALIVE = "poke {invuln} 0xC8\npoke {pl_lives} 3\n"
 
 BUILTIN = {
     "boss": (
-        "run 60\npress z\nrun 2\nrelease z\nrun 100\n"
-        # View near the top of the map, distance near the end, no waves left.
-        "poke {view_top} 0x40 0x01\npoke {bg_distance} 0x00 0x0B\npoke {next_wave} 99\n"
+        "run 60\npoke {first_stage} {stage}\npress z\nrun 2\nrelease z\nrun 100\n"
+        # View near the top of the map, distance near the end, no waves left,
+        # the sky (if any) at its empty top.
+        "poke {view_top} 0x40 0x01\npoke {bg_distance} 0x00 0x0B\npoke {next_wave} 99\npoke {sky_top} 0 0\n"
         "run 200\nshot \"{out}/boss_warning.png\"\nrun 260\n"
         + "".join(
             f"press {k}\n" + (KEEP_ALIVE + "run 100\n") * 4 + f"dump {{lag_frames}} 2\nshot \"{{out}}/boss_{i}.png\"\nrelease {k}\n"
@@ -47,7 +48,7 @@ BUILTIN = {
         + "shot \"{out}/boss_end.png\"\ndump {lag_frames} 2\ndump {gstate} 1\n"
     ),
     "soak": (
-        "run 60\npress z\nrun 2\nrelease z\nrun 10\n"
+        "run 60\npoke {first_stage} {stage}\npress z\nrun 2\nrelease z\nrun 10\n"
         + "".join(
             f"press {k}\n" + (KEEP_ALIVE + "run 100\n") * 8 + f"dump {{lag_frames}} 2\nshot \"{{out}}/soak_{i}.png\"\nrelease {k}\n"
             for i, k in enumerate("zxcvbnzc")
@@ -71,6 +72,7 @@ def main():
     ap.add_argument("script")
     ap.add_argument("--out", default=tempfile.gettempdir())
     ap.add_argument("--seed", default="3")
+    ap.add_argument("--stage", type=int, default=1, help="the stage a built-in script plays (1 up)")
     ap.add_argument("--phi2", help="6502 clock in kHz (default 8000); lower it to measure CPU headroom")
     args = ap.parse_args()
     text = BUILTIN.get(args.script)
@@ -82,6 +84,8 @@ def main():
         name, plus = m.group(1), m.group(2)
         if name == "out":
             return args.out
+        if name == "stage":
+            return str(args.stage - 1)
         if name not in syms:
             sys.exit(f"unknown symbol {name}")
         return hex(syms[name] + (int(plus) if plus else 0))

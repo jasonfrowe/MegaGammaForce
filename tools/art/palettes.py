@@ -86,7 +86,8 @@ HUD = [
     (255, 110, 220), (60, 70, 112), (20, 24, 56), (180, 140, 255), (0, 0, 0),
 ]
 
-ALL = [
+# Palettes that are always loaded, in XRAM order.
+RESIDENT = [
     ("PLAYER", PLAYER),
     ("SHOTS", SHOTS),
     ("ENEMY_RED", ENEMY_RED),
@@ -97,11 +98,39 @@ ALL = [
     ("BULLET_PINK", BULLET_PINK),
     ("BULLET_BLUE", BULLET_BLUE),
     ("EXPLOSION", EXPLOSION),
-    ("BOSS", BOSS),
-    ("BOSS_WRECK", BOSS_WRECK),
-    ("TILES", TILES),
     ("HUD", HUD),
 ]
+
+# Palettes each stage brings in its bank, loaded over these slots, which
+# follow the resident ones. TILES is the ground (plane 0), SKY the plane 1
+# layer (parallax, clouds), LAYER the boss's tile layer (stage 3's ship).
+# By convention entries 2-4 of TILES, SKY and LAYER rotate and 13-14 blink
+# (see bg.c), so draw with them only where that should happen.
+STAGE_SLOTS = ["TILES", "SKY", "LAYER", "BOSS", "BOSS_WRECK"]
+
+BLANK = [T] * 16
+
+# Stage 2, NEON SPIRES. Ground and sky colors live with the art in city.py.
+BOSS2 = [
+    T, (10, 6, 18),
+    (32, 24, 48), (56, 44, 80), (90, 74, 120), (136, 118, 170), (196, 182, 226),  # 2-6 armour
+    (10, 90, 100), (30, 170, 170), (140, 250, 230),                              # 7-9 teal trim
+    (255, 40, 180), (255, 170, 230),                                             # 10-11 eye
+    (14, 10, 22), (40, 26, 56),                                                  # 12-13 vents
+    (255, 200, 60), (255, 250, 220),                                             # 14-15 lights
+]
+BOSS2_WRECK = [
+    T, (8, 6, 10),
+    (24, 18, 24), (40, 30, 36), (60, 46, 52), (84, 64, 70), (110, 86, 90),
+    (30, 40, 40), (50, 70, 66), (80, 100, 90),
+    (110, 30, 50), (180, 80, 90),
+    (12, 10, 12), (28, 20, 26),
+    (60, 40, 30), (90, 70, 60),
+]
+
+STAGE1 = {"TILES": TILES, "SKY": BLANK, "LAYER": BLANK, "BOSS": BOSS, "BOSS_WRECK": BOSS_WRECK}
+
+ALL = RESIDENT + [(name, STAGE1[name]) for name in STAGE_SLOTS]
 
 
 def rgb555(c):

@@ -68,5 +68,80 @@
     "exported_vgm": true,
     "date": "2026-10-17",
     "command": ".venv/bin/python tools/generate_music.py --track boss --seed 3141 --style 9 --vol 0,0,0,0,0,0,0 --patch 3C,30,2B,31,2F,FE,37 --export-vgm"
+  },
+  "Stage2": {
+    "seed": 2026,
+    "style": 11,
+    "style_name": "eurobeat",
+    "vol": "0,0,0,0,0,0,0",
+    "patch": "3E,07,26,59,FD,FE,FF",
+    "roles": "lead,arp,bass,pad,kick,snare,hat",
+    "mood": {
+      "key_root": 4,
+      "scale": "minor",
+      "bpm": 150,
+      "intensity": 0.75,
+      "target_seconds": 150.0,
+      "lead_octave": 5,
+      "arp_octave": 4,
+      "bass_octave": 2,
+      "use_drums": true,
+      "meter": "4/4"
+    },
+    "prog": "5,3",
+    "bpm": null,
+    "exported_vgm": true,
+    "date": "2026-10-17",
+    "command": ".venv/bin/python tools/generate_music.py --track stage2 --seed 2026 --style 11 --vol 0,0,0,0,0,0,0 --patch 3E,07,26,59,FD,FE,FF --prog 5,3 --export-vgm"
+  },
+  "Stage3": {
+    "seed": 2026,
+    "style": 13,
+    "style_name": "fusion",
+    "vol": "0,0,0,0,0,0,0",
+    "patch": "41,84,23,30,FD,FE,FF",
+    "roles": "lead,arp,bass,pad,kick,snare,hat",
+    "mood": {
+      "key_root": 2,
+      "scale": "minor",
+      "bpm": 150,
+      "intensity": 0.75,
+      "target_seconds": 150.0,
+      "lead_octave": 5,
+      "arp_octave": 4,
+      "bass_octave": 2,
+      "use_drums": true,
+      "meter": "4/4"
+    },
+    "prog": "4,3",
+    "bpm": null,
+    "exported_vgm": true,
+    "date": "2026-10-17",
+    "command": ".venv/bin/python tools/generate_music.py --track stage3 --seed 2026 --style 13 --vol 0,0,0,0,0,0,0 --patch 41,84,23,30,FD,FE,FF --prog 4,3 --export-vgm"
+  },
+  "Boss3": {
+    "seed": 2026,
+    "style": 10,
+    "style_name": "fmrock",
+    "vol": "0,0,0,0,0,0,0",
+    "patch": "1D,9C,21,92,FD,FE,FF",
+    "roles": "lead,arp,bass,pad,kick,snare,hat",
+    "mood": {
+      "key_root": 0,
+      "scale": "minor",
+      "bpm": 180,
+      "intensity": 0.95,
+      "target_seconds": 120.0,
+      "lead_octave": 5,
+      "arp_octave": 4,
+      "bass_octave": 2,
+      "use_drums": true,
+      "meter": "4/4"
+    },
+    "prog": "6,4",
+    "bpm": null,
+    "exported_vgm": true,
+    "date": "2026-10-17",
+    "command": ".venv/bin/python tools/generate_music.py --track boss3 --seed 2026 --style 10 --vol 0,0,0,0,0,0,0 --patch 1D,9C,21,92,FD,FE,FF --prog 6,4 --export-vgm"
   }
 }

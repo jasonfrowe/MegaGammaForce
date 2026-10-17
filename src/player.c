@@ -1,3 +1,4 @@
+#include "bg.h"
 #include "bullets.h"
 #include "fx.h"
 #include "game.h"
@@ -437,6 +438,14 @@ void player_update(bool controls)
     int16_t gx = pl_x >> 4, gy = pl_y >> 4;
     pl_bx = (uint8_t)(gx + BS_X);
     pl_by = (uint8_t)(gy + BS_Y);
+
+    /* Flying into a tower is fatal. */
+    if (bg_sky_hit(gx - 4, gy - 4) || bg_sky_hit(gx + 4, gy - 4) || bg_sky_hit(gx - 4, gy + 4) ||
+        bg_sky_hit(gx + 4, gy + 4)) {
+        player_hit();
+        if (pl_state != PL_ALIVE)
+            return;
+    }
     if (invuln)
         invuln--;
 

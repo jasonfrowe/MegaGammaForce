@@ -2,7 +2,8 @@
 
 A vertical shoot-'em-up for the [Picocomputer 6502](https://picocomputer.github.io/)
 in the spirit of *Radiant Silvergun*: three weapons that combine into
-seven attacks, a color chain, and a boss you take apart piece by piece.
+seven attacks, a color chain, and three stages, each ending in a boss you
+take apart piece by piece.
 Written in C with [llvm-mos](https://llvm-mos.org/).
 
 <!-- rp6502
@@ -86,14 +87,35 @@ chain, and the Hyper Sword charge with it.
 
 Every 100,000 points earns an extra life (EXTEND!), up to seven ships.
 
-### The boss
+### The stages
 
-GAMMA CORE is built from eight parts: the core, two wings, four wing
-turrets and a belly cannon. Each part has its own armor. Shooting a part
+| Stage | Where | What's new | Boss |
+|---|---|---|---|
+| 1 | **Sky Fortress**, a fortress deck over the sea | Ground turrets | GAMMA CORE |
+| 2 | **Neon Spires**, a city at night | Tall towers to dodge (flying into one is fatal), tanks on the roads, wasps | SPIRE WARDEN |
+| 3 | **Iron Tide**, open ocean and jungle islands | Gunboats, island bunkers | Battleship LEVIATHAN |
+
+Score, lives and the chain carry from one stage to the next. Clearing
+stage 3 ends the game.
+
+### The bosses
+
+Every boss is built from parts, each with its own armor. Shooting a part
 off raises the DESTROY percentage; destroying the core ends the fight.
 Strip everything else first for **100% destruction** and a perfect bonus.
-Absorb the cannon's big pink orbs with the sword to charge the Hyper Sword.
-If you take longer than 90 seconds, the boss escapes.
+Absorb big pink bullets with the sword to charge the Hyper Sword. Take
+too long and the boss escapes.
+
+- **GAMMA CORE** (90 seconds): the core, two wings with two turrets each,
+  and a belly cannon that lobs big pink orbs.
+- **SPIRE WARDEN** (90 seconds): three pods orbit the core, faster as they
+  fall; a twin cannon sweeps needles across the screen, and the core opens
+  up once two pods are gone.
+- **LEVIATHAN** (two minutes): a battleship longer than the screen, sailing
+  bow first. Six deck turrets, two main guns, a bridge, and two missile
+  bays that open to launch fighters. Its core, the reactor, is at the
+  stern, so it has to sail past before you can finish it. Destroyed parts
+  leave craters in the deck.
 
 ## Building
 
@@ -122,15 +144,26 @@ The 320x240 canvas uses all three planes:
 
 | Plane | Fill layer | Sprite layer |
 |---|---|---|
-| 0 | Mode 2 stage map, 16x16 4bpp tiles | Ground turrets (Mode 5 custom) |
-| 1 | — | Everything airborne: boss, enemies, shots, ship, sword, explosions, bullets (Mode 5 custom, 4bpp) |
+| 0 | Mode 2 ground map, 16x16 4bpp tiles | Ground units: turrets, tanks, gunboats (8, 12 or 16 by stage) |
+| 1 | Mode 2 sky layer: stage 2's towers and clouds, stage 3's clouds, then the battleship's hull | Everything airborne: boss, enemies, shots, ship, sword, explosions, bullets (Mode 5 custom, 4bpp) |
 | 2 | Mode 1 text HUD | — |
 
 The playfield is 192 pixels wide, close to an arcade's vertical screen.
 The HUD's two side panels are opaque, so they also hide sprites leaving
 the playfield. The whole stage map lives in XRAM, so scrolling is one
 16-bit write a frame. Its top holds two copies of the same stretch of sea
-for the boss fight to scroll over forever.
+for the boss fight to scroll over forever. The sky layer scrolls 1.5
+times as fast, for parallax, and stops at its empty top before the boss
+arrives. Fill layers cost no sprite time, which is why the battleship's
+hull is a tile map that the game moves around, with its guns as sprites
+on top.
+
+XRAM holds what every stage shares (the ship, weapons, enemies, effects,
+sound effects, HUD) and, after it, one **stage bank** of about 39 KB.
+Each stage's own tiles, maps, boss art and palettes are packed into
+`ROM:stage<N>.bin`, which the game reads into the bank when the stage
+starts, with the HUD blacking out the playfield while it loads. The title
+uses stage 1's bank, which also holds the logo.
 
 Every sprite list is mirrored in RAM and copied to XRAM once a frame,
 right after VSYNC. Bullets and shots keep 8.8 fixed point positions in a
@@ -144,8 +177,9 @@ results.
 
 | Tool | Makes |
 |---|---|
-| `tools/gen_art.py` | `images/*.png` sprite and tile sheets, `images/palettes.bin`, the stage map and turret positions, `src/gen/assets.h` |
-| `tools/art/` | The pixel-art kit: shapes with heights, lit from the top left, outlined. Banking frames are real rolls of the ship. |
+| `tools/gen_art.py` | Shared sheets in `images/*.png`; each stage's sheets, maps and palettes in `images/stage<N>/`; `src/gen/assets.h`, `src/gen/stage<N>.h` (bank offsets) and `src/gen/stage<N>_data.h` (ground units, solid tiles) |
+| `tools/art/` | The pixel-art kit: shapes with heights, lit from the top left, outlined. Banking frames are real rolls of the ship. `stages.py` lists what each stage's bank holds; `tiles.py`, `city.py`, `ocean.py` draw the stages, `boss.py`, `boss2.py`, `ship.py` the bosses. |
+| `tools/mkbank.py` | Run by the build: packs `images/stage<N>/` into `ROM:stage<N>.bin` |
 | `tools/gen_sfx.py` | OPL2 sound effects in `music/sfx.bin`, `src/gen/sfx_ids.h` |
 | `tools/generate_music.py` | OPL2 music via Furnace (from RPDemo's composer): `music/fur_levels/*.fur` and `music/*.vgm` |
 | `tools/gen_tables.py` | Trig tables in `src/gen/tables.c` |
@@ -153,9 +187,10 @@ results.
 
 The PNG sheets are indexed 16-color images with frames side by side, so
 they open directly in Aseprite. Edit and save one, rebuild, and your
-change is in the game. Running `gen_art.py` again overwrites them.
+change is in the game; a stage's sheets must keep their frame size and
+count. Running `gen_art.py` again overwrites them.
 
-The music uses style 9, **silvergun**, written for this game in
+The title, stage 1 and stage 1 boss music use style 9, **silvergun**, written for this game in
 `tools/musicgen/silvergun.py`: orchestral-epic instead of RPDemo's
 electronic styles, but with a rock kit underneath for drive. That means
 brass and string leads playing phrases and 16th-note runs, galloping
@@ -174,6 +209,7 @@ to try with `--style`:
 | 12 **chiparcade** | Square leads, a fast one-row-per-note chord arpeggio, bouncing bass, and the pad channel used as an echo of the lead |
 | 13 **fusion** | Sax or synth lead, electric piano stabs, slap bass with octave pops and ghost notes, a busy funk kit |
 
+Stage 2 uses eurobeat, stage 3 fusion and the battleship fmrock; the stage 2 boss reuses `Boss.vgm`.
 All four are in 4/4. On a 6/8 track (the boss), they keep the same eighth-note
 pulse, so they play 1.5 times as fast.
 
@@ -251,8 +287,10 @@ per 16th note, so the tempo lands on 900/n: 180, 150, 128.6, 112.5, 100.
 `{symbol}` addresses from the ELF. `boss` warps to the boss and fights it
 invulnerable; `soak` plays the stage holding fire. Both print
 `lag_frames`, the count of frames where the game logic overran, which
-stays at 0.
+stays at 0. `--stage N` picks the stage (scripts of your own can poke
+`first_stage` on the title screen), and `--phi2` slows the 6502 to
+measure headroom: every stage keeps up down to 7 MHz.
 
 ```sh
-.venv/bin/python tools/playtest.py boss --out /tmp
+.venv/bin/python tools/playtest.py boss --stage 3 --out /tmp
 ```

@@ -27,6 +27,10 @@ static const etype_t etypes[] = {
     [ET_DRONE] = {10, 300, 7, 7, 16, 16, XRAM_IMG_ENEMY16 + ENEMY16_DRONE * ENEMY16_FRAME_BYTES, ENEMY16_FRAME_BYTES, 2},
     [ET_GUNSHIP] = {60, 2000, 14, 13, 32, 32, XRAM_IMG_ENEMY32 + ENEMY32_GUNSHIP * ENEMY32_FRAME_BYTES, ENEMY32_FRAME_BYTES, 2},
     [ET_TURRET] = {8, 300, 7, 7, 16, 16, XRAM_IMG_ENEMY16 + ENEMY16_TURRET * ENEMY16_FRAME_BYTES, ENEMY16_FRAME_BYTES, 1},
+    [ET_TANK] = {10, 400, 7, 6, 16, 16, XRAM_IMG_ENEMY16 + ENEMY16_TANK * ENEMY16_FRAME_BYTES, ENEMY16_FRAME_BYTES, 1},
+    [ET_WASP] = {3, 150, 6, 6, 16, 16, XRAM_IMG_ENEMY16 + ENEMY16_WASP * ENEMY16_FRAME_BYTES, ENEMY16_FRAME_BYTES, 2},
+    [ET_GUNBOAT] = {40, 1500, 8, 14, 32, 32, XRAM_IMG_ENEMY32 + ENEMY32_GUNBOAT * ENEMY32_FRAME_BYTES, ENEMY32_FRAME_BYTES,
+                    2},
 };
 
 static uint8_t e_type[EN_N], e_color[EN_N], e_hp[EN_N], e_state[EN_N], e_flash[EN_N], e_param[EN_N];
@@ -38,7 +42,7 @@ static const uint8_t color_pal[4] = {PAL_ENEMY_RED, PAL_ENEMY_BLUE, PAL_ENEMY_YE
 
 static mode5_csprite_t *sprite_of(uint8_t i)
 {
-    return e_type[i] == ET_TURRET ? &gspr[i] : &spr[SPR_ENEMY + i];
+    return EN_GROUND(e_type[i]) ? &gspr[i] : &spr[SPR_ENEMY + i];
 }
 
 void enemies_reset(void)
@@ -47,7 +51,7 @@ void enemies_reset(void)
         e_type[i] = ET_NONE;
         spr_hide(&spr[SPR_ENEMY + i]);
     }
-    for (uint8_t i = 0; i < GSPR_N; i++)
+    for (uint8_t i = 0; i < GSPR_MAX; i++)
         spr_hide(&gspr[i]);
 }
 
@@ -62,11 +66,11 @@ uint8_t enemies_alive(void)
 
 int8_t enemy_spawn(uint8_t type, uint8_t color, int16_t gx, int16_t gy, uint8_t param)
 {
-    /* Ground turrets need a plane 0 sprite, which only the low slots have. */
-    uint8_t first = type == ET_TURRET ? 0 : 0;
-    uint8_t last = type == ET_TURRET ? GSPR_N : EN_N;
-    for (uint8_t i = first; i < last; i++) {
-        uint8_t j = type == ET_TURRET ? i : (uint8_t)(EN_N - 1 - i); /* air fills from the top */
+    /* Ground units need a plane 0 sprite, which only the low slots have. */
+    bool ground = EN_GROUND(type);
+    uint8_t last = ground ? gspr_n : EN_N;
+    for (uint8_t i = 0; i < last; i++) {
+        uint8_t j = ground ? i : (uint8_t)(EN_N - 1 - i); /* air fills from the top */
         if (e_type[j] != ET_NONE)
             continue;
         const etype_t *t = &etypes[type];
@@ -99,7 +103,7 @@ static void destroy(uint8_t i)
 {
     int16_t gx = e_x[i] >> 4, gy = e_y[i] >> 4;
     const etype_t *t = &etypes[e_type[i]];
-    if (e_type[i] == ET_GUNSHIP) {
+    if (e_type[i] == ET_GUNSHIP || e_type[i] == ET_GUNBOAT) {
         fx_explode(gx, gy, 1);
         fx_explode(gx - 10, gy - 8, 0);
         fx_explode(gx + 10, gy + 6, 0);
@@ -228,6 +232,42 @@ static void think(uint8_t i)
         }
         break;
     }
+    case ET_TANK: {
+        /* Drives along its road; the turret tracks the player. */
+        uint8_t sp = e_param[i] & 0x7F;
+        e_vx[i] = (e_param[i] & 0x80) ? -(int16_t)sp : (int16_t)sp;
+        uint8_t a = aim_at_player(i);
+        e_aim[i] = (uint8_t)(((uint8_t)(a - ANG_DOWN + 16)) >> 5);
+        if ((uint8_t)(t + i * 11) % 90 == 30 && on_screen(i) && alive) {
+            bullet_fire(gx + (COS8(a) >> 4), gy + (SIN8(a) >> 4), a, 26, BK_PINK);
+            sfx_enemy(SFX_ENEMY_FIRE, SFX_PRI_FIRE);
+        }
+        break;
+    }
+    case ET_WASP:
+        /* Weaves down; stings once on the way. */
+        e_vy[i] = 26;
+        e_x[i] = e_base[i] + (int16_t)(((int16_t)SIN8((uint8_t)(t * 4)) * e_param[i]) >> 3);
+        if (t == 40 && alive) {
+            uint8_t a = aim_at_player(i);
+            for (int8_t k = -1; k <= 1; k++)
+                bullet_fire(gx, gy + 6, (uint8_t)(a + k * 10), 38, BK_NEEDLE);
+        }
+        break;
+    case ET_GUNBOAT:
+        /* Sails up against the scroll; aimed fans and a pink ring. */
+        e_vy[i] = -5;
+        if (alive && on_screen(i)) {
+            uint8_t c = (uint8_t)((t + i * 23) % 120);
+            if (c == 0)
+                bullet_fan(gx, gy - 8, aim_at_player(i), 26, BK_BLUE, 3, 14);
+            else if (c == 60) {
+                for (uint8_t k = 0; k < 10; k++)
+                    bullet_fire(gx, gy, (uint8_t)(k * 26 + (t & 31)), 22, BK_PINK);
+                sfx_enemy(SFX_ENEMY_FIRE, SFX_PRI_FIRE);
+            }
+        }
+        break;
     }
 }
 
@@ -239,7 +279,7 @@ void enemies_update(uint8_t scroll)
         if (type == ET_NONE)
             continue;
         think(i);
-        if (type == ET_TURRET)
+        if (EN_GROUND(type))
             e_y[i] += (int16_t)scroll << 4;
         e_x[i] += e_vx[i];
         e_y[i] += e_vy[i];
@@ -253,7 +293,16 @@ void enemies_update(uint8_t scroll)
         int16_t gx = e_x[i] >> 4, gy = e_y[i] >> 4;
         tgt_add(gx, gy, t->hw, t->hh, i);
         mode5_csprite_t *s = sprite_of(i);
-        uint8_t f = type == ET_TURRET ? e_aim[i] : (uint8_t)(anim % t->frames);
+        uint8_t f;
+        if (type == ET_TURRET)
+            f = e_aim[i];
+        else if (type == ET_TANK) {
+            /* Facing left is the right-facing image flipped, so the aim flips too. */
+            bool left = e_param[i] & 0x80;
+            f = left ? (uint8_t)((8 - e_aim[i]) & 7) : e_aim[i];
+            s->options = OPT4 | (left ? MODE5_HFLIP : 0);
+        } else
+            f = (uint8_t)(anim % t->frames);
         s->xram_sprite_ptr = t->img + f * t->frame_bytes;
         if (e_flash[i]) {
             e_flash[i]--;

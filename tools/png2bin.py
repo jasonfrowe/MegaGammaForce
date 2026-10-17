@@ -76,9 +76,8 @@ def read_indexed_png(path):
     return w, h, rows
 
 
-def main():
-    src, dst, fw, fh = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
-    bpp = int(sys.argv[5]) if len(sys.argv) > 5 else 4
+def convert(src, fw, fh, bpp=4):
+    """The frames of an indexed PNG sheet, packed."""
     w, h, px = read_indexed_png(src)
     if w % fw or h % fh:
         sys.exit(f"{src}: {w}x{h} is not a whole number of {fw}x{fh} frames")
@@ -95,8 +94,14 @@ def main():
                             sys.exit(f"{src}: index {v} at {x + k},{y} needs more than {bpp} bits")
                         b = (b << bpp) | v
                     out.append(b)
+    return bytes(out)
+
+
+def main():
+    src, dst, fw, fh = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
+    bpp = int(sys.argv[5]) if len(sys.argv) > 5 else 4
     with open(dst, "wb") as f:
-        f.write(out)
+        f.write(convert(src, fw, fh, bpp))
 
 
 if __name__ == "__main__":

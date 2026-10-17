@@ -1,0 +1,77 @@
+{
+ "palettes": "images/stage3/palettes.bin",
+ "items": [
+  {
+   "png": "images/stage3/tiles.png",
+   "w": 16,
+   "h": 16,
+   "frames": 25,
+   "offset": 0,
+   "size": 3200
+  },
+  {
+   "bin": "images/stage3/map.bin",
+   "offset": 3200,
+   "size": 2496
+  },
+  {
+   "png": "images/stage3/sky_tiles.png",
+   "w": 16,
+   "h": 16,
+   "frames": 17,
+   "offset": 5696,
+   "size": 2176
+  },
+  {
+   "bin": "images/stage3/sky_map.bin",
+   "offset": 7872,
+   "size": 3504
+  },
+  {
+   "png": "images/stage3/hull_tiles.png",
+   "w": 16,
+   "h": 16,
+   "frames": 33,
+   "offset": 11376,
+   "size": 4224
+  },
+  {
+   "bin": "images/stage3/hull_map.bin",
+   "offset": 15600,
+   "size": 260
+  },
+  {
+   "png": "images/stage3/boss_bridge.png",
+   "w": 64,
+   "h": 64,
+   "frames": 1,
+   "offset": 15860,
+   "size": 2048
+  },
+  {
+   "png": "images/stage3/boss_reactor.png",
+   "w": 32,
+   "h": 32,
+   "frames": 2,
+   "offset": 17908,
+   "size": 1024
+  },
+  {
+   "png": "images/stage3/boss_gun.png",
+   "w": 32,
+   "h": 32,
+   "frames": 8,
+   "offset": 18932,
+   "size": 4096
+  },
+  {
+   "png": "images/stage3/boss_turret.png",
+   "w": 16,
+   "h": 16,
+   "frames": 8,
+   "offset": 23028,
+   "size": 1024
+  }
+ ],
+ "size": 24052
+}

@@ -1,0 +1,59 @@
+{
+ "palettes": "images/stage1/palettes.bin",
+ "items": [
+  {
+   "png": "images/stage1/tiles.png",
+   "w": 16,
+   "h": 16,
+   "frames": 30,
+   "offset": 0,
+   "size": 3840
+  },
+  {
+   "bin": "images/stage1/map.bin",
+   "offset": 3840,
+   "size": 2496
+  },
+  {
+   "png": "images/stage1/logo.png",
+   "w": 64,
+   "h": 64,
+   "frames": 3,
+   "offset": 6336,
+   "size": 6144
+  },
+  {
+   "png": "images/stage1/boss_core.png",
+   "w": 64,
+   "h": 64,
+   "frames": 1,
+   "offset": 12480,
+   "size": 2048
+  },
+  {
+   "png": "images/stage1/boss_wing.png",
+   "w": 32,
+   "h": 64,
+   "frames": 1,
+   "offset": 14528,
+   "size": 1024
+  },
+  {
+   "png": "images/stage1/boss_cannon.png",
+   "w": 32,
+   "h": 32,
+   "frames": 2,
+   "offset": 15552,
+   "size": 1024
+  },
+  {
+   "png": "images/stage1/boss_turret.png",
+   "w": 16,
+   "h": 16,
+   "frames": 8,
+   "offset": 16576,
+   "size": 1024
+  }
+ ],
+ "size": 17600
+}

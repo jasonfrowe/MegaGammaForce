@@ -75,6 +75,24 @@ TRACKS: list = [
         mood=MoodPreset(key_root=9, scale="minor", bpm=180, intensity=0.70, target_seconds=150.0, lead_octave=5),
     ),
     TrackSpec(
+        resource="Stage2",
+        description="Stage 2, Neon Spires",
+        aliases=["stage2", "level2"],
+        mood=MoodPreset(key_root=4, scale="minor", bpm=150, intensity=0.75, target_seconds=150.0, lead_octave=5),
+    ),
+    TrackSpec(
+        resource="Stage3",
+        description="Stage 3, Iron Tide",
+        aliases=["stage3", "level3"],
+        mood=MoodPreset(key_root=2, scale="minor", bpm=150, intensity=0.75, target_seconds=150.0, lead_octave=5),
+    ),
+    TrackSpec(
+        resource="Boss3",
+        description="Boss battle, battleship LEVIATHAN",
+        aliases=["boss3"],
+        mood=MoodPreset(key_root=0, scale="minor", bpm=180, intensity=0.95, target_seconds=120.0, lead_octave=5),
+    ),
+    TrackSpec(
         resource="Boss",
         description="Boss battle, GAMMA CORE",
         aliases=["boss"],

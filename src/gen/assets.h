@@ -46,25 +46,23 @@
 #define LOCK_FRAMES 2
 #define LOCK_FRAME_BYTES 128
 
-#define LOGO_W 64
-#define LOGO_H 64
-#define LOGO_FRAMES 3
-#define LOGO_FRAME_BYTES 2048
-
 #define ENEMY16_W 16
 #define ENEMY16_H 16
-#define ENEMY16_FRAMES 16
+#define ENEMY16_FRAMES 26
 #define ENEMY16_FRAME_BYTES 128
 #define ENEMY16_DART 0
 #define ENEMY16_SAUCER 2
 #define ENEMY16_DRONE 6
 #define ENEMY16_TURRET 8
+#define ENEMY16_TANK 16
+#define ENEMY16_WASP 24
 
 #define ENEMY32_W 32
 #define ENEMY32_H 32
-#define ENEMY32_FRAMES 2
+#define ENEMY32_FRAMES 4
 #define ENEMY32_FRAME_BYTES 512
 #define ENEMY32_GUNSHIP 0
+#define ENEMY32_GUNBOAT 2
 
 #define BULLET8_W 8
 #define BULLET8_H 8
@@ -88,31 +86,6 @@
 #define EXPL32_FRAMES 6
 #define EXPL32_FRAME_BYTES 512
 
-#define BOSS_CORE_W 64
-#define BOSS_CORE_H 64
-#define BOSS_CORE_FRAMES 1
-#define BOSS_CORE_FRAME_BYTES 2048
-
-#define BOSS_WING_W 32
-#define BOSS_WING_H 64
-#define BOSS_WING_FRAMES 1
-#define BOSS_WING_FRAME_BYTES 1024
-
-#define BOSS_CANNON_W 32
-#define BOSS_CANNON_H 32
-#define BOSS_CANNON_FRAMES 2
-#define BOSS_CANNON_FRAME_BYTES 512
-
-#define BOSS_TURRET_W 16
-#define BOSS_TURRET_H 16
-#define BOSS_TURRET_FRAMES 8
-#define BOSS_TURRET_FRAME_BYTES 128
-
-#define TILES_W 16
-#define TILES_H 16
-#define TILES_FRAMES 30
-#define TILES_FRAME_BYTES 128
-
 #define PAL_PLAYER 0
 #define PAL_SHOTS 1
 #define PAL_ENEMY_RED 2
@@ -123,15 +96,17 @@
 #define PAL_BULLET_PINK 7
 #define PAL_BULLET_BLUE 8
 #define PAL_EXPLOSION 9
-#define PAL_BOSS 10
-#define PAL_BOSS_WRECK 11
-#define PAL_TILES 12
-#define PAL_HUD 13
-#define PAL_COUNT 14
+#define PAL_HUD 10
+#define PAL_TILES 11
+#define PAL_SKY 12
+#define PAL_LAYER 13
+#define PAL_BOSS 14
+#define PAL_BOSS_WRECK 15
+#define PAL_COUNT 16
+#define PAL_STAGE 11 /* first of the palettes a stage loads */
+#define PAL_STAGE_N 5
 
-#define STAGE1_MAP_COLS 12
-#define STAGE1_MAP_ROWS 208
-#define STAGE1_LOOP_ROWS 16
-#define TILE_SEA0 0
+#define STAGE_COUNT 3
+#define STAGE_BANK_MAX 24944 /* the largest stage bank */
 
 #endif
