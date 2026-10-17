@@ -12,7 +12,14 @@ static int16_t svx[SH_N], svy[SH_N];
 static uint8_t skind[SH_N], slife[SH_N], sang[SH_N], sspeed[SH_N];
 static uint8_t snext;
 
-static const uint8_t kind_dmg[] = {0, 3, 2, 3, 2, 0};
+/*
+ * Damage per hit. Tuned against the Vulcan (3 per bolt every 4 frames,
+ * 45 per second), the strongest weapon:
+ *   Spread  1 x 5 orbs every 10 frames  30/s if all hit, ~18/s typical
+ *   Homing  1 x 2 darts every 12 frames 10/s, but it never misses
+ *   Back    1 per side shot
+ */
+static const uint8_t kind_dmg[] = {0, 3, 1, 1, 1, 0};
 
 void shots_reset(void)
 {

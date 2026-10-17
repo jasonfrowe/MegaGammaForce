@@ -1,0 +1,71 @@
+{
+  "Title": {
+    "seed": 7,
+    "style": 9,
+    "style_name": "silvergun",
+    "vol": "0,0,0,0,0,0,0",
+    "patch": "3C,2D,46,34,2F,FE,37",
+    "roles": "lead,arp,bass,pad,kick,snare,hat",
+    "mood": {
+      "key_root": 2,
+      "scale": "minor",
+      "bpm": 60,
+      "intensity": 0.3,
+      "target_seconds": 100.0,
+      "lead_octave": 5,
+      "arp_octave": 4,
+      "bass_octave": 2,
+      "use_drums": true,
+      "meter": "6/8"
+    },
+    "exported_vgm": true,
+    "date": "2026-10-17",
+    "command": ".venv/bin/python tools/generate_music.py --track title --seed 7 --style 9 --vol 0,0,0,0,0,0,0 --patch 3C,2D,46,34,2F,FE,37 --export-vgm"
+  },
+  "Stage1": {
+    "seed": 1998,
+    "style": 9,
+    "style_name": "silvergun",
+    "vol": "0,0,0,0,0,0,0",
+    "patch": "28,2D,2B,30,2F,FE,37",
+    "roles": "lead,arp,bass,pad,kick,snare,hat",
+    "mood": {
+      "key_root": 9,
+      "scale": "minor",
+      "bpm": 150,
+      "intensity": 0.6,
+      "target_seconds": 150.0,
+      "lead_octave": 5,
+      "arp_octave": 4,
+      "bass_octave": 2,
+      "use_drums": true,
+      "meter": "4/4"
+    },
+    "exported_vgm": true,
+    "date": "2026-10-17",
+    "command": ".venv/bin/python tools/generate_music.py --track stage1 --seed 1998 --style 9 --vol 0,0,0,0,0,0,0 --patch 28,2D,2B,30,2F,FE,37 --export-vgm"
+  },
+  "Boss": {
+    "seed": 3141,
+    "style": 9,
+    "style_name": "silvergun",
+    "vol": "0,0,0,0,0,0,0",
+    "patch": "3C,30,2B,31,2F,FE,37",
+    "roles": "lead,arp,bass,pad,kick,snare,hat",
+    "mood": {
+      "key_root": 4,
+      "scale": "minor",
+      "bpm": 96,
+      "intensity": 0.95,
+      "target_seconds": 110.0,
+      "lead_octave": 5,
+      "arp_octave": 4,
+      "bass_octave": 2,
+      "use_drums": true,
+      "meter": "6/8"
+    },
+    "exported_vgm": true,
+    "date": "2026-10-17",
+    "command": ".venv/bin/python tools/generate_music.py --track boss --seed 3141 --style 9 --vol 0,0,0,0,0,0,0 --patch 3C,30,2B,31,2F,FE,37 --export-vgm"
+  }
+}

@@ -160,9 +160,10 @@ static void fire(uint8_t w)
                 uint8_t jx = (uint8_t)((rng8() & 7) - 3);
                 shot_spark((uint8_t)(nx + ((dx * f) >> 6) + (int8_t)jx), (uint8_t)(ny + ((dy * f) >> 6)));
             }
+            /* Weakest weapon: it locks on by itself, 1 every 8 frames = 7.5/s. */
             if (fire_cd == 0) {
-                tgt_damage((uint8_t)t, 2);
-                fire_cd = 3;
+                tgt_damage((uint8_t)t, 1);
+                fire_cd = 8;
                 sfx_player(SFX_PLASMA, SFX_PRI_FIRE);
             }
         } else {
@@ -199,8 +200,8 @@ static void update_sword(uint8_t w, int16_t sx, int16_t sy)
         sword_x1 = pl_bx < 207 ? (uint8_t)(pl_bx + 48) : 255;
         sword_y0 = pl_by > 72 ? (uint8_t)(pl_by - 72) : 0;
         sword_y1 = (uint8_t)(pl_by - 4);
-        if ((sword_tick & 1) == 0)
-            sword_strike(4);
+        if ((sword_tick & 7) == 0)
+            sword_strike(3); /* 22/s; it also absorbs pink bullets */ /* 45/s */
         /* The blade's energy also lances up the screen as a beam. */
         int16_t top = sy - 16 - 128;
         for (uint8_t k = 0; k < SPR_BEAM_N; k++) {
@@ -210,11 +211,11 @@ static void update_sword(uint8_t w, int16_t sx, int16_t sy)
             b->x_pos_px = sx - 16;
             b->y_pos_px = top - 128 * k;
         }
-        if ((sword_tick & 1) == 1) {
+        if ((sword_tick & 3) == 2) { /* beam 2 every 4 frames, 30/s */
             uint8_t x0 = (uint8_t)(pl_bx - 14), x1 = (uint8_t)(pl_bx + 14);
             for (uint8_t i = 0; i < tgt_n; i++)
                 if (tgt_x1[i] > x0 && tgt_x0[i] < x1 && tgt_y0[i] < pl_by)
-                    tgt_damage(i, 3);
+                    tgt_damage(i, 2);
         }
     } else {
         spr_setup(s, XRAM_IMG_SWORD + f * SWORD_FRAME_BYTES, PAL_ADDR(PAL_SHOTS), WH(48, 32), OPT4);
@@ -224,8 +225,8 @@ static void update_sword(uint8_t w, int16_t sx, int16_t sy)
         sword_x1 = pl_bx < 231 ? (uint8_t)(pl_bx + 24) : 255;
         sword_y0 = pl_by > 36 ? (uint8_t)(pl_by - 36) : 0;
         sword_y1 = (uint8_t)(pl_by - 4);
-        if ((sword_tick & 3) == 0)
-            sword_strike(3);
+        if ((sword_tick & 7) == 0)
+            sword_strike(3); /* 22/s; it also absorbs pink bullets */
         if ((sword_tick & 15) == 0)
             sfx_player(SFX_SWORD, SFX_PRI_FIRE);
     }
@@ -340,7 +341,7 @@ static const char *const weapon_name[8][2] = {
 
 void player_hud(bool force)
 {
-    uint8_t w = hyper_timer ? WP_HYPER : pl_weapon;
+    uint8_t w = hyper_timer ? WP_HYPER : (pl_weapon == WP_HYPER ? WP_SWORD : pl_weapon);
     if (w != shown_weapon || force) {
         shown_weapon = w;
         hud_fill(33, 3, 7, ' ', HC_WHITE, HC_PANEL);

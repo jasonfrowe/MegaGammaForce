@@ -91,7 +91,7 @@ import random
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Set, Tuple
 
-from . import drum_patterns
+from . import drum_patterns, silvergun
 from .furwriter import NOTE_OFF, FurInstrument, FurSong, RowCell, note_value
 from .instruments import role_candidates
 from .tracks import MoodPreset
@@ -105,6 +105,7 @@ STYLE_DUBSTEP = 5
 STYLE_TECHNO = 6
 STYLE_SYNTHWAVE = 7
 STYLE_DNB = 8
+STYLE_SILVERGUN = 9
 STYLE_NAMES = {
     STYLE_SILPHEED: "silpheed",
     STYLE_KRAFTWERK: "kraftwerk",
@@ -115,6 +116,7 @@ STYLE_NAMES = {
     STYLE_TECHNO: "techno",
     STYLE_SYNTHWAVE: "synthwave",
     STYLE_DNB: "dnb",
+    STYLE_SILVERGUN: "silvergun",
 }
 
 # Per-style knobs for the shared `_generate_chunk_electronic` composer --
@@ -581,7 +583,8 @@ def _roles_for_unit(unit: str) -> Set[str]:
     return set(DRUM_ROLES) if unit == "drums" else {unit}
 
 
-def _plan_sections(rng: random.Random, mood: MoodPreset, semitone_bump: bool = False) -> List[_Section]:
+def _plan_sections(rng: random.Random, mood: MoodPreset, semitone_bump: bool = False,
+                   rows_per_chunk: int = CHUNK_ROWS, rows_per_beat: int = ROWS_PER_BEAT) -> List[_Section]:
     """`semitone_bump`: the classic "truck driver's gear change" -- swap the
     second half of the final full-band return for a chunk transposed up a
     semitone (see `generate_track`'s "A1_UP" chunk). A one-time surge before
@@ -599,8 +602,7 @@ def _plan_sections(rng: random.Random, mood: MoodPreset, semitone_bump: bool = F
         cumulative |= _roles_for_unit(unit)
         plan.append(_Section("A1", set(cumulative)))
 
-    rows_per_chunk = CHUNK_ROWS
-    rows_per_sec = mood.bpm / 60.0 * ROWS_PER_BEAT
+    rows_per_sec = mood.bpm / 60.0 * rows_per_beat
     target_rows = mood.target_seconds * rows_per_sec
 
     rows_added = len(plan) * rows_per_chunk
@@ -700,6 +702,9 @@ def generate_track(name: str, mood: MoodPreset, seed: int, bank: List[FurInstrum
     patch_overrides = patch_overrides or {}
     base_vol: Dict[str, int] = {role: ROLE_VOLUME[role] + vol_overrides.get(role, 0) for role in ROLE_TO_CHANNEL}
 
+    if style == STYLE_SILVERGUN:
+        return _generate_silvergun(name, mood, rng, bank, base_vol, patch_overrides)
+
     ins: Dict[str, int] = _pick_instruments_for_style(rng, bank, style)
     if mood.use_drums:
         kick_ins, snare_ins, hat_ins = role_candidates("perc")  # Bass Drum, Snare, Hat (fixed order)
@@ -780,4 +785,53 @@ def generate_track(name: str, mood: MoodPreset, seed: int, bank: List[FurInstrum
         for ch in unused_channels:
             song.orders[ch].append(empty_pattern_idx)
 
+    return song, ins
+
+
+def _generate_silvergun(name: str, mood: MoodPreset, rng: random.Random, bank: List[FurInstrument],
+                        base_vol: Dict[str, int], patch_overrides: Dict[str, int]) -> Tuple[FurSong, Dict[str, int]]:
+    """Style 9 -- see silvergun.py. Same arrangement and song assembly as the
+    other styles, but its own instruments, harmony, chunk composer and meter."""
+    ins = silvergun.pick_instruments(rng)
+    for role, patch in patch_overrides.items():
+        ins[role] = patch
+    major = mood.scale in ("major", "mixolydian")
+    prog_a, prog_b = silvergun.pick_progressions(rng, mood.intensity, major)
+    b_root = mood.key_root
+    if mood.intensity >= 0.65 and rng.random() < 0.65:
+        b_root = (mood.key_root + rng.choice([2, 3, -2, 5])) % 12
+    semitone_bump = rng.random() < 0.3
+
+    rpb, beat = silvergun.meter_rows(mood.meter)
+    chunk_rows = rpb * CHUNK_BARS
+    prog = {"A1": prog_a, "A2": prog_a, "B1": prog_b, "B2": prog_b, "BR1": prog_b, "BR2": prog_a}
+    root = {"A1": mood.key_root, "A2": mood.key_root, "B1": b_root, "B2": b_root, "BR1": b_root, "BR2": b_root}
+    order = ["A1", "A2", "B1", "B2", "BR1", "BR2"]
+    if semitone_bump:
+        prog["A1_UP"] = prog_a
+        root["A1_UP"] = (mood.key_root + 1) % 12
+        order.append("A1_UP")
+    chunks = {k: silvergun.generate_chunk(rng, mood, ins, prog[k], root[k], base_vol, ROLE_VOLUME_JITTER, CHUNK_BARS)
+              for k in order}
+    pidx = {k: i for i, k in enumerate(order)}
+    empty = len(order)
+
+    bpm = max(40.0, mood.bpm + rng.uniform(-3, 3))
+    speed = max(1, round(60.0 * 60.0 / (bpm * beat)))
+    song = FurSong(name=name, hz=60.0, speed=speed, pattern_len=chunk_rows, instruments=bank, channels=CHANNEL_COUNT)
+    song.orders = [[] for _ in range(CHANNEL_COUNT)]
+    unused = set(range(CHANNEL_COUNT)) - set(ROLE_TO_CHANNEL.values())
+    for ch in range(CHANNEL_COUNT):
+        song.patterns[(ch, empty)] = {} if ch in unused else {0: RowCell(note=NOTE_OFF)}
+    for section in _plan_sections(rng, mood, semitone_bump=semitone_bump, rows_per_chunk=chunk_rows,
+                                  rows_per_beat=beat):
+        p = pidx[section.chunk_key]
+        for role, ch in ROLE_TO_CHANNEL.items():
+            if role in section.active_roles:
+                song.orders[ch].append(p)
+                song.patterns[(ch, p)] = chunks[section.chunk_key][role]
+            else:
+                song.orders[ch].append(empty)
+        for ch in unused:
+            song.orders[ch].append(empty)
     return song, ins

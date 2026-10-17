@@ -48,6 +48,7 @@ class MoodPreset:
     arp_octave: int = 4
     bass_octave: int = 2
     use_drums: bool = True
+    meter: str = "4/4"  # "4/4", "6/8" or "3/4"; only style 9 (silvergun) reads it
 
 
 @dataclass
@@ -63,20 +64,23 @@ TRACKS: list = [
         resource="Title",
         description="Title / attract screen",
         aliases=["title"],
-        mood=MoodPreset(key_root=2, scale="dorian", bpm=120, intensity=0.20, target_seconds=120.0, lead_octave=5),
+        # Slow heroic 6/8; bpm counts dotted quarters.
+        mood=MoodPreset(key_root=2, scale="minor", bpm=60, intensity=0.30, target_seconds=100.0, lead_octave=5,
+                         meter="6/8"),
     ),
     TrackSpec(
         resource="Stage1",
         description="Stage 1, Sky Fortress",
         aliases=["stage1", "level1"],
-        mood=MoodPreset(key_root=9, scale="minor", bpm=138, intensity=0.55, target_seconds=150.0, lead_octave=5),
+        mood=MoodPreset(key_root=9, scale="minor", bpm=150, intensity=0.60, target_seconds=150.0, lead_octave=5),
     ),
     TrackSpec(
         resource="Boss",
         description="Boss battle, GAMMA CORE",
         aliases=["boss"],
-        mood=MoodPreset(key_root=4, scale="phrygian", bpm=148, intensity=0.95, target_seconds=120.0,
-                         lead_octave=4, arp_octave=3),
+        # Galloping 6/8; bpm counts dotted quarters.
+        mood=MoodPreset(key_root=4, scale="minor", bpm=96, intensity=0.95, target_seconds=110.0,
+                         lead_octave=5, arp_octave=4, meter="6/8"),
     ),
 ]
 

@@ -26,7 +26,8 @@
 #define Q4(px) ((int16_t)((px) * 16))
 
 /* Sprites parked here are off the canvas. */
-#define SPR_HIDDEN_Y (-96)
+/* Below the tallest sprite (a 64 px image doubled to 128) plus margin. */
+#define SPR_HIDDEN_Y (-256)
 
 /* Chain colors. Gray enemies never touch the chain. */
 enum

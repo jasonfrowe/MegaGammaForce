@@ -6,7 +6,8 @@ one of nine styles (--style, see musicgen/compose.py's STYLE_NAMES and
 module docstring for the full rundown of each: 0 silpheed/orchestral,
 1 kraftwerk/motorik electronic (default), 2 daftpunk/house-funk, 3 trance,
 4 bigroom/electro-house, 5 dubstep/halftime, 6 techno/minimal-progressive,
-7 synthwave, 8 dnb/jungle), and writes them as Furnace 0.6.8.1-compatible .fur
+7 synthwave, 8 dnb/jungle, 9 silvergun/orchestral-epic -- MegaGammaForce's
+own, see musicgen/silvergun.py), and writes them as Furnace 0.6.8.1-compatible .fur
 files, using RPTracker's 256-patch instrument bank. Open the result in
 Furnace to audition and tweak by hand; pass --export-vgm to also render
 straight to music/<resource>.vgm (e.g. music/Boss.vgm) using Furnace's own
@@ -39,11 +40,19 @@ integer offsets from each role's base volume
 --patch values are 2-digit hex instrument indices (00-FF) into RPTracker's
 256-patch bank, overriding whichever instrument that role would otherwise
 have picked. Both only make sense with a single --track, not --track all.
+
+Every run also records the track in music/music_manifest.json (seed, style,
+vol, patch, mood, the exact command). To rebuild from that record -- after
+editing its vol/patch, say -- without re-rolling the composition:
+  python tools/generate_music.py --track boss --from-manifest --export-vgm
+  python tools/generate_music.py --track all --from-manifest --export-vgm
 """
 
 from __future__ import annotations
 
 import argparse
+import datetime
+import json
 import random
 import re
 import subprocess
@@ -69,6 +78,36 @@ DEFAULT_VGM_OUT_DIR = MUSIC_DIR
 # values are given/printed in, taken directly from compose.py's role->channel
 # mapping so it can never drift out of sync with the actual role set.
 ROLE_ORDER = list(compose.ROLE_TO_CHANNEL.keys())
+MANIFEST = MUSIC_DIR / "music_manifest.json"
+
+
+def _load_manifest() -> dict:
+    if MANIFEST.exists():
+        return json.loads(MANIFEST.read_text())
+    return {}
+
+
+def _record(spec, seed: int, style: int, vol_overrides: dict, ins: dict, exported: bool) -> None:
+    """Remember exactly how a track was made, so it can be rebuilt or tweaked
+    later: see --from-manifest."""
+    vol_str = ",".join(str(vol_overrides.get(role, 0)) for role in ROLE_ORDER)
+    patch_str = ",".join(f"{ins[role]:02X}" for role in ROLE_ORDER)
+    m = _load_manifest()
+    m[spec.resource] = {
+        "seed": seed,
+        "style": style,
+        "style_name": compose.STYLE_NAMES[style],
+        "vol": vol_str,
+        "patch": patch_str,
+        "roles": ",".join(ROLE_ORDER),
+        "mood": {k: v for k, v in vars(spec.mood).items()},
+        "exported_vgm": exported,
+        "date": datetime.date.today().isoformat(),
+        "command": (f".venv/bin/python tools/generate_music.py --track {spec.aliases[0]} --seed {seed} "
+                    f"--style {style} --vol {vol_str} --patch {patch_str} --export-vgm"),
+    }
+    MANIFEST.write_text(json.dumps(m, indent=2) + "\n")
+    print(f"  recorded in {MANIFEST}")
 
 
 def _parse_vol(spec: str) -> dict:
@@ -144,7 +183,8 @@ def _export_vgm(fur_path: Path, vgm_path: Path) -> None:
 
 def generate_one(spec: "tracks.TrackSpec", seed: int, bank, out_dir: Path,
                   export_vgm: bool = False, vgm_out_dir: Path = DEFAULT_VGM_OUT_DIR,
-                  vol_overrides: dict = None, patch_overrides: dict = None, style: int = compose.STYLE_KRAFTWERK) -> Path:
+                  vol_overrides: dict = None, patch_overrides: dict = None, style: int = compose.STYLE_KRAFTWERK,
+                  record: bool = True) -> Path:
     song, ins = compose.generate_track(
         name=f"{spec.resource} - {spec.description}", mood=spec.mood, seed=seed, bank=bank,
         vol_overrides=vol_overrides, patch_overrides=patch_overrides, style=style,
@@ -162,6 +202,8 @@ def generate_one(spec: "tracks.TrackSpec", seed: int, bank, out_dir: Path,
     patch_str = ",".join(f"{ins[role]:02X}" for role in ROLE_ORDER)
     print(f"  regenerate: python3 tools/generate_music.py --track {spec.aliases[0]} --seed {seed} --style {style} "
           f"--vol {vol_str} --patch {patch_str}")
+    if record:
+        _record(spec, seed, style, vol_overrides, ins, export_vgm)
     return out_path
 
 
@@ -211,10 +253,27 @@ def main() -> int:
     parser.add_argument("--style", type=int, default=compose.STYLE_KRAFTWERK,
                          help=f"composition style: {style_choices} (default: {compose.STYLE_KRAFTWERK})")
     parser.add_argument("--list", action="store_true", help="list all tracks and exit")
+    parser.add_argument("--from-manifest", action="store_true",
+                         help=f"rebuild --track (or 'all') from the seed/style/vol/patch recorded in {MANIFEST.name}; "
+                              "--vol/--patch given here still override the recorded ones")
     args = parser.parse_args(_fuse_negative_values(sys.argv[1:]))
 
     if args.list:
         cmd_list()
+        return 0
+
+    if args.from_manifest:
+        manifest = _load_manifest()
+        names = [s.resource for s in tracks.TRACKS] if (args.track or "").lower() == "all" else [tracks.resolve(args.track).resource]
+        bank = load_bank()
+        for name in names:
+            if name not in manifest:
+                parser.error(f"{name} is not in {MANIFEST}")
+            e = manifest[name]
+            vol = _parse_vol(args.vol) if args.vol else _parse_vol(e["vol"])
+            patch = _parse_patch(args.patch) if args.patch else _parse_patch(e["patch"])
+            generate_one(tracks.resolve(name), e["seed"], bank, Path(args.out_dir), export_vgm=args.export_vgm,
+                         vgm_out_dir=Path(args.vgm_out_dir), vol_overrides=vol, patch_overrides=patch, style=e["style"])
         return 0
 
     if args.style not in compose.STYLE_NAMES:

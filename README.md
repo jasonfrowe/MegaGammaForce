@@ -32,18 +32,27 @@ The ship slows down while it fires, and slows further with the sword out.
 
 ### Weapons
 
-- **Vulcan**: fast twin bolts straight ahead. The highest focused damage.
-- **Homing**: lock-on darts from the wingtips that chase the nearest target.
-- **Spread**: a five-way fan for crowds.
-- **Back Wide**: a forward bolt plus shots to the sides and behind.
-- **Homing Plasma**: a crackling link that latches onto the nearest target
-  ahead and drains it.
+From strongest to weakest:
+
+- **Vulcan**: fast twin bolts straight ahead. The strongest weapon, if you
+  aim it.
+- **Spread**: a five-way fan for crowds. Medium, and best up close where
+  more of the fan connects.
 - **Radiant Sword**: a blade arc above the ship that cuts anything it
   touches and **absorbs pink bullets**. Blue bullets pass through it.
+- **Back Wide**: a forward bolt plus weak shots to the sides and behind.
+- **Homing**: lock-on darts from the wingtips. They never miss, so they
+  hit softly.
+- **Homing Plasma**: a crackling link that latches onto the nearest target
+  ahead. The weakest: it does the aiming for you.
 - **Hyper Sword**: every absorbed bullet charges the SWORD gauge. When it
   reads HYPER!, hold all three buttons: every bullet on screen is cancelled
   for points, and for a few seconds the blade grows, a beam lances up the
   screen, and the ship cannot be hit.
+
+Damage per second, against the Vulcan's 45: Spread 30 (all five orbs
+hitting), Sword 22, Homing 10, Homing Plasma 7.5. The table is in
+`src/shots.c` and `src/player.c`.
 
 ### The chain
 
@@ -122,13 +131,26 @@ The PNG sheets are indexed 16-color images with frames side by side, so
 they open directly in Aseprite. Edit and save one, rebuild, and your
 change is in the game. Running `gen_art.py` again overwrites them.
 
-Music was rolled with:
+The music uses style 9, **silvergun**, written for this game in
+`tools/musicgen/silvergun.py`: orchestral-epic instead of RPDemo's
+electronic styles. That means brass and string leads playing phrases,
+string ostinatos, choir pads, pitched timpani, a march snare and orchestra
+hits, chromatic "epic minor" harmony, and optional 6/8 time. Track moods
+(key, tempo, meter, intensity) are in `tools/musicgen/tracks.py`.
+
+Every generated track is recorded in `music/music_manifest.json`: its
+seed, style, per-role volume offsets and patches, mood, and the exact
+command. To tweak a track, edit its `vol` or `patch` there (roles in
+`lead,arp,bass,pad,kick,snare,hat` order; patches are hex indices into
+RPTracker's bank) and rebuild it without re-rolling the composition:
 
 ```sh
-.venv/bin/python tools/generate_music.py --track title --style 7 --seed 2026 --export-vgm
-.venv/bin/python tools/generate_music.py --track stage1 --style 3 --seed 1717 --export-vgm
-.venv/bin/python tools/generate_music.py --track boss --style 8 --seed 4242 --export-vgm
+.venv/bin/python tools/generate_music.py --track boss --from-manifest --export-vgm
+.venv/bin/python tools/generate_music.py --track all --from-manifest --export-vgm
 ```
+
+`--vol`/`--patch` on that command line override the recorded values for
+one run. A new `--seed` re-rolls the composition. Then rebuild the game.
 
 ### Testing in the emulator
 
