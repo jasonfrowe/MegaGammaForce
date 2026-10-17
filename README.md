@@ -64,8 +64,9 @@ From strongest to weakest:
   holding the sword never sets it off.
 
 Damage per second, against the Vulcan's 45: Spread 30 (all five orbs
-hitting), Sword 22, Homing Plasma 7.5, Homing 7.5. Homing Missiles do 3 per
-locked target per sweep of the ring, about a second. The
+hitting), Sword 22, Homing Plasma 7.5, Homing 7.5. Homing Missiles do 8 per
+locked target per sweep of the ring, about a second: enough to destroy
+darts, wasps, saucers and ground turrets in one hit. The
 table is in `src/shots.c` and `src/player.c`.
 
 ### The chain

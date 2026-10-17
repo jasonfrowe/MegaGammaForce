@@ -20,7 +20,9 @@ static uint8_t snext;
  *   Back    1 per side shot
  *   Missile 3 per locked target, one sweep of the lock-on ring at a time
  */
-static const uint8_t kind_dmg[] = {0, 3, 1, 1, 1, 0, 3};
+/* Missiles hit hard enough to destroy small fry in one: darts, wasps,
+ * saucers and ground turrets. */
+static const uint8_t kind_dmg[] = {0, 3, 1, 1, 1, 0, 8};
 
 void shots_reset(void)
 {
