@@ -87,8 +87,8 @@ static void enter_title(void)
     hud_center(13, "THE GAMMA CORE RISES.", HC_GRAY);
     hud_center(14, "ONE SHIP. NO RETREAT.", HC_GRAY);
     hud_center(20, "Z VULCAN  X HOMING", HC_GRAY);
-    hud_center(21, "C SPREAD  N SWORD", HC_GRAY);
-    hud_center(22, "M HYPER SWORD", HC_GRAY);
+    hud_center(21, "C SPREAD  SPACE SWORD", HC_GRAY);
+    hud_center(22, "Z+X+C HYPER SWORD", HC_GRAY);
     hud_center(23, "COMBINE Z X C FOR MORE", HC_GRAY);
     hud_text(0, 5, "HISCORE", HC_CYAN, HC_PANEL);
     hud_digits(0, 6, hiscore_d, SCORE_DIGITS, HC_YELLOW);

@@ -9,10 +9,11 @@ C Spread         C or L         C or R1
 A+B Plasma       V              X
 A+C Wide Shot    Z+C            Y
 B+C Missiles     B              Z or L1
-Radiant Sword    N or Space     R2
-Hyper Sword      M              L2
+Radiant Sword    Space          R2
+Hyper Sword      Z+X+C          L2
 Start / pause    Enter / P      Start
 
 The sword absorbs pink bullets and charges the Hyper Sword.
-Destroy three enemies of one color in a row to build the chain.
+Destroy three enemies of one color in a row to build the chain;
+keep hitting that color to keep it paying, or switch after a full set.
 Shoot the boss apart before its core for 100% destruction.

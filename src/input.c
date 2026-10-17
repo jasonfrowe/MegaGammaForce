@@ -31,9 +31,7 @@ static const keymap_t keymap[] = {
     {HID_KEY_L, IN_C},
     {HID_KEY_V, IN_A | IN_B},
     {HID_KEY_B, IN_B | IN_C},
-    {HID_KEY_N, IN_SWORD},
     {HID_KEY_SPACE, IN_SWORD},
-    {HID_KEY_M, IN_HYPER},
     {HID_KEY_ENTER, IN_START},
     {HID_KEY_P, IN_START},
 };
@@ -77,6 +75,10 @@ void input_update(void)
             if (KEYBOARD_PRESSED(kb.keys, keymap[i].key))
                 held |= keymap[i].bits;
         }
+        /* All three guns at once also triggers the Hyper Sword (keyboard
+         * only); until the gauge is full they just fire the Vulcan. */
+        if ((held & IN_GUNS) == IN_GUNS)
+            held |= IN_HYPER;
     }
 
     uint8_t pad[4];

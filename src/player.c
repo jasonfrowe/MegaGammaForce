@@ -235,9 +235,14 @@ static void fire(uint8_t w)
         break;
     case WP_HOMING:
         if (fire_cd == 0 && shots_count(SK_HOMING) < 8) {
-            shot_fire(SK_HOMING, (uint8_t)(pl_bx - 10), pl_by, ANG_UP - 40, 60);
-            shot_fire(SK_HOMING, (uint8_t)(pl_bx + 10), pl_by, ANG_UP + 40, 60);
-            fire_cd = 24; /* 1 x 2 darts every 24 frames = 5/s */
+            /* One dart every 8 frames, alternating sides: 7.5 damage/s. */
+            static bool side;
+            side = !side;
+            if (side)
+                shot_fire(SK_HOMING, (uint8_t)(pl_bx - 10), pl_by, ANG_UP - 40, 60);
+            else
+                shot_fire(SK_HOMING, (uint8_t)(pl_bx + 10), pl_by, ANG_UP + 40, 60);
+            fire_cd = 8;
             sfx_player(SFX_HOMING, SFX_PRI_FIRE);
         }
         break;

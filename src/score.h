@@ -18,7 +18,7 @@ extern uint8_t hiscore_d[SCORE_DIGITS];
 extern uint8_t chain_level;
 extern uint8_t chain_max;
 extern uint8_t chain_color;
-extern uint8_t chain_count; /* kills in the current set, 0-2 */
+extern uint8_t chain_count; /* kills in the current color run, 0-3 (3 = set complete) */
 extern uint16_t chain_last_bonus;
 
 void score_reset(void);

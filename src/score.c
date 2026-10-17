@@ -56,32 +56,38 @@ void score_add(uint16_t pts)
     score_dirty = true;
 }
 
+/*
+ * Three of one color in a row completes a set and pays a bonus. Every
+ * further kill of that color pays the next bonus up. A new color starts a
+ * new set: the chain carries on if the run before it was complete (three
+ * or more), and breaks if it was cut short.
+ */
 uint16_t chain_kill(uint8_t color)
 {
     if (color == COL_GRAY)
         return 0;
     chain_dirty = true;
-    if (chain_count == 0 || color == chain_color) {
+    if (chain_count && color == chain_color) {
+        if (chain_count < 3)
+            chain_count++;
+    } else {
+        if (chain_count && chain_count < 3)
+            chain_level = 0; /* broken mid-set */
         chain_color = color;
-        if (++chain_count < 3)
-            return 0;
-        chain_count = 0;
-        if (chain_level < 99)
-            chain_level++;
-        if (chain_level > chain_max)
-            chain_max = chain_level;
-        uint8_t i = (uint8_t)(chain_level - 1);
-        if (i > 7)
-            i = 7;
-        chain_last_bonus = chain_bonus[i];
-        score_add(chain_last_bonus);
-        return chain_last_bonus;
+        chain_count = 1;
     }
-    /* Broken: this kill starts a new set. */
-    chain_level = 0;
-    chain_color = color;
-    chain_count = 1;
-    return 0;
+    if (chain_count < 3)
+        return 0;
+    if (chain_level < 99)
+        chain_level++;
+    if (chain_level > chain_max)
+        chain_max = chain_level;
+    uint8_t i = (uint8_t)(chain_level - 1);
+    if (i > 7)
+        i = 7;
+    chain_last_bonus = chain_bonus[i];
+    score_add(chain_last_bonus);
+    return chain_last_bonus;
 }
 
 static const uint8_t color_hc[4] = {HC_RED, HC_BLUE, HC_YELLOW, HC_GRAY};

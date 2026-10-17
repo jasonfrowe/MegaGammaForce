@@ -88,10 +88,10 @@ rarely feel alike even with similar moods:
 from __future__ import annotations
 
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Dict, List, Optional, Set, Tuple
 
-from . import drum_patterns, silvergun
+from . import arcade, drum_patterns, silvergun
 from .furwriter import NOTE_OFF, FurInstrument, FurSong, RowCell, note_value
 from .instruments import role_candidates
 from .tracks import MoodPreset
@@ -106,6 +106,10 @@ STYLE_TECHNO = 6
 STYLE_SYNTHWAVE = 7
 STYLE_DNB = 8
 STYLE_SILVERGUN = 9
+STYLE_FMROCK = 10
+STYLE_EUROBEAT = 11
+STYLE_CHIPARCADE = 12
+STYLE_FUSION = 13
 STYLE_NAMES = {
     STYLE_SILPHEED: "silpheed",
     STYLE_KRAFTWERK: "kraftwerk",
@@ -117,7 +121,21 @@ STYLE_NAMES = {
     STYLE_SYNTHWAVE: "synthwave",
     STYLE_DNB: "dnb",
     STYLE_SILVERGUN: "silvergun",
+    STYLE_FMROCK: "fmrock",
+    STYLE_EUROBEAT: "eurobeat",
+    STYLE_CHIPARCADE: "chiparcade",
+    STYLE_FUSION: "fusion",
 }
+assert all(STYLE_NAMES[k] == v.name for k, v in arcade.STYLES.items())
+
+
+def style_kit(style: int):
+    """The composer for styles 9 and up (silvergun.py, arcade.py), or None
+    for RPDemo's styles 0-8. A kit has meter_rows, pick_instruments,
+    pick_progressions and generate_chunk, and optionally tempo."""
+    if style == STYLE_SILVERGUN:
+        return silvergun
+    return arcade.STYLES.get(style)
 
 # Per-style knobs for the shared `_generate_chunk_electronic` composer --
 # see the module docstring for what each style sounds like and why. Keyed
@@ -705,8 +723,9 @@ def generate_track(name: str, mood: MoodPreset, seed: int, bank: List[FurInstrum
     patch_overrides = patch_overrides or {}
     base_vol: Dict[str, int] = {role: ROLE_VOLUME[role] + vol_overrides.get(role, 0) for role in ROLE_TO_CHANNEL}
 
-    if style == STYLE_SILVERGUN:
-        return _generate_silvergun(name, mood, rng, bank, base_vol, patch_overrides, prog_override)
+    kit = style_kit(style)
+    if kit is not None:
+        return _generate_kit(kit, name, mood, rng, bank, base_vol, patch_overrides, prog_override)
 
     ins: Dict[str, int] = _pick_instruments_for_style(rng, bank, style)
     if mood.use_drums:
@@ -791,23 +810,24 @@ def generate_track(name: str, mood: MoodPreset, seed: int, bank: List[FurInstrum
     return song, ins
 
 
-def _generate_silvergun(name: str, mood: MoodPreset, rng: random.Random, bank: List[FurInstrument],
-                        base_vol: Dict[str, int], patch_overrides: Dict[str, int],
-                        prog_override: Optional[Tuple[int, int]] = None) -> Tuple[FurSong, Dict[str, int]]:
-    """Style 9 -- see silvergun.py. Same arrangement and song assembly as the
-    other styles, but its own instruments, harmony, chunk composer and meter."""
-    ins = silvergun.pick_instruments(rng)
+def _generate_kit(kit, name: str, mood: MoodPreset, rng: random.Random, bank: List[FurInstrument],
+                  base_vol: Dict[str, int], patch_overrides: Dict[str, int],
+                  prog_override: Optional[Tuple[int, int]] = None) -> Tuple[FurSong, Dict[str, int]]:
+    """Styles 9 and up -- see silvergun.py and arcade.py. Same arrangement and
+    song assembly as the other styles, but the kit's own instruments,
+    harmony, chunk composer and meter."""
+    ins = kit.pick_instruments(rng)
     for role, patch in patch_overrides.items():
         ins[role] = patch
     major = mood.scale in ("major", "mixolydian")
-    prog_a, prog_b, ia, ib = silvergun.pick_progressions(rng, mood.intensity, major, prog_override)
+    prog_a, prog_b, ia, ib = kit.pick_progressions(rng, mood.intensity, major, prog_override)
     print(f"  progressions: A {ia} ({silvergun.describe(prog_a)}), B {ib} ({silvergun.describe(prog_b)})")
     b_root = mood.key_root
     if mood.intensity >= 0.65 and rng.random() < 0.65:
         b_root = (mood.key_root + rng.choice([2, 3, -2, 5])) % 12
     semitone_bump = rng.random() < 0.3
 
-    rpb, beat = silvergun.meter_rows(mood.meter)
+    rpb, beat = kit.meter_rows(mood.meter)
     chunk_rows = rpb * CHUNK_BARS
     prog = {"A1": prog_a, "A2": prog_a, "B1": prog_b, "B2": prog_b, "BR1": prog_b, "BR2": prog_a}
     root = {"A1": mood.key_root, "A2": mood.key_root, "B1": b_root, "B2": b_root, "BR1": b_root, "BR2": b_root}
@@ -816,19 +836,20 @@ def _generate_silvergun(name: str, mood: MoodPreset, rng: random.Random, bank: L
         prog["A1_UP"] = prog_a
         root["A1_UP"] = (mood.key_root + 1) % 12
         order.append("A1_UP")
-    chunks = {k: silvergun.generate_chunk(rng, mood, ins, prog[k], root[k], base_vol, ROLE_VOLUME_JITTER, CHUNK_BARS)
+    chunks = {k: kit.generate_chunk(rng, mood, ins, prog[k], root[k], base_vol, ROLE_VOLUME_JITTER, CHUNK_BARS)
               for k in order}
     pidx = {k: i for i, k in enumerate(order)}
     empty = len(order)
 
-    bpm = max(40.0, mood.bpm + rng.uniform(-3, 3))
+    tempo = kit.tempo(mood) if hasattr(kit, "tempo") else mood.bpm
+    bpm = max(40.0, tempo + rng.uniform(-3, 3))
     speed = max(1, round(60.0 * 60.0 / (bpm * beat)))
     song = FurSong(name=name, hz=60.0, speed=speed, pattern_len=chunk_rows, instruments=bank, channels=CHANNEL_COUNT)
     song.orders = [[] for _ in range(CHANNEL_COUNT)]
     unused = set(range(CHANNEL_COUNT)) - set(ROLE_TO_CHANNEL.values())
     for ch in range(CHANNEL_COUNT):
         song.patterns[(ch, empty)] = {} if ch in unused else {0: RowCell(note=NOTE_OFF)}
-    for section in _plan_sections(rng, mood, semitone_bump=semitone_bump, rows_per_chunk=chunk_rows,
+    for section in _plan_sections(rng, replace(mood, bpm=tempo), semitone_bump=semitone_bump, rows_per_chunk=chunk_rows,
                                   rows_per_beat=beat):
         p = pidx[section.chunk_key]
         for role, ch in ROLE_TO_CHANNEL.items():

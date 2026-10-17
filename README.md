@@ -28,12 +28,13 @@ the combination's own button.
 | **A+B** Homing Plasma | V (or Z+X) | X (or A+B) |
 | **A+C** Wide Shot | Z+C | Y (or A+C/R1) |
 | **B+C** Homing Missiles | B (or X+C) | Z or L1 (or B+C/R1) |
-| Radiant Sword | N or Space | R2 |
-| Hyper Sword | M | L2 |
+| Radiant Sword | Space | R2 |
+| Hyper Sword | Z+X+C | L2 |
 | Start / pause | Enter or P | Start |
 
 The ship slows down while it fires, and slows further with the sword out.
-Holding all three guns fires the Vulcan.
+Holding all three guns fires the Vulcan; on the keyboard, pressing Z+X+C
+with a full gauge also unleashes the Hyper Sword.
 
 ### Weapons
 
@@ -62,7 +63,7 @@ From strongest to weakest:
   holding the sword never sets it off.
 
 Damage per second, against the Vulcan's 45: Spread 30 (all five orbs
-hitting), Sword 22, Homing Plasma 7.5, Homing 5. Homing Missiles do 3 per
+hitting), Sword 22, Homing Plasma 7.5, Homing 7.5. Homing Missiles do 3 per
 locked target per sweep of the ring, about a second. The
 table is in `src/shots.c` and `src/player.c`.
 
@@ -70,9 +71,17 @@ table is in `src/shots.c` and `src/player.c`.
 
 Enemies come in red, blue and yellow (gray ones don't count). Destroy
 three of the **same color in a row** to complete a set: the chain goes up
-and pays 100, 200, 400 … up to 10,000 points per set. Hitting a different
-color in the middle of a set breaks the chain. Once a set is complete, the
-next set can be any color. The three pips under CHAIN show the set so far.
+and pays 100, 200, 400 … up to 10,000 points. Each further kill of that
+same color pays again, one step higher. Switching color starts a new set:
+if the run you left was complete, the chain carries on once you get three
+of the new color; if you switch in the middle of a set, the chain breaks.
+
+    red red red    -> bonus x1
+    red            -> bonus x2
+    blue blue blue -> bonus x3
+    red blue ...   -> broken: the lone red was an unfinished set
+
+The three pips under CHAIN show the current run.
 
 ### The boss
 
@@ -152,6 +161,19 @@ hi-hat groove, crashes and orchestra hits, chromatic "epic minor" harmony,
 and optional 6/8 time. Tempo comes in steps, because a 16th note is a whole
 number of 60 Hz ticks: 6 ticks is 150 bpm, 5 is 180.
 
+Four more styles, in `tools/musicgen/arcade.py`, give you something else
+to try with `--style`:
+
+| Style | Sound |
+|---|---|
+| 10 **fmrock** | Mega Drive FM rock: distorted guitar or synth brass riffs, palm-muted 16th chug, picked bass, rock organ, double-kick runs |
+| 11 **eurobeat** | Synth brass hooks, a two-octave 16th broken-chord sequence, octave bass on every 8th, four-on-the-floor kick |
+| 12 **chiparcade** | Square leads, a fast one-row-per-note chord arpeggio, bouncing bass, and the pad channel used as an echo of the lead |
+| 13 **fusion** | Sax or synth lead, electric piano stabs, slap bass with octave pops and ghost notes, a busy funk kit |
+
+All four are in 4/4. On a 6/8 track (the boss), they keep the same eighth-note
+pulse, so they play 1.5 times as fast.
+
 The base mix already includes the `--vol -3,3,0,0,0,0,12` balance that
 RPDemo's tracks always needed, so `vol` offsets in the manifest start at 0. Track moods
 (key, tempo, meter, intensity) are in `tools/musicgen/tracks.py`.
@@ -176,9 +198,49 @@ IV-V-iii-vi. The melody, rhythms and instruments of the seed stay the same,
 and the choice is recorded in the manifest:
 
 ```sh
-.venv/bin/python tools/generate_music.py --list-progs
+.venv/bin/python tools/generate_music.py --list-progs            # every style's banks
+.venv/bin/python tools/generate_music.py --list-progs --style 11 # one style's
 .venv/bin/python tools/generate_music.py --track title --from-manifest --prog 6,0 --export-vgm
 ```
+
+#### Trying out new music
+
+The `.vgm` files in `music/` are what the game plays. The build packs
+`music/Title.vgm`, `Stage1.vgm` and `Boss.vgm` into the ROM as they are,
+so nothing else needs converting. The `.fur` files are only for editing
+in Furnace.
+
+Add `--scratch` to try ideas without touching the game's tracks. Takes go
+to `music/scratch/` (which is gitignored), are named by track, style and
+seed, and are not recorded in the manifest:
+
+```sh
+# Each style once at the Stage 1 mood, to hear the differences.
+for s in 9 10 11 12 13; do
+  .venv/bin/python tools/generate_music.py --track stage1 --style $s --scratch --export-vgm
+done
+# Then vary one you like: the same seed with other chords, or another tempo.
+.venv/bin/python tools/generate_music.py --track stage1 --style 11 --seed 42 --prog 2,3 --scratch --export-vgm
+.venv/bin/python tools/generate_music.py --track stage1 --style 11 --seed 42 --bpm 150 --scratch --export-vgm
+```
+
+Open a take's `.fur` in Furnace to listen and edit it. To hear it in the
+game, either:
+
+- **Keep it:** rerun the take's command without `--scratch`. Every run prints
+  its command. That writes `music/Stage1.vgm` and records the take in the
+  manifest.
+- **Use your Furnace edits:** in Furnace, choose File > Export > VGM and save over
+  `music/Stage1.vgm`. The songs this tool writes are already OPL2 only. You can also
+  export without the GUI:
+  `furnace -subsong 0 -loops 1 -vgmout music/Stage1.vgm music/scratch/<take>.fur`.
+
+Then rebuild. The exported VGM must be plain OPL2 on channels 1-7: the
+game's player doesn't understand OPL3, and channels 8-9 are kept for sound
+effects.
+
+`--bpm` takes any number, but the speed is a whole number of 60 Hz ticks
+per 16th note, so the tempo lands on 900/n: 180, 150, 128.6, 112.5, 100.
 
 ### Testing in the emulator
 

@@ -2,12 +2,13 @@
 """Generate Furnace (.fur) tracker projects for MegaGammaForce's OPL2 music.
 
 Procedurally composes OPL2 tracks for each of the game's music slots, in
-one of nine styles (--style, see musicgen/compose.py's STYLE_NAMES and
+one of fourteen styles (--style, see musicgen/compose.py's STYLE_NAMES and
 module docstring for the full rundown of each: 0 silpheed/orchestral,
 1 kraftwerk/motorik electronic (default), 2 daftpunk/house-funk, 3 trance,
 4 bigroom/electro-house, 5 dubstep/halftime, 6 techno/minimal-progressive,
-7 synthwave, 8 dnb/jungle, 9 silvergun/orchestral-epic -- MegaGammaForce's
-own, see musicgen/silvergun.py), and writes them as Furnace 0.6.8.1-compatible .fur
+7 synthwave, 8 dnb/jungle; MegaGammaForce's own: 9 silvergun/orchestral-epic
+(musicgen/silvergun.py), 10 fmrock, 11 eurobeat, 12 chiparcade, 13 fusion
+(musicgen/arcade.py)), and writes them as Furnace 0.6.8.1-compatible .fur
 files, using RPTracker's 256-patch instrument bank. Open the result in
 Furnace to audition and tweak by hand; pass --export-vgm to also render
 straight to music/<resource>.vgm (e.g. music/Boss.vgm) using Furnace's own
@@ -41,6 +42,12 @@ integer offsets from each role's base volume
 256-patch bank, overriding whichever instrument that role would otherwise
 have picked. Both only make sense with a single --track, not --track all.
 
+To try ideas without touching the game's tracks, add --scratch: the .fur
+(and the .vgm, with --export-vgm) go to music/scratch/ and the manifest is
+left alone:
+  python tools/generate_music.py --track stage1 --style 11 --scratch --export-vgm
+  python tools/generate_music.py --track stage1 --style 11 --seed 77 --bpm 160 --prog 1,3 --scratch
+
 Every run also records the track in music/music_manifest.json (seed, style,
 vol, patch, mood, the exact command). To rebuild from that record -- after
 editing its vol/patch, say -- without re-rolling the composition:
@@ -51,6 +58,7 @@ editing its vol/patch, say -- without re-rolling the composition:
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import datetime
 import json
 import random
@@ -69,10 +77,10 @@ FURNACE_BIN = "/Applications/Furnace.app/Contents/MacOS/furnace"
 MUSIC_DIR = Path(__file__).resolve().parent.parent / "music"
 # fur_levels/ is the tracked, canonical editable-.fur location (matches the
 # ROM asset/output names in CMakeLists.txt and tracks.py's `resource`
-# field); music/fur/ still exists as local, gitignored scratch space, not
-# the default output target.
+# field). --scratch writes to music/scratch/ instead, which is gitignored.
 DEFAULT_OUT_DIR = MUSIC_DIR / "fur_levels"
 DEFAULT_VGM_OUT_DIR = MUSIC_DIR
+SCRATCH_DIR = MUSIC_DIR / "scratch"  # gitignored; never loaded by the build
 
 # lead, arp, bass, pad, kick, snare, hat -- the canonical order --vol/--patch
 # values are given/printed in, taken directly from compose.py's role->channel
@@ -88,6 +96,7 @@ def _load_manifest() -> dict:
 
 
 def _record(spec, seed: int, style: int, vol_overrides: dict, ins: dict, exported: bool) -> None:
+    bpm = spec.mood.bpm if spec.mood.bpm != tracks.resolve(spec.resource).mood.bpm else None
     prog = ins.get("_prog")
     prog_str = f"{prog[0]},{prog[1]}" if prog else None
     """Remember exactly how a track was made, so it can be rebuilt or tweaked
@@ -104,11 +113,13 @@ def _record(spec, seed: int, style: int, vol_overrides: dict, ins: dict, exporte
         "roles": ",".join(ROLE_ORDER),
         "mood": {k: v for k, v in vars(spec.mood).items()},
         "prog": prog_str,
+        "bpm": bpm,
         "exported_vgm": exported,
         "date": datetime.date.today().isoformat(),
         "command": (f".venv/bin/python tools/generate_music.py --track {spec.aliases[0]} --seed {seed} "
                     f"--style {style} --vol {vol_str} --patch {patch_str}"
-                    + (f" --prog {prog_str}" if prog_str else "") + " --export-vgm"),
+                    + (f" --prog {prog_str}" if prog_str else "") + (f" --bpm {bpm:g}" if bpm else "")
+                    + " --export-vgm"),
     }
     MANIFEST.write_text(json.dumps(m, indent=2) + "\n")
     print(f"  recorded in {MANIFEST}")
@@ -189,26 +200,39 @@ def generate_one(spec: "tracks.TrackSpec", seed: int, bank, out_dir: Path,
                   export_vgm: bool = False, vgm_out_dir: Path = DEFAULT_VGM_OUT_DIR,
                   vol_overrides: dict = None, patch_overrides: dict = None, style: int = compose.STYLE_KRAFTWERK,
                   record: bool = True, prog: tuple = None) -> Path:
+    # Scratch takes (record=False) are named for what made them, so several sit side by side.
+    stem = spec.resource if record else f"{spec.resource}-{compose.STYLE_NAMES[style]}-{seed}"
     song, ins = compose.generate_track(
         name=f"{spec.resource} - {spec.description}", mood=spec.mood, seed=seed, bank=bank,
         vol_overrides=vol_overrides, patch_overrides=patch_overrides, style=style, prog_override=prog,
     )
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / f"{spec.resource}.fur"
+    out_path = out_dir / f"{stem}.fur"
     write_fur(str(out_path), song)
     print(f"{spec.resource} ({', '.join(spec.aliases)}) -> {out_path}  [seed={seed}, style={style} ({compose.STYLE_NAMES[style]})]  {spec.description}")
     _validate_with_furnace(out_path)
     if export_vgm:
-        _export_vgm(out_path, vgm_out_dir / f"{spec.resource}.vgm")
+        _export_vgm(out_path, vgm_out_dir / f"{stem}.vgm")
 
     vol_overrides = vol_overrides or {}
     vol_str = ",".join(str(vol_overrides.get(role, 0)) for role in ROLE_ORDER)
     patch_str = ",".join(f"{ins[role]:02X}" for role in ROLE_ORDER)
+    prog_ab = ins.get("_prog")
+    extra = (f" --prog {prog_ab[0]},{prog_ab[1]}" if prog_ab else "")
+    if spec.mood.bpm != tracks.resolve(spec.resource).mood.bpm:
+        extra += f" --bpm {spec.mood.bpm:g}"
     print(f"  regenerate: python3 tools/generate_music.py --track {spec.aliases[0]} --seed {seed} --style {style} "
-          f"--vol {vol_str} --patch {patch_str}")
+          f"--vol {vol_str} --patch {patch_str}{extra}" + ("" if record else " --scratch"))
     if record:
         _record(spec, seed, style, vol_overrides, ins, export_vgm)
     return out_path
+
+
+def _with_bpm(spec, bpm):
+    """The track with its tempo replaced, or unchanged when bpm is None."""
+    if not bpm:
+        return spec
+    return dataclasses.replace(spec, mood=dataclasses.replace(spec.mood, bpm=float(bpm)))
 
 
 def cmd_list() -> None:
@@ -257,9 +281,15 @@ def main() -> int:
     parser.add_argument("--style", type=int, default=compose.STYLE_KRAFTWERK,
                          help=f"composition style: {style_choices} (default: {compose.STYLE_KRAFTWERK})")
     parser.add_argument("--list", action="store_true", help="list all tracks and exit")
-    parser.add_argument("--prog", help="style 9 only: A,B chord progression indices for the two themes "
+    parser.add_argument("--prog", help="styles 9 and up: A,B chord progression indices for the two themes "
                                         "(see --list-progs); the rest of the seed's composition is unchanged")
-    parser.add_argument("--list-progs", action="store_true", help="list style 9's chord progression banks and exit")
+    parser.add_argument("--list-progs", action="store_true",
+                        help="list the chord progression banks of --style (or of every style 9 and up) and exit")
+    parser.add_argument("--bpm", type=float, help="override the track's tempo (ticks per row are whole numbers at "
+                                                  "60 Hz, so 4/4 lands on 900/n: 180, 150, 128.6, 112.5, 100 ...)")
+    parser.add_argument("--scratch", action="store_true",
+                        help=f"write to {SCRATCH_DIR} instead (both .fur and .vgm) and leave the manifest alone, "
+                             "for trying things out")
     parser.add_argument("--from-manifest", action="store_true",
                          help=f"rebuild --track (or 'all') from the seed/style/vol/patch recorded in {MANIFEST.name}; "
                               "--vol/--patch given here still override the recorded ones")
@@ -270,11 +300,21 @@ def main() -> int:
         return 0
     if args.list_progs:
         from musicgen import silvergun
-        for label, bank in (("major", silvergun.MAJOR_BANK), ("minor", silvergun.MINOR_BANK)):
-            print(f"{label} (tracks whose scale is {label}):")
-            for i, (tier, p) in enumerate(bank):
-                print(f"  {i:2d}  tier {tier}  {silvergun.describe(p)}")
+        given = "--style" in sys.argv or any(a.startswith("--style=") for a in sys.argv)
+        styles = [args.style] if given else [k for k in sorted(compose.STYLE_NAMES) if compose.style_kit(k)]
+        for st in styles:
+            kit = compose.style_kit(st)
+            if kit is None:
+                parser.error(f"style {st} has no progression bank (only styles 9 and up do)")
+            majb, minb = (kit.MAJOR_BANK, kit.MINOR_BANK) if kit is silvergun else (kit.major_bank, kit.minor_bank)
+            print(f"style {st} ({compose.STYLE_NAMES[st]})")
+            for label, bank in (("major", majb), ("minor", minb)):
+                print(f"  {label} (tracks whose scale is {label}):")
+                for i, (tier, p) in enumerate(bank):
+                    print(f"    {i:2d}  tier {tier}  {silvergun.describe(p)}")
         return 0
+    if args.scratch:
+        args.out_dir = args.vgm_out_dir = str(SCRATCH_DIR)
     prog = None
     if args.prog:
         prog = tuple(int(x) for x in args.prog.split(","))
@@ -292,9 +332,9 @@ def main() -> int:
             vol = _parse_vol(args.vol) if args.vol else _parse_vol(e["vol"])
             patch = _parse_patch(args.patch) if args.patch else _parse_patch(e["patch"])
             p = prog or (tuple(int(x) for x in e["prog"].split(",")) if e.get("prog") else None)
-            generate_one(tracks.resolve(name), e["seed"], bank, Path(args.out_dir), export_vgm=args.export_vgm,
-                         vgm_out_dir=Path(args.vgm_out_dir), vol_overrides=vol, patch_overrides=patch, style=e["style"],
-                         prog=p)
+            generate_one(_with_bpm(tracks.resolve(name), args.bpm or e.get("bpm")), e["seed"], bank,
+                         Path(args.out_dir), export_vgm=args.export_vgm, vgm_out_dir=Path(args.vgm_out_dir),
+                         vol_overrides=vol, patch_overrides=patch, style=e["style"], prog=p, record=not args.scratch)
         return 0
 
     if args.style not in compose.STYLE_NAMES:
@@ -313,8 +353,9 @@ def main() -> int:
             parser.error("--vol/--patch only make sense with a single --track, not --track all")
         bank = load_bank()
         for spec in tracks.TRACKS:
-            generate_one(spec, random.randrange(2**31), bank, out_dir,
-                         export_vgm=args.export_vgm, vgm_out_dir=vgm_out_dir, style=args.style)
+            generate_one(_with_bpm(spec, args.bpm), random.randrange(2**31), bank, out_dir,
+                         export_vgm=args.export_vgm, vgm_out_dir=vgm_out_dir, style=args.style,
+                         record=not args.scratch)
         return 0
 
     try:
@@ -332,8 +373,9 @@ def main() -> int:
 
     seed = args.seed if args.seed is not None else random.randrange(2**31)
     bank = load_bank()
-    generate_one(spec, seed, bank, out_dir, export_vgm=args.export_vgm, vgm_out_dir=vgm_out_dir,
-                 vol_overrides=vol_overrides, patch_overrides=patch_overrides, style=args.style, prog=prog)
+    generate_one(_with_bpm(spec, args.bpm), seed, bank, out_dir, export_vgm=args.export_vgm, vgm_out_dir=vgm_out_dir,
+                 vol_overrides=vol_overrides, patch_overrides=patch_overrides, style=args.style, prog=prog,
+                 record=not args.scratch)
     return 0
 
 
