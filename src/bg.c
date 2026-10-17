@@ -160,7 +160,7 @@ uint8_t bg_update(void)
     }
 
     /* Palette cycling: water shimmers, lights run, lamps blink. */
-    if (++cycle_timer >= 12) {
+    if (++cycle_timer >= 16) {
         cycle_timer = 0;
         cycle_phase = (uint8_t)((cycle_phase + 1) & 3);
         pal_dirty = true;
