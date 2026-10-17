@@ -1,2 +1,16 @@
-This information is displayed with the HELP and INFO monitor commands.
-Please change it to suit your project.
+MEGA GAMMA FORCE
+A Radiant Silvergun-style shooter for the Picocomputer 6502.
+
+Move     Arrows / WASD          d-pad / left stick
+A Vulcan Z or J                 X
+B Homing X or K                 A
+C Spread C or L                 B
+A+B      V  Back Wide           L1
+B+C      B  Homing Plasma       R1
+A+C      N / Space  Sword       Y
+A+B+C    M  Hyper Sword         L2 / R2
+Start    Enter / P              Start
+
+The sword absorbs pink bullets and charges the Hyper Sword.
+Destroy three enemies of one color in a row to build the chain.
+Shoot the boss apart before its core for 100% destruction.

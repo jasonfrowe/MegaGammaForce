@@ -1,100 +1,143 @@
-# RP6502 Project Template
+# MegaGammaForce
 
-Scaffolding for a new Picocomputer 6502 software project, in C with
-either 6502 compiler, cc65 or llvm-mos, or in BASIC. The CMake preset
-sets the language: the `cc65` and `llvm-mos` presets build the C program,
-and the `basic` preset builds the BASIC program. Each program is "Hello,
-world!".
-
-`src/main.c` is the C program, which builds with either compiler:
-
-```c
-#include <rp6502.h>
-#include <stdio.h>
-#include "xram.h"
-
-int main(void)
-{
-    puts("Hello, world!");
-}
-```
-
-`src/main-cc65.s` and `src/main-llvm-mos.s` are assembly for that C.
-To start an assembly language project, replace `src/main.c` in
-`CMakeLists.txt` with the version for the assembler you will use.
-
-`src/main.bas` is the BASIC program. `rp6502_basic()` packages it with
-a BASIC ROM into `hello.rp6502`, and BASIC runs it at start:
-
-```basic
-10 PRINT "Hello, world!"
-```
+A vertical shoot-'em-up for the [Picocomputer 6502](https://picocomputer.github.io/)
+in the spirit of *Radiant Silvergun*: three weapons that combine into
+seven attacks, a color chain, and a boss you take apart piece by piece.
+Written in C with [llvm-mos](https://llvm-mos.org/).
 
 <!-- rp6502
-preset: basic
-publish: hello.zip
+preset: llvm-mos/Release
+publish: MegaGammaForce.zip
+frames: 120
 -->
-[![Hello, world!](https://picocomputer.github.io/rp6502-sdk/hello/screenshot.png)](https://picocomputer.github.io/rp6502-sdk/hello/)
+[![MegaGammaForce](https://jasonfrowe.github.io/MegaGammaForce/MegaGammaForce/screenshot.png)](https://jasonfrowe.github.io/MegaGammaForce/MegaGammaForce/)
 
-[Run it in your browser](https://picocomputer.github.io/rp6502-sdk/hello/),
-BASIC is usable. Type `10` then TAB to edit line 10. `RUN` to run.
+## How to play
 
-On each push to `main`, `.github/workflows/web.yml` publishes this web
-player and its screenshot to GitHub Pages. The `preset` in the `rp6502`
-comment above the picture sets the program it plays: `basic` for the
-BASIC program, or a `cc65/Release` or `llvm-mos/Release` preset for the
-C program. To publish yours, open Settings > Pages on GitHub and set
-Source to GitHub Actions.
+### Controls
 
-The `if()` in `CMakeLists.txt` has a branch for each language. Keep the
-branch you want, delete the other and the `if()`, and delete the presets
-and files you do not use. Set the `preset` in the `rp6502` comment to a
-preset you keep.
+| Action | Keyboard | Gamepad |
+|---|---|---|
+| Move | Arrows or WASD | D-pad or left stick |
+| **A** Vulcan | Z or J | X |
+| **B** Homing | X or K | A |
+| **C** Spread | C or L | B |
+| **A+B** Back Wide | V (or hold Z+X) | L1 |
+| **B+C** Homing Plasma | B (or hold X+C) | R1 |
+| **A+C** Radiant Sword | N or Space (or hold Z+C) | Y |
+| **A+B+C** Hyper Sword | M (or hold all three) | L2 / R2 |
+| Start / pause | Enter or P | Start |
 
-### Requirements:
- * CMake 3.21 or newer
- * Python 3
- * Make or Ninja
- * [cc65 or llvm-mos](https://github.com/picocomputer?view_as=public), for
-   C. Install both if you want to try both.
+The ship slows down while it fires, and slows further with the sword out.
 
-The install steps for Windows, macOS and Linux are in
-[RP6502-SDK](https://picocomputer.github.io/sdk.html#sdk-install), along with
-the rest of the SDK documentation.
+### Weapons
 
-### Use the template:
-Go to the [GitHub template](https://github.com/picocomputer/rp6502-sdk) and
-select "Use this template" then "Create a new repository". Don't fork it: a
-fork stays linked to this repository and includes its history, while "Use this
-template" makes a new repository with a clean history. Then clone the new
-repository.
+- **Vulcan**: fast twin bolts straight ahead. The highest focused damage.
+- **Homing**: lock-on darts from the wingtips that chase the nearest target.
+- **Spread**: a five-way fan for crowds.
+- **Back Wide**: a forward bolt plus shots to the sides and behind.
+- **Homing Plasma**: a crackling link that latches onto the nearest target
+  ahead and drains it.
+- **Radiant Sword**: a blade arc above the ship that cuts anything it
+  touches and **absorbs pink bullets**. Blue bullets pass through it.
+- **Hyper Sword**: every absorbed bullet charges the SWORD gauge. When it
+  reads HYPER!, hold all three buttons: every bullet on screen is cancelled
+  for points, and for a few seconds the blade grows, a beam lances up the
+  screen, and the ship cannot be hit.
 
-### Updating the tools:
-`tools/` holds the CMake and Python scripts that the SDK runs. Update them with
-the "RP6502: update tools" task (Terminal > Run Task), or with:
+### The chain
 
-```bash
-$ cmake -P tools/rp6502.cmake
+Enemies come in red, blue and yellow (gray ones don't count). Destroy
+three of the **same color in a row** to complete a set: the chain goes up
+and pays 100, 200, 400 … up to 10,000 points per set. Hitting a different
+color in the middle of a set breaks the chain. Once a set is complete, the
+next set can be any color. The three pips under CHAIN show the set so far.
+
+### The boss
+
+GAMMA CORE is built from eight parts: the core, two wings, four wing
+turrets and a belly cannon. Each part has its own armor. Shooting a part
+off raises the DESTROY percentage; destroying the core ends the fight.
+Strip everything else first for **100% destruction** and a perfect bonus.
+Absorb the cannon's big pink orbs with the sword to charge the Hyper Sword.
+If you take longer than 90 seconds, the boss escapes.
+
+## Building
+
+You need the [RP6502 SDK](https://picocomputer.github.io/sdk.html) tools
+(CMake 3.21+, Python 3, llvm-mos). Then:
+
+```sh
+cmake --preset llvm-mos/Release
+cmake --build --preset llvm-mos/Release
+./tools/rp6502-emu build/llvm-mos/release/MegaGammaForce.rp6502
 ```
 
-### Updating an older project:
-Projects made before this template merged cc65 and llvm-mos have their compiler
-wired into the top of `CMakeLists.txt`, and a `tools/` that predates any of
-this. Start by copying this template's `tools/rp6502.cmake` over yours. That
-name used to be the cc65 toolchain file; it is now the small script that
-fetches everything, and the toolchain it replaces comes back as
-`tools/cc65-toolchain.cmake` on the first configure.
+The build itself needs only Python's standard library. Regenerating the
+art needs Pillow and numpy in the project's virtual environment:
 
-Then replace everything above `project()` with:
-
-```cmake
-cmake_minimum_required(VERSION 3.21)
-
-include(${CMAKE_CURRENT_LIST_DIR}/tools/rp6502.cmake)
+```sh
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
 ```
 
-Delete `tools/CMakeLists.txt` and the `add_subdirectory(tools)` line that
-pulled it in — the `include()` above replaces both. Copy `CMakePresets.json`
-from this template as well; that is where the compiler is chosen now. Old
-projects called `rp6502_executable()` with the address their compiler happened
-to use, and `DATA default RESET default` works under both.
+## How it's made
+
+### Screen layout
+
+The 320x240 canvas uses all three planes:
+
+| Plane | Fill layer | Sprite layer |
+|---|---|---|
+| 0 | Mode 2 stage map, 16x16 4bpp tiles | Ground turrets (Mode 5 custom) |
+| 1 | — | Everything airborne: boss, enemies, shots, ship, sword, explosions, bullets (Mode 5 custom, 4bpp) |
+| 2 | Mode 1 text HUD | — |
+
+The playfield is 192 pixels wide, close to an arcade's vertical screen.
+The HUD's two side panels are opaque, so they also hide sprites leaving
+the playfield. The whole stage map lives in XRAM, so scrolling is one
+16-bit write a frame. Its top holds two copies of the same stretch of sea
+for the boss fight to scroll over forever.
+
+Every sprite list is mirrored in RAM and copied to XRAM once a frame,
+right after VSYNC. Bullets and shots keep 8.8 fixed point positions in a
+"bullet space" where the visible playfield fits in a byte, so collision
+tests are byte compares. `src/xram.h` is the whole XRAM map.
+
+### Assets are generated
+
+Nothing is drawn by hand yet; Python draws it all, and you can edit the
+results.
+
+| Tool | Makes |
+|---|---|
+| `tools/gen_art.py` | `images/*.png` sprite and tile sheets, `images/palettes.bin`, the stage map and turret positions, `src/gen/assets.h` |
+| `tools/art/` | The pixel-art kit: shapes with heights, lit from the top left, outlined. Banking frames are real rolls of the ship. |
+| `tools/gen_sfx.py` | OPL2 sound effects in `music/sfx.bin`, `src/gen/sfx_ids.h` |
+| `tools/generate_music.py` | OPL2 music via Furnace (from RPDemo's composer): `music/fur_levels/*.fur` and `music/*.vgm` |
+| `tools/gen_tables.py` | Trig tables in `src/gen/tables.c` |
+| `tools/png2bin.py` | Run by the build: PNG sheets to VGA image data |
+
+The PNG sheets are indexed 16-color images with frames side by side, so
+they open directly in Aseprite. Edit and save one, rebuild, and your
+change is in the game. Running `gen_art.py` again overwrites them.
+
+Music was rolled with:
+
+```sh
+.venv/bin/python tools/generate_music.py --track title --style 7 --seed 2026 --export-vgm
+.venv/bin/python tools/generate_music.py --track stage1 --style 3 --seed 1717 --export-vgm
+.venv/bin/python tools/generate_music.py --track boss --style 8 --seed 4242 --export-vgm
+```
+
+### Testing in the emulator
+
+`tools/playtest.py` runs emulator scripts against the build, filling in
+`{symbol}` addresses from the ELF. `boss` warps to the boss and fights it
+invulnerable; `soak` plays the stage holding fire. Both print
+`lag_frames`, the count of frames where the game logic overran, which
+stays at 0.
+
+```sh
+.venv/bin/python tools/playtest.py boss --out /tmp
+```

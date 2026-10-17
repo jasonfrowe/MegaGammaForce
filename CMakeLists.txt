@@ -2,21 +2,89 @@ cmake_minimum_required(VERSION 3.21)
 
 include(${CMAKE_CURRENT_LIST_DIR}/tools/rp6502.cmake)
 
-if(RP6502_BASIC)
-    project(MY-RP6502-PROJECT BASIC)
-    add_executable(hello)
-    rp6502_asset(hello help src/help.txt)
-    rp6502_asset(hello hello.bas src/main.bas)
-    rp6502_basic(hello hello.bas)
-    rp6502_web(hello)
+project(MegaGammaForce C CXX ASM)
+
+# Asset tools run in the project's .venv (pip install -r requirements.txt).
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.venv/bin/python)
+    set(ART_PYTHON ${CMAKE_CURRENT_SOURCE_DIR}/.venv/bin/python)
 else()
-    project(MY-RP6502-PROJECT C CXX ASM)
-    add_executable(hello)
-    rp6502_map(hello src/xram.h "XRAM_.*")
-    rp6502_asset(hello help src/help.txt)
-    rp6502_executable(hello DATA default RESET default)
-    rp6502_web(hello)
-    target_sources(hello PRIVATE
-        src/main.c
-    )
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    set(ART_PYTHON ${Python3_EXECUTABLE})
 endif()
+
+add_executable(MegaGammaForce)
+rp6502_map(MegaGammaForce src/xram.h "XRAM_.*" "XRAM_IMG_.*|XRAM_STAGE_MAP|XRAM_SFX_DATA|XRAM_KEYBOARD|XRAM_GAMEPAD|XRAM_HUD")
+
+# Sprite and tile sheets: images/<name>.png -> <build>/<name>.bin
+function(mgf_sheet name w h)
+    set(out ${CMAKE_CURRENT_BINARY_DIR}/${name}.bin)
+    add_custom_command(
+        OUTPUT ${out}
+        COMMAND ${ART_PYTHON} ${CMAKE_CURRENT_SOURCE_DIR}/tools/png2bin.py
+            ${CMAKE_CURRENT_SOURCE_DIR}/images/${name}.png ${out} ${w} ${h}
+        DEPENDS tools/png2bin.py images/${name}.png
+        VERBATIM
+    )
+    string(TOUPPER ${name} up)
+    rp6502_asset(MegaGammaForce XRAM(XRAM_IMG_${up}) ${out})
+endfunction()
+
+mgf_sheet(player 24 24)
+mgf_sheet(flame 8 8)
+mgf_sheet(vulcan 8 16)
+mgf_sheet(shot8 8 8)
+mgf_sheet(sword 48 32)
+mgf_sheet(beam 32 64)
+mgf_sheet(logo 64 64)
+mgf_sheet(enemy16 16 16)
+mgf_sheet(enemy32 32 32)
+mgf_sheet(bullet8 8 8)
+mgf_sheet(bullet16 16 16)
+mgf_sheet(expl16 16 16)
+mgf_sheet(expl32 32 32)
+mgf_sheet(boss_core 64 64)
+mgf_sheet(boss_wing 32 64)
+mgf_sheet(boss_cannon 32 32)
+mgf_sheet(boss_turret 16 16)
+mgf_sheet(tiles 16 16)
+
+rp6502_asset(MegaGammaForce XRAM(XRAM_PALETTES) images/palettes.bin)
+rp6502_asset(MegaGammaForce XRAM(XRAM_STAGE_MAP) images/stage1_map.bin)
+rp6502_asset(MegaGammaForce XRAM(XRAM_SFX_DATA) music/sfx.bin)
+
+# Music, streamed from the ROM while playing.
+foreach(track Title Stage1 Boss)
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/music/${track}.vgm)
+        rp6502_asset(MegaGammaForce ${track}.vgm music/${track}.vgm)
+    endif()
+endforeach()
+rp6502_asset(MegaGammaForce help src/help.txt)
+
+rp6502_executable(MegaGammaForce DATA default RESET default)
+rp6502_web(MegaGammaForce)
+
+target_include_directories(MegaGammaForce PRIVATE src)
+target_compile_options(MegaGammaForce PRIVATE -Os -Wall)
+
+target_sources(MegaGammaForce PRIVATE
+    src/main.c
+    src/util.c
+    src/gen/tables.c
+    src/sprites.c
+    src/bg.c
+    src/hud.c
+    src/input.c
+    src/score.c
+    src/targets.c
+    src/bullets.c
+    src/shots.c
+    src/fx.c
+    src/player.c
+    src/enemies.c
+    src/stage.c
+    src/boss.c
+    src/opl.c
+    src/vgm.c
+    src/music.c
+    src/sfx.c
+)

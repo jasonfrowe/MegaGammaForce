@@ -1,0 +1,32 @@
+#ifndef SCORE_H
+#define SCORE_H
+
+#include <stdbool.h>
+#include <stdint.h>
+
+#define SCORE_DIGITS 7
+
+extern uint8_t score_d[SCORE_DIGITS]; /* most significant first */
+extern uint8_t hiscore_d[SCORE_DIGITS];
+
+/*
+ * The chain, after Radiant Silvergun: destroy three enemies of one color
+ * in a row to complete a set. Each completed set raises the chain and pays
+ * a growing bonus. A different color part way through a set breaks the
+ * chain. After a completed set, any color may start the next one.
+ */
+extern uint8_t chain_level;
+extern uint8_t chain_max;
+extern uint8_t chain_color;
+extern uint8_t chain_count; /* kills in the current set, 0-2 */
+extern uint16_t chain_last_bonus;
+
+void score_reset(void);
+void score_add(uint16_t pts);
+/* Register a kill. Returns the bonus paid, 0 if no set was completed. */
+uint16_t chain_kill(uint8_t color);
+void score_hud(bool force);
+void hiscore_load(void);
+void hiscore_save(void);
+
+#endif
