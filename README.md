@@ -165,6 +165,16 @@ RPTracker's bank) and rebuild it without re-rolling the composition:
 `--vol`/`--patch` on that command line override the recorded values for
 one run. A new `--seed` re-rolls the composition. Then rebuild the game.
 
+To change only the chords, pick the two themes' progressions with
+`--prog A,B`. `--list-progs` prints the banks, such as the "royal road"
+IV-V-iii-vi. The melody, rhythms and instruments of the seed stay the same,
+and the choice is recorded in the manifest:
+
+```sh
+.venv/bin/python tools/generate_music.py --list-progs
+.venv/bin/python tools/generate_music.py --track title --from-manifest --prog 6,0 --export-vgm
+```
+
 ### Testing in the emulator
 
 `tools/playtest.py` runs emulator scripts against the build, filling in

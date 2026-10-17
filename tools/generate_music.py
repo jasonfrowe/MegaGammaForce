@@ -88,6 +88,8 @@ def _load_manifest() -> dict:
 
 
 def _record(spec, seed: int, style: int, vol_overrides: dict, ins: dict, exported: bool) -> None:
+    prog = ins.get("_prog")
+    prog_str = f"{prog[0]},{prog[1]}" if prog else None
     """Remember exactly how a track was made, so it can be rebuilt or tweaked
     later: see --from-manifest."""
     vol_str = ",".join(str(vol_overrides.get(role, 0)) for role in ROLE_ORDER)
@@ -101,10 +103,12 @@ def _record(spec, seed: int, style: int, vol_overrides: dict, ins: dict, exporte
         "patch": patch_str,
         "roles": ",".join(ROLE_ORDER),
         "mood": {k: v for k, v in vars(spec.mood).items()},
+        "prog": prog_str,
         "exported_vgm": exported,
         "date": datetime.date.today().isoformat(),
         "command": (f".venv/bin/python tools/generate_music.py --track {spec.aliases[0]} --seed {seed} "
-                    f"--style {style} --vol {vol_str} --patch {patch_str} --export-vgm"),
+                    f"--style {style} --vol {vol_str} --patch {patch_str}"
+                    + (f" --prog {prog_str}" if prog_str else "") + " --export-vgm"),
     }
     MANIFEST.write_text(json.dumps(m, indent=2) + "\n")
     print(f"  recorded in {MANIFEST}")
@@ -184,10 +188,10 @@ def _export_vgm(fur_path: Path, vgm_path: Path) -> None:
 def generate_one(spec: "tracks.TrackSpec", seed: int, bank, out_dir: Path,
                   export_vgm: bool = False, vgm_out_dir: Path = DEFAULT_VGM_OUT_DIR,
                   vol_overrides: dict = None, patch_overrides: dict = None, style: int = compose.STYLE_KRAFTWERK,
-                  record: bool = True) -> Path:
+                  record: bool = True, prog: tuple = None) -> Path:
     song, ins = compose.generate_track(
         name=f"{spec.resource} - {spec.description}", mood=spec.mood, seed=seed, bank=bank,
-        vol_overrides=vol_overrides, patch_overrides=patch_overrides, style=style,
+        vol_overrides=vol_overrides, patch_overrides=patch_overrides, style=style, prog_override=prog,
     )
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{spec.resource}.fur"
@@ -253,6 +257,9 @@ def main() -> int:
     parser.add_argument("--style", type=int, default=compose.STYLE_KRAFTWERK,
                          help=f"composition style: {style_choices} (default: {compose.STYLE_KRAFTWERK})")
     parser.add_argument("--list", action="store_true", help="list all tracks and exit")
+    parser.add_argument("--prog", help="style 9 only: A,B chord progression indices for the two themes "
+                                        "(see --list-progs); the rest of the seed's composition is unchanged")
+    parser.add_argument("--list-progs", action="store_true", help="list style 9's chord progression banks and exit")
     parser.add_argument("--from-manifest", action="store_true",
                          help=f"rebuild --track (or 'all') from the seed/style/vol/patch recorded in {MANIFEST.name}; "
                               "--vol/--patch given here still override the recorded ones")
@@ -261,6 +268,18 @@ def main() -> int:
     if args.list:
         cmd_list()
         return 0
+    if args.list_progs:
+        from musicgen import silvergun
+        for label, bank in (("major", silvergun.MAJOR_BANK), ("minor", silvergun.MINOR_BANK)):
+            print(f"{label} (tracks whose scale is {label}):")
+            for i, (tier, p) in enumerate(bank):
+                print(f"  {i:2d}  tier {tier}  {silvergun.describe(p)}")
+        return 0
+    prog = None
+    if args.prog:
+        prog = tuple(int(x) for x in args.prog.split(","))
+        if len(prog) != 2:
+            parser.error("--prog takes two indices, A,B")
 
     if args.from_manifest:
         manifest = _load_manifest()
@@ -272,8 +291,10 @@ def main() -> int:
             e = manifest[name]
             vol = _parse_vol(args.vol) if args.vol else _parse_vol(e["vol"])
             patch = _parse_patch(args.patch) if args.patch else _parse_patch(e["patch"])
+            p = prog or (tuple(int(x) for x in e["prog"].split(",")) if e.get("prog") else None)
             generate_one(tracks.resolve(name), e["seed"], bank, Path(args.out_dir), export_vgm=args.export_vgm,
-                         vgm_out_dir=Path(args.vgm_out_dir), vol_overrides=vol, patch_overrides=patch, style=e["style"])
+                         vgm_out_dir=Path(args.vgm_out_dir), vol_overrides=vol, patch_overrides=patch, style=e["style"],
+                         prog=p)
         return 0
 
     if args.style not in compose.STYLE_NAMES:
@@ -312,7 +333,7 @@ def main() -> int:
     seed = args.seed if args.seed is not None else random.randrange(2**31)
     bank = load_bank()
     generate_one(spec, seed, bank, out_dir, export_vgm=args.export_vgm, vgm_out_dir=vgm_out_dir,
-                 vol_overrides=vol_overrides, patch_overrides=patch_overrides, style=args.style)
+                 vol_overrides=vol_overrides, patch_overrides=patch_overrides, style=args.style, prog=prog)
     return 0
 
 

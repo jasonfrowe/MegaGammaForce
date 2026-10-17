@@ -683,7 +683,8 @@ def _generate_chunk_for_style(style: int, rng: random.Random, mood: MoodPreset, 
 def generate_track(name: str, mood: MoodPreset, seed: int, bank: List[FurInstrument],
                     vol_overrides: Optional[Dict[str, int]] = None,
                     patch_overrides: Optional[Dict[str, int]] = None,
-                    style: int = STYLE_KRAFTWERK) -> Tuple[FurSong, Dict[str, int]]:
+                    style: int = STYLE_KRAFTWERK,
+                    prog_override: Optional[Tuple[int, int]] = None) -> Tuple[FurSong, Dict[str, int]]:
     """`vol_overrides`/`patch_overrides` (both optional, keyed by role --
     see ROLE_TO_CHANNEL for the role names) let a specific roll be hand-tuned
     without touching the rest of the composition: `vol_overrides[role]` is
@@ -705,7 +706,7 @@ def generate_track(name: str, mood: MoodPreset, seed: int, bank: List[FurInstrum
     base_vol: Dict[str, int] = {role: ROLE_VOLUME[role] + vol_overrides.get(role, 0) for role in ROLE_TO_CHANNEL}
 
     if style == STYLE_SILVERGUN:
-        return _generate_silvergun(name, mood, rng, bank, base_vol, patch_overrides)
+        return _generate_silvergun(name, mood, rng, bank, base_vol, patch_overrides, prog_override)
 
     ins: Dict[str, int] = _pick_instruments_for_style(rng, bank, style)
     if mood.use_drums:
@@ -791,14 +792,16 @@ def generate_track(name: str, mood: MoodPreset, seed: int, bank: List[FurInstrum
 
 
 def _generate_silvergun(name: str, mood: MoodPreset, rng: random.Random, bank: List[FurInstrument],
-                        base_vol: Dict[str, int], patch_overrides: Dict[str, int]) -> Tuple[FurSong, Dict[str, int]]:
+                        base_vol: Dict[str, int], patch_overrides: Dict[str, int],
+                        prog_override: Optional[Tuple[int, int]] = None) -> Tuple[FurSong, Dict[str, int]]:
     """Style 9 -- see silvergun.py. Same arrangement and song assembly as the
     other styles, but its own instruments, harmony, chunk composer and meter."""
     ins = silvergun.pick_instruments(rng)
     for role, patch in patch_overrides.items():
         ins[role] = patch
     major = mood.scale in ("major", "mixolydian")
-    prog_a, prog_b = silvergun.pick_progressions(rng, mood.intensity, major)
+    prog_a, prog_b, ia, ib = silvergun.pick_progressions(rng, mood.intensity, major, prog_override)
+    print(f"  progressions: A {ia} ({silvergun.describe(prog_a)}), B {ib} ({silvergun.describe(prog_b)})")
     b_root = mood.key_root
     if mood.intensity >= 0.65 and rng.random() < 0.65:
         b_root = (mood.key_root + rng.choice([2, 3, -2, 5])) % 12
@@ -836,4 +839,6 @@ def _generate_silvergun(name: str, mood: MoodPreset, rng: random.Random, bank: L
                 song.orders[ch].append(empty)
         for ch in unused:
             song.orders[ch].append(empty)
+    ins = dict(ins)
+    ins["_prog"] = (ia, ib)  # not a role: reported back so the manifest can record it
     return song, ins

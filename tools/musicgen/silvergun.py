@@ -25,7 +25,7 @@ its actual music:
 from __future__ import annotations
 
 import random
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from .furwriter import NOTE_OFF, RowCell, note_value
 
@@ -51,6 +51,12 @@ MAJOR_BANK: List[Tuple[int, List[Chord]]] = [
     (2, [(0, "M"), (9, "m"), (5, "M"), (7, "M")]),    # I  vi  IV  V
     (2, [(0, "M"), (4, "m"), (5, "M"), (7, "M")]),    # I  iii IV  V
     (3, [(0, "M"), (3, "M"), (8, "M"), (7, "M")]),    # I  bIII bVI V
+    # Added later; appended so the indices above keep their meaning.
+    (2, [(5, "M"), (7, "M"), (4, "m"), (9, "m")]),    # IV V   iii vi  ("royal road", JRPG staple)
+    (2, [(9, "m"), (5, "M"), (0, "M"), (7, "M")]),    # vi IV  I   V
+    (2, [(0, "M"), (7, "M"), (9, "m"), (5, "M")]),    # I  V   vi  IV
+    (3, [(0, "M"), (4, "M"), (9, "m"), (7, "M")]),    # I  III vi  V   (secondary dominant)
+    (3, [(5, "M"), (7, "M"), (8, "M"), (10, "M")]),   # IV V   bVI bVII (rising, never lands)
 ]
 
 # Natural minor, natural major. A major chord built on the 5th raises the 7th.
@@ -84,7 +90,11 @@ def meter_rows(meter: str) -> Tuple[int, int]:
     return 16, 4
 
 
-def pick_progressions(rng: random.Random, intensity: float, major: bool) -> Tuple[List[Chord], List[Chord]]:
+def pick_progressions(rng: random.Random, intensity: float, major: bool,
+                      override: Optional[Tuple[int, int]] = None) -> Tuple[List[Chord], List[Chord], int, int]:
+    """Two progressions for the A and B themes, and their bank indices.
+    `override` names the indices instead; the picks still draw from `rng`
+    so the rest of the seed's composition comes out the same."""
     bank = MAJOR_BANK if major else MINOR_BANK
 
     def weight(tier):
@@ -98,9 +108,22 @@ def pick_progressions(rng: random.Random, intensity: float, major: bool) -> Tupl
     out = []
     for _ in range(2):
         pick = rng.choices(idxs, weights=[weight(bank[i][0]) + 0.02 for i in idxs], k=1)[0]
-        out.append(bank[pick][1])
+        out.append(pick)
         idxs.remove(pick)
-    return out[0], out[1]
+    if override is not None:
+        out = list(override)
+    for i in out:
+        if not 0 <= i < len(bank):
+            raise ValueError(f"progression {i} is not in the {'major' if major else 'minor'} bank (0-{len(bank) - 1})")
+    return bank[out[0]][1], bank[out[1]][1], out[0], out[1]
+
+
+ROMAN = {0: "I", 1: "bII", 2: "II", 3: "bIII", 4: "III", 5: "IV", 6: "bV", 7: "V", 8: "bVI", 9: "VI", 10: "bVII",
+         11: "VII"}
+
+
+def describe(prog: List[Chord]) -> str:
+    return " ".join(ROMAN[o] if q == "M" else ROMAN[o].lower() for o, q in prog)
 
 
 def pick_instruments(rng: random.Random) -> Dict[str, int]:

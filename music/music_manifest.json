@@ -18,9 +18,10 @@
       "use_drums": true,
       "meter": "4/4"
     },
+    "prog": "6,0",
     "exported_vgm": true,
     "date": "2026-10-17",
-    "command": ".venv/bin/python tools/generate_music.py --track title --seed 1634767060 --style 9 --vol 0,0,0,0,0,0,0 --patch 28,30,46,32,2F,FE,37 --export-vgm"
+    "command": ".venv/bin/python tools/generate_music.py --track title --seed 1634767060 --style 9 --vol 0,0,0,0,0,0,0 --patch 28,30,46,32,2F,FE,37 --prog 6,0 --export-vgm"
   },
   "Stage1": {
     "seed": 1998,
