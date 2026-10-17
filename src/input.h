@@ -9,13 +9,13 @@
  *
  *                   Keyboard        Gamepad
  * Move              WASD / arrows   d-pad / left stick
- * A   Vulcan        Y               A
- * B   Homing        U               B
- * C   Spread        I               C or R1
- * A+B Homing Plasma H               X
- * A+C Wide Shot     J               Y
- * B+C Homing Spread K               Z or L1
- * Radiant Sword     N               R2
+ * A   Vulcan        Z or J          A
+ * B   Homing        X or K          B
+ * C   Spread        C or L          C or R1
+ * A+B Homing Plasma V               X
+ * A+C Wide Shot     (Z+C)           Y
+ * B+C Homing Spread B               Z or L1
+ * Radiant Sword     N or Space      R2
  * Hyper Sword       M               L2
  * Start / pause     Enter / P       Start
  */

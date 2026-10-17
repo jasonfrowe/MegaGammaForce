@@ -21,14 +21,14 @@ the combination's own button.
 
 | Action | Keyboard | Gamepad |
 |---|---|---|
-| Move | WASD or arrows | D-pad or left stick |
-| **A** Vulcan | Y | A |
-| **B** Homing | U | B |
-| **C** Spread | I | C or R1 |
-| **A+B** Homing Plasma | H (or Y+U) | X (or A+B) |
-| **A+C** Wide Shot | J (or Y+I) | Y (or A+C/R1) |
-| **B+C** Homing Spread | K (or U+I) | Z or L1 (or B+C/R1) |
-| Radiant Sword | N | R2 |
+| Move | Arrows or WASD | D-pad or left stick |
+| **A** Vulcan | Z or J | A |
+| **B** Homing | X or K | B |
+| **C** Spread | C or L | C or R1 |
+| **A+B** Homing Plasma | V (or Z+X) | X (or A+B) |
+| **A+C** Wide Shot | Z+C | Y (or A+C/R1) |
+| **B+C** Homing Spread | B (or X+C) | Z or L1 (or B+C/R1) |
+| Radiant Sword | N or Space | R2 |
 | Hyper Sword | M | L2 |
 | Start / pause | Enter or P | Start |
 
