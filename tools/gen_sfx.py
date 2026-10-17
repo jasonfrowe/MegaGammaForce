@@ -189,6 +189,19 @@ def lock():
     return s.on(1320).wait(25).off().wait(10).on(1760).wait(30).off()
 
 
+def extend():
+    """Extra life: a bright major fanfare, then a shimmering held top note."""
+    s = Sfx(7).patch(mod_mult=1, mod_tl=12, mod_dr=4, car_mult=2, car_dr=3, car_sl=3, car_rr=5, feedback=4,
+                     connection=0)
+    for f, ms in ((783.99, 70), (1046.5, 70), (1318.5, 70), (1568.0, 70), (1318.5, 70), (1568.0, 70)):
+        s.on(f).wait(ms).off().wait(10)
+    s.on(2093.0)
+    for _ in range(10):
+        for lv in (0, 3, 6, 3):
+            s.tl(lv).wait(15)
+    return s.off()
+
+
 def enemy_fire():
     return Sfx(8).patch(mod_mult=2, mod_tl=22, car_dr=6, car_sl=4, car_rr=8, feedback=2).sweep(600, 260, 70, 7).off()
 
@@ -230,6 +243,7 @@ SFX = [
     ("ABSORB", absorb),
     ("CLEAR", clear),
     ("LOCK", lock),
+    ("EXTEND", extend),
     ("ENEMY_FIRE", enemy_fire),
     ("EXPLODE", explode),
     ("BIG_EXPLODE", big_explode),

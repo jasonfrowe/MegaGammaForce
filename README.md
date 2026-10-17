@@ -81,7 +81,10 @@ of the new color; if you switch in the middle of a set, the chain breaks.
     blue blue blue -> bonus x3
     red blue ...   -> broken: the lone red was an unfinished set
 
-The three pips under CHAIN show the current run.
+The three pips under CHAIN show the current run. Losing a ship loses the
+chain, and the Hyper Sword charge with it.
+
+Every 100,000 points earns an extra life (EXTEND!), up to seven ships.
 
 ### The boss
 

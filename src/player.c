@@ -27,6 +27,10 @@ static uint8_t dead_timer;
 static uint8_t fire_cd;
 static uint8_t sword_tick;
 static uint8_t shown_weapon = 0xFF, shown_gauge = 0xFF, shown_lives = 0xFF;
+static uint8_t extend_timer;
+
+#define LIVES_MAX 7 /* as many as the HUD shows */
+#define EXTEND_ROW 18
 
 /*
  * Homing missiles: while the button is held, a lock-on ring grows out from
@@ -173,6 +177,7 @@ void player_reset(void)
     hyper_timer = 0;
     pl_weapon = WP_VULCAN;
     shown_weapon = shown_gauge = shown_lives = 0xFF;
+    extend_timer = 0;
     player_respawn();
     invuln = 0;
 }
@@ -195,6 +200,8 @@ void player_hit(void)
     if (pl_lives)
         pl_lives--;
     sword_active = false;
+    sword_gauge = 0; /* dying loses the Hyper Sword charge */
+    chain_break();   /* and the chain */
     player_hide();
 }
 
@@ -349,8 +356,25 @@ static void update_sword(uint8_t w, int16_t sx, int16_t sy)
     }
 }
 
+/* Extra lives from the score: one each 100,000 points. */
+static void extends(void)
+{
+    if (extend_timer && --extend_timer == 0)
+        hud_clear_row(EXTEND_ROW);
+    if (!score_extends || (pl_state == PL_DEAD && pl_lives == 0))
+        return;
+    score_extends--;
+    if (pl_lives < LIVES_MAX)
+        pl_lives++;
+    hud_clear_row(EXTEND_ROW);
+    hud_text(16, EXTEND_ROW, "EXTEND!", HC_YELLOW, HC_CLEAR);
+    extend_timer = 120;
+    sfx_player(SFX_EXTEND, SFX_PRI_TOP);
+}
+
 void player_update(bool controls)
 {
+    extends();
     if (pl_state == PL_DEAD) {
         if (dead_timer && --dead_timer == 0 && pl_lives)
             player_respawn();

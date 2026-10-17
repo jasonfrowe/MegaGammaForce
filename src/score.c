@@ -13,6 +13,10 @@ uint8_t chain_max;
 uint8_t chain_color;
 uint8_t chain_count;
 uint16_t chain_last_bonus;
+uint8_t score_extends;
+
+/* The next extend, in hundred-thousands. */
+static uint8_t next_extend;
 
 static bool score_dirty, chain_dirty;
 
@@ -27,6 +31,8 @@ void score_reset(void)
     chain_count = 0;
     chain_color = COL_GRAY;
     chain_last_bonus = 0;
+    score_extends = 0;
+    next_extend = 1;
     score_dirty = chain_dirty = true;
 }
 
@@ -51,6 +57,11 @@ void score_add(uint16_t pts)
     }
     if (carry)
         memset(score_d, 9, sizeof(score_d)); /* counter stop */
+    uint8_t hundred_k = (uint8_t)(score_d[0] * 10 + score_d[1]);
+    while (next_extend <= hundred_k) {
+        next_extend++;
+        score_extends++;
+    }
     if (memcmp(score_d, hiscore_d, SCORE_DIGITS) > 0)
         memcpy(hiscore_d, score_d, SCORE_DIGITS);
     score_dirty = true;
@@ -88,6 +99,15 @@ uint16_t chain_kill(uint8_t color)
     chain_last_bonus = chain_bonus[i];
     score_add(chain_last_bonus);
     return chain_last_bonus;
+}
+
+void chain_break(void)
+{
+    chain_level = 0;
+    chain_count = 0;
+    chain_color = COL_GRAY;
+    chain_last_bonus = 0;
+    chain_dirty = true;
 }
 
 static const uint8_t color_hc[4] = {HC_RED, HC_BLUE, HC_YELLOW, HC_GRAY};

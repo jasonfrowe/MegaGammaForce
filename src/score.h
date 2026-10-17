@@ -8,6 +8,8 @@
 
 extern uint8_t score_d[SCORE_DIGITS]; /* most significant first */
 extern uint8_t hiscore_d[SCORE_DIGITS];
+#define SCORE_EXTEND_EVERY 100000 /* an extra life at each multiple */
+extern uint8_t score_extends; /* extra lives earned, not yet handed out */
 
 /*
  * The chain, after Radiant Silvergun: destroy three enemies of one color
@@ -25,6 +27,8 @@ void score_reset(void);
 void score_add(uint16_t pts);
 /* Register a kill. Returns the bonus paid, 0 if no set was completed. */
 uint16_t chain_kill(uint8_t color);
+/* Lose the chain (on death); chain_max is kept for the results. */
+void chain_break(void);
 void score_hud(bool force);
 void hiscore_load(void);
 void hiscore_save(void);
