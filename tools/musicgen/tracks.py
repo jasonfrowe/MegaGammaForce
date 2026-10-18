@@ -108,6 +108,18 @@ TRACKS: list = [
         mood=MoodPreset(key_root=1, scale="minor", bpm=180, intensity=0.95, target_seconds=120.0, lead_octave=5),
     ),
     TrackSpec(
+        resource="Stage5",
+        description="Stage 5, Frozen Strait",
+        aliases=["stage5", "level5"],
+        mood=MoodPreset(key_root=11, scale="minor", bpm=160, intensity=0.8, target_seconds=150.0, lead_octave=5),
+    ),
+    TrackSpec(
+        resource="Boss5",
+        description="Boss battle, GLACIER CRAWLER",
+        aliases=["boss5"],
+        mood=MoodPreset(key_root=6, scale="minor", bpm=172, intensity=0.95, target_seconds=120.0, lead_octave=5),
+    ),
+    TrackSpec(
         resource="Gameover",
         description="Game over",
         aliases=["gameover"],

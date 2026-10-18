@@ -147,7 +147,7 @@
 #define PAL_STAGE 11 /* first of the palettes a stage loads */
 #define PAL_STAGE_N 5
 
-#define STAGE_COUNT 4
+#define STAGE_COUNT 5
 #define STAGE_BANK_MAX 20178 /* the largest stage file, less its palettes */
 #define BOSS_BANK_MAX 12804 /* the largest boss file, less its palettes */
 

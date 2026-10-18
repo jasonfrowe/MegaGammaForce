@@ -92,6 +92,19 @@ typedef struct
     uint8_t chain_first, chain_n, chain_gap;
 } motion_t;
 
+/*
+ * A boss drawn in plane 1's tile layer (bg_layer_show), centered on the
+ * boss and moving with it. Destroyed parts leave craters in its map.
+ */
+typedef struct
+{
+    uint16_t map, tiles; /* XRAM addresses */
+    uint8_t w, h;        /* in tiles */
+    const uint8_t (*socket)[2]; /* each part's top left tile: column, row */
+    uint8_t crater;      /* tile written over a one-tile part */
+    uint8_t crater_big;  /* the first of four, over a larger part */
+} hull_t;
+
 struct boss_def
 {
     const char *core_label; /* names the HUD bar */
@@ -119,6 +132,8 @@ struct boss_def
     const motion_t *motion;
     const pattern_t *patterns;
     uint8_t n_patterns;
+    /* Optional: the boss's body is a tile map. */
+    const hull_t *hull;
 };
 
 /* Shared with the boss scripts. */

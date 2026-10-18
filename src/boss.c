@@ -1,3 +1,5 @@
+#include <rp6502.h>
+#include "bg.h"
 #include "boss.h"
 #include "bullets.h"
 #include "enemies.h"
@@ -149,6 +151,8 @@ static void hide_all(void)
 static void finish(void)
 {
     hide_all();
+    if (def && def->hull)
+        bg_layer_hide();
     if (def && def->finish)
         def->finish();
 }
@@ -181,6 +185,11 @@ void boss_start(const boss_def_t *d)
         part_aim[i] = 0;
         if (p->kind != PK_HIDDEN)
             spr_setup(&spr[SPR_BOSS + i], p->img, PAL_ADDR(PAL_BOSS), WH(p->w, p->h), OPT4 | p->opt);
+    }
+    const hull_t *h = def->hull;
+    if (h) {
+        bg_layer_show(h->map, h->w, h->h, h->tiles);
+        boss_y = Q4(-(int16_t)(h->h * 8) - 8);
     }
     orbit = 0;
     for (uint8_t k = 0; k < 16; k++)
@@ -230,6 +239,21 @@ static void destroy_part(uint8_t i, bool scored)
         score_add(p->score);
         weapon_xp((uint8_t)(2 + (p->weight >> 1)));
     }
+    const hull_t *h = def->hull;
+    if (h) {
+        /* A crater in the hull where it stood. */
+        uint16_t at = h->map + h->socket[i][1] * h->w + h->socket[i][0];
+        if (p->w >= 32) {
+            xram0_poke8(at, h->crater_big);
+            xram0_poke8(at + 1, h->crater_big + 1);
+            xram0_poke8(at + h->w, h->crater_big + 2);
+            xram0_poke8(at + h->w + 1, h->crater_big + 3);
+        } else {
+            xram0_poke8(at, h->crater);
+            if (p->h >= 32)
+                xram0_poke8(at + h->w, h->crater);
+        }
+    }
     if (def->destroyed)
         def->destroyed(i);
     /* Parts mounted on this one go with it. */
@@ -267,6 +291,8 @@ static void place(void)
     }
     if (def->motion)
         script_place();
+    if (def->hull)
+        bg_layer_move(x - def->hull->w * 8, y - def->hull->h * 8);
     if (def->place)
         def->place();
 }
@@ -335,6 +361,16 @@ void boss_update(void)
                 sfx_enemy(SFX_BIG_EXPLODE, SFX_PRI_TOP);
         }
         boss_y += 4;
+        if (def->hull) {
+            /* Left behind as it burns, cratering from end to end. */
+            const hull_t *h = def->hull;
+            boss_y += 20;
+            if ((state_t & 7) == 0) {
+                uint8_t c = (uint8_t)(1 + rng8() % (h->w - 2)), r = (uint8_t)(rng8() % h->h);
+                xram0_poke8(h->map + r * h->w + c, h->crater);
+                fx_explode((boss_x >> 4) - h->w * 8 + c * 16 + 8, (boss_y >> 4) - h->h * 8 + r * 16 + 8, 1);
+            }
+        }
         if (def->dying)
             def->dying();
         if (state_t > 150) {

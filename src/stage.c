@@ -20,6 +20,8 @@
 #include "gen/stage3_data.h"
 #include "gen/stage4.h"
 #include "gen/stage4_data.h"
+#include "gen/stage5.h"
+#include "gen/stage5_data.h"
 
 #define N(a) ((uint8_t)(sizeof(a) / sizeof((a)[0])))
 
@@ -103,6 +105,27 @@ static const stage_def_t stage_defs[] = {
         .sky_solid = 0,
         .boss = &boss4,
     },
+    {
+        .bank = "ROM:stage5.bin",
+        .boss_bank = "ROM:boss5.bin",
+        .name = "STAGE 5",
+        .title = "FROZEN STRAIT",
+        .warning = "GLACIER CRAWLER ADVANCING",
+        .music = "ROM:Stage5.vgm",
+        .boss_music = "ROM:Boss5.vgm",
+        .speed = 160,
+        .gspr_n = 16,
+        .tiles = S5_TILES,
+        .map = S5_MAP,
+        .map_rows = S5_MAP_ROWS,
+        .loop_rows = S5_MAP_LOOP_ROWS,
+        .sky_tiles = S5_SKY_TILES,
+        .sky_map = S5_SKY_MAP,
+        .sky_rows = S5_SKY_ROWS,
+        .sky_speed = S5_SKY_SPEED,
+        .sky_solid = s5_sky_solid,
+        .boss = &boss5,
+    },
 };
 _Static_assert(N(stage_defs) == STAGE_COUNT, "a stage in the art has no stage_defs entry, or the other way");
 
@@ -151,19 +174,20 @@ void stage_load(uint8_t n)
 {
     stage_num = n;
     stage = &stage_defs[n];
+    /* The HUD is in front of every plane, so a black playfield hides
+     * the tiles and sprites while their data is replaced. */
+    curtain();
+    /* The boss file always comes fresh: a tile boss cratered its map. */
+    boss_bank_load(n);
+    frame_loaded = true;
     if (loaded != n) {
-        /* The HUD is in front of every plane, so a black playfield hides
-         * the tiles and sprites while their data is replaced. */
-        curtain();
         load_file(stage->bank, PAL_TILES, 2, XRAM_BANK);
-        boss_bank_load(n);
         n_waves = xram0_peek8(XRAM_BANK);
         n_ground = xram0_peek8(XRAM_BANK + 1);
         xram0_read(waves, XRAM_BANK + 2, n_waves * sizeof(wave_t));
         xram0_read(ground, XRAM_BANK + 2 + n_waves * sizeof(wave_t), n_ground * sizeof(ground_t));
         bg_capture_palettes();
         loaded = n;
-        frame_loaded = true;
     }
     spr_ground_count(stage->gspr_n);
     bg_load();

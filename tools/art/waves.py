@@ -141,3 +141,30 @@ S4_WAVES = [
     (2720, "ET_DART", "COL_RED", 96, 0, 3, 10, 130),
     (2770, "ET_GUNSHIP", "COL_GRAY", 96, 0, 1, 1, 60),
 ]
+
+# Stage 5, Frozen Strait: icebergs take room, so the air is lighter than
+# stage 4's; tanks on the roads and icebreakers in the leads below.
+S5_WAVES = [
+    (140, "ET_SAUCER", "COL_BLUE", 60, 0, 3, 20, 40),
+    (220, "ET_SAUCER", "COL_BLUE", 132, 0, 3, 20, 40),
+    (360, "ET_DART", "COL_RED", 30, 24, 3, 12, 100),
+    (480, "ET_DART", "COL_RED", 162, -24, 3, 12, 100),
+    (620, "ET_WASP", "COL_YELLOW", 96, 0, 3, 14, 40),
+    (780, "ET_DRONE", "COL_BLUE", 50, 46, 3, 26, 64),
+    (940, "ET_GUNSHIP", "COL_GRAY", 96, 0, 1, 1, 60),
+    (1100, "ET_WASP", "COL_RED", 30, 14, 3, 10, 30),
+    (1140, "ET_WASP", "COL_RED", 160, -14, 3, 10, 30),
+    (1300, "ET_DART", "COL_YELLOW", 20, 30, 6, 8, 110),
+    (1460, "ET_SAUCER", "COL_RED", 96, 0, 3, 18, 60),
+    (1620, "ET_DRONE", "COL_YELLOW", 60, 36, 3, 30, 70),
+    (1780, "ET_GUNSHIP", "COL_GRAY", 60, 0, 1, 1, 50),
+    (1820, "ET_GUNSHIP", "COL_GRAY", 132, 0, 1, 1, 80),
+    (1980, "ET_DART", "COL_BLUE", 172, -30, 6, 8, 100),
+    (2140, "ET_WASP", "COL_BLUE", 40, 0, 3, 10, 24),
+    (2170, "ET_WASP", "COL_YELLOW", 152, 0, 3, 10, 24),
+    (2320, "ET_SAUCER", "COL_YELLOW", 60, 0, 3, 18, 40),
+    (2350, "ET_SAUCER", "COL_RED", 130, 0, 3, 18, 40),
+    (2500, "ET_DRONE", "COL_RED", 40, 56, 3, 22, 60),
+    (2660, "ET_DART", "COL_BLUE", 96, 0, 3, 10, 130),
+    (2780, "ET_GUNSHIP", "COL_GRAY", 96, 0, 1, 1, 60),
+]

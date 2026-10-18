@@ -112,12 +112,13 @@ Extra lives (EXTEND!) come at 50,000 and 100,000 points, then every 100,000 afte
 | 2 | **Neon Spires**, a city at night | Tall towers to dodge (flying into one is fatal), tanks on the roads, wasps | SPIRE WARDEN |
 | 3 | **Iron Tide**, open ocean and jungle islands | Gunboats, island bunkers | Battleship LEVIATHAN |
 | 4 | **Scorched Sands**, desert dunes, plateaus and oases | Armoured trains on a railway, a sandstorm drifting over | DUNE WYRM |
+| 5 | **Frozen Strait**, pack ice and open leads | Icebergs to dodge, icebreakers in the water, snow tanks on plowed roads, blowing snow | GLACIER CRAWLER |
 
 On the title screen, left and right choose the stage a game starts on.
 Score, lives and the chain carry from one stage to the next. Clearing
 the last stage ends the game.
 
-Stage 2's towers stand as high as you fly. Flying into one is fatal, and
+Stage 2's towers and stage 5's icebergs stand as high as you fly. Flying into one is fatal, and
 they stop your Vulcan, Spread, Homing darts and the Wide Shot's rear shots,
 and every enemy bullet too, so they make cover as well as walls. Homing
 Missiles and Homing Plasma reach over them, and so do the swords. Flying
@@ -146,6 +147,10 @@ too long and the boss escapes.
 - **DUNE WYRM** (90 seconds): a sandworm whose head winds a figure of
   eight with nine armoured segments and a tail trailing its path. Every
   segment can be shot off; the head is the core.
+- **GLACIER CRAWLER** (100 seconds): a tracked fortress grinding up the
+  ice at you. Twin guns, four turrets, two hatches that launch fighters,
+  and an ice drill at the front that sprays pink. The cryo reactor at the
+  rear is the core, and wakes up once the drill is gone.
 
 ## Building
 
@@ -186,7 +191,11 @@ for the boss fight to scroll over forever. The sky layer scrolls 1.5
 times as fast, for parallax, and stops at its empty top before the boss
 arrives. Fill layers cost no sprite time, which is why the battleship's
 hull is a tile map that the game moves around, with its guns as sprites
-on top.
+on top. Stage 5's crawler is built the same way, but from tables alone:
+a scripted boss can name a `hull_t` (its map, tiles and each part's
+socket), and the boss engine shows and moves the layer and writes craters
+for it. The boss file is reloaded whenever a stage starts, so the craters
+from the last attempt are gone.
 
 XRAM holds what every stage shares (the ship, weapons, enemies, effects,
 sound effects, HUD) and, after it, about 34 KB for the current stage, in
@@ -219,7 +228,7 @@ results.
 | Tool | Makes |
 |---|---|
 | `tools/gen_art.py` | Shared sheets in `images/*.png`; each stage's sheets, maps and palettes in `images/stage<N>/`; `src/gen/assets.h`, `src/gen/stage<N>.h` (bank offsets) and `src/gen/stage<N>_data.h` (ground units, solid tiles) |
-| `tools/art/` | The pixel-art kit: shapes with heights, lit from the top left, outlined. Banking frames are real rolls of the ship. `stages.py` lists what each stage's files hold and places ground units, `waves.py` has every stage's air waves; `tiles.py`, `city.py`, `ocean.py`, `desert.py` draw the stages, `boss.py`, `boss2.py`, `ship.py`, `wyrm.py` the bosses, `hud.py` the HUD graphics. |
+| `tools/art/` | The pixel-art kit: shapes with heights, lit from the top left, outlined. Banking frames are real rolls of the ship. `stages.py` lists what each stage's files hold and places ground units, `waves.py` has every stage's air waves; `tiles.py`, `city.py`, `ocean.py`, `desert.py`, `arctic.py` draw the stages, `boss.py`, `boss2.py`, `ship.py`, `wyrm.py`, `crawler.py` the bosses, `hud.py` the HUD graphics. |
 | `tools/mkbank.py` | Run by the build: packs `images/stage<N>/` into `ROM:stage<N>.bin` and `ROM:boss<N>.bin` |
 | `tools/gen_sfx.py` | OPL2 sound effects in `music/sfx.bin`, `src/gen/sfx_ids.h` |
 | `tools/generate_music.py` | OPL2 music via Furnace (from RPDemo's composer): `music/fur_levels/*.fur` and `music/*.vgm` |
@@ -250,7 +259,7 @@ to try with `--style`:
 | 12 **chiparcade** | Square leads, a fast one-row-per-note chord arpeggio, bouncing bass, and the pad channel used as an echo of the lead |
 | 13 **fusion** | Sax or synth lead, electric piano stabs, slap bass with octave pops and ghost notes, a busy funk kit |
 
-Stage 2 uses eurobeat, stage 3 fusion and the battleship fmrock, stage 4 silvergun with Phrygian chords (`--prog 6,7`) and the wyrm fmrock; the stage 2 boss reuses `Boss.vgm`.
+Stage 2 uses eurobeat, stage 3 fusion and the battleship fmrock, stage 4 silvergun with Phrygian chords (`--prog 6,7`) and the wyrm fmrock, stage 5 chiparcade and the crawler eurobeat; the stage 2 boss reuses `Boss.vgm`.
 `Victory.vgm` (and its `.fur`) comes from RPDemo as it is, and plays once after a boss is destroyed.
 `Gameover.vgm` is generated (style 9, `"form": "jingle"` in its mood: one phrase and a cadence home, played once).
 All four are in 4/4. On a 6/8 track (the boss), they keep the same eighth-note

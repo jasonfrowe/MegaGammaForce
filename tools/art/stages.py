@@ -15,9 +15,11 @@ A stage is a dict:
 
 import numpy as np
 
+import arctic
 import boss
 import boss2
 import city
+import crawler
 import desert
 import hud
 import logo
@@ -229,5 +231,71 @@ def stage4():
 LOOP_ROWS_DEFAULT = 16
 
 
+def hull_defines(defines, mod, hids, craters):
+    """A tile-built boss's hull: its size, each part's socket (tile column
+    and row of its top left) and center offset from the hull's center in
+    pixels, and the tile ids the game writes."""
+    defines.update({"HULL_W": mod.W, "HULL_H": mod.H})
+    for name, (c, r, w, h) in mod.PARTS.items():
+        defines[f"{name}_COL"] = c
+        defines[f"{name}_ROW"] = r
+        defines[f"{name}_OX"] = c * 16 + w * 8 - mod.W * 8
+        defines[f"{name}_OY"] = r * 16 + h * 8 - mod.H * 8
+    for name in craters:
+        defines[f"T_{name.upper()}"] = hids[name]
+
+
+def stage5():
+    gt, gmap, bunkers, roads, water = arctic.stage5_ground()
+    sky_speed = 6
+    st, smap, solid = arctic.stage5_sky(sky_stage_rows(sky_speed))
+    ht, hids = crawler.hull_tileset()
+    hmap = crawler.hull_map(hids)
+    pal = {"TILES": arctic.ICE, "SKY": arctic.FROST, "LAYER": crawler.HULL5, "BOSS": crawler.BOSS5,
+           "BOSS_WRECK": crawler.BOSS5_WRECK}
+    units = []
+    for i, (r, c) in enumerate(sorted(bunkers)):
+        y = (r + 1) * 16
+        if 300 < y < WAVES_END:
+            units.append((y, (c + 1) * 16, "ET_TURRET", COLOR[i % 3], 0))
+    # Snow tanks on the roads, alternating directions.
+    for k, r in enumerate(roads):
+        y = r * 16 + 8
+        if 400 < y < WAVES_END - 100:
+            left = k % 2 == 1
+            units.append((y, 200 if left else 0, "ET_TANK", COLOR[(k // 3) % 3], (0x80 if left else 0) | 9))
+    boats = [(r, c) for r, c in sorted(water) if 500 < r * 16 < WAVES_END - 200]
+    for k, (r, c) in enumerate(boats):
+        units.append((r * 16 + 8, c * 16 + 8, "ET_GUNBOAT", COLOR[(k // 3) % 3], 0))
+    defines = map_defines("MAP", gmap, LOOP_ROWS_DEFAULT)
+    defines.update({"TILES_N": len(gt), "SKY_ROWS": smap.shape[0], "SKY_SPEED": sky_speed, "SKY_TILES_N": len(st),
+                    "HULL_TILES_N": len(ht)})
+    hull_defines(defines, crawler, hids, ("crater", "crater_big0"))
+    assert all(hids[f"crater_big{k}"] == hids["crater_big0"] + k for k in range(4))
+    return {
+        "n": 5,
+        "palettes": pal,
+        "items": [
+            {"name": "tiles", "frames": gt, "pal": arctic.ICE},
+            {"name": "map", "data": gmap.astype(np.uint8).tobytes()},
+            {"name": "sky_tiles", "frames": st, "pal": arctic.FROST},
+            {"name": "sky_map", "data": smap.astype(np.uint8).tobytes()},
+            {"name": "hull_tiles", "boss": True, "frames": ht, "pal": crawler.HULL5},
+            {"name": "hull_map", "boss": True, "data": hmap.astype(np.uint8).tobytes()},
+            {"name": "boss_reactor", "boss": True, "frames": crawler.reactor(), "pal": crawler.BOSS5},
+            {"name": "portrait", "boss": True, "frames": hud.portrait(crawler.drill()[0]), "pal": crawler.BOSS5},
+            {"name": "boss_drill", "boss": True, "frames": crawler.drill(), "pal": crawler.BOSS5},
+            {"name": "boss_gun", "boss": True, "frames": ship.main_gun(), "pal": crawler.BOSS5},
+            {"name": "boss_turret", "boss": True, "frames": boss.turret(), "pal": crawler.BOSS5},
+        ],
+        "defines": defines,
+        "waves": waves.S5_WAVES,
+        "ground": units,
+        "data_h": solid_table(5, "sky", solid, len(st)),
+        "previews": {"ground": (tilemap_image(gt, gmap), arctic.ICE), "sky": (tilemap_image(st, smap), arctic.FROST),
+                     "hull": (tilemap_image(ht, hmap), crawler.HULL5)},
+    }
+
+
 def all_stages():
-    return [stage1(), stage2(), stage3(), stage4()]
+    return [stage1(), stage2(), stage3(), stage4(), stage5()]

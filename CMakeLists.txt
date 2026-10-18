@@ -79,7 +79,7 @@ foreach(n RANGE 1 9)
 endforeach()
 
 # Music, streamed from the ROM while playing.
-foreach(track Title Stage1 Boss Stage2 Stage3 Boss3 Stage4 Boss4 Victory Gameover)
+foreach(track Title Stage1 Boss Stage2 Stage3 Boss3 Stage4 Boss4 Stage5 Boss5 Victory Gameover)
     if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/music/${track}.vgm)
         rp6502_asset(MegaGammaForce ${track}.vgm music/${track}.vgm)
     endif()
@@ -113,6 +113,7 @@ target_sources(MegaGammaForce PRIVATE
     src/boss2.c
     src/boss3.c
     src/boss4.c
+    src/boss5.c
     src/opl.c
     src/vgm.c
     src/music.c
