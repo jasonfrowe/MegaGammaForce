@@ -156,6 +156,18 @@ TRACKS: list = [
         mood=MoodPreset(key_root=11, scale="minor", bpm=174, intensity=1.0, target_seconds=120.0, lead_octave=5),
     ),
     TrackSpec(
+        resource="Stage9",
+        description="Stage 9, Corona",
+        aliases=["stage9", "level9"],
+        mood=MoodPreset(key_root=9, scale="minor", bpm=160, intensity=0.9, target_seconds=150.0, lead_octave=5),
+    ),
+    TrackSpec(
+        resource="Final",
+        description="Final boss, GAMMA PRIME",
+        aliases=["final"],
+        mood=MoodPreset(key_root=2, scale="minor", bpm=188, intensity=1.0, target_seconds=150.0, lead_octave=5),
+    ),
+    TrackSpec(
         resource="Gameover",
         description="Game over",
         aliases=["gameover"],

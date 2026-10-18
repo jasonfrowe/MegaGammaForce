@@ -494,9 +494,8 @@ void player_update(bool controls)
     pl_bx = (uint8_t)(gx + BS_X);
     pl_by = (uint8_t)(gy + BS_Y);
 
-    /* Flying into a tower is fatal. */
-    if (bg_sky_hit(gx - 4, gy - 4) || bg_sky_hit(gx + 4, gy - 4) || bg_sky_hit(gx - 4, gy + 4) ||
-        bg_sky_hit(gx + 4, gy + 4)) {
+    /* Flying into a tower is fatal, and so is an erupting flare. */
+    if (bg_sky_hit_fine(gx, gy) || bg_flare_hit(gx, gy) || bg_flare_hit(gx - 4, gy) || bg_flare_hit(gx + 4, gy)) {
         player_hit();
         if (pl_state != PL_ALIVE)
             return;

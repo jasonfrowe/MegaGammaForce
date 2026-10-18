@@ -11,6 +11,7 @@ enum
     SP_WARNING,
     SP_BOSS,
     SP_CLEAR,
+    SP_RUSH, /* between the bosses of a boss rush */
 };
 
 /* A group of enemies: count of them, gap frames apart, each dx further
@@ -62,11 +63,22 @@ typedef struct
     /* Solid towers: the offset of a 16-bit mask per sky row, top row first,
      * bit c set where column c is clear; or 0 for nothing solid. */
     uint16_t sky_clear;
+    /* And finer, for the ship: 16 bits per sky tile id, a 4 x 4 grid of
+     * 4-pixel cells, set where the tile is filled in. */
+    uint16_t sky_fine;
+    /* Flares: sky tiles from flare_a on (group B from flare_b), which
+     * erupt in turn and are fatal to fly through then; 0 for none. */
+    uint8_t flare_a, flare_b;
     /* Ground palette entries fade_first.. (fade_n of them, 0 for none) dim
      * toward black as the scroll goes from fade_from to fade_to pixels. */
     uint8_t fade_first, fade_n;
     uint16_t fade_from, fade_to;
     const boss_def_t *boss;
+    /* A boss rush before the stage's own boss: these stages' bosses
+     * (0-based), one after another; then final_warning and the boss. */
+    const uint8_t *rush;
+    uint8_t rush_n;
+    const char *final_warning;
 } stage_def_t;
 
 extern uint8_t stage_phase;

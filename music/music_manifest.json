@@ -429,5 +429,57 @@
     "exported_vgm": true,
     "date": "2026-10-18",
     "command": ".venv/bin/python tools/generate_music.py --track boss8 --seed 808 --style 8 --vol 0,0,0,0,0,0,0 --patch 55,57,27,5E,FD,FE,FF --export-vgm"
+  },
+  "Stage9": {
+    "seed": 909,
+    "style": 9,
+    "style_name": "silvergun",
+    "vol": "0,0,0,0,0,0,0",
+    "patch": "39,31,2B,35,2F,FE,37",
+    "roles": "lead,arp,bass,pad,kick,snare,hat",
+    "mood": {
+      "key_root": 9,
+      "scale": "minor",
+      "bpm": 160,
+      "intensity": 0.9,
+      "target_seconds": 150.0,
+      "lead_octave": 5,
+      "arp_octave": 4,
+      "bass_octave": 2,
+      "use_drums": true,
+      "meter": "4/4",
+      "form": "song"
+    },
+    "prog": "0,6",
+    "bpm": null,
+    "exported_vgm": true,
+    "date": "2026-10-18",
+    "command": ".venv/bin/python tools/generate_music.py --track stage9 --seed 909 --style 9 --vol 0,0,0,0,0,0,0 --patch 39,31,2B,35,2F,FE,37 --prog 0,6 --export-vgm"
+  },
+  "Final": {
+    "seed": 909,
+    "style": 10,
+    "style_name": "fmrock",
+    "vol": "0,0,0,0,0,0,0",
+    "patch": "1E,1D,A2,92,FD,FE,FF",
+    "roles": "lead,arp,bass,pad,kick,snare,hat",
+    "mood": {
+      "key_root": 2,
+      "scale": "minor",
+      "bpm": 188,
+      "intensity": 1.0,
+      "target_seconds": 150.0,
+      "lead_octave": 5,
+      "arp_octave": 4,
+      "bass_octave": 2,
+      "use_drums": true,
+      "meter": "4/4",
+      "form": "song"
+    },
+    "prog": "2,5",
+    "bpm": null,
+    "exported_vgm": true,
+    "date": "2026-10-18",
+    "command": ".venv/bin/python tools/generate_music.py --track final --seed 909 --style 10 --vol 0,0,0,0,0,0,0 --patch 1E,1D,A2,92,FD,FE,FF --prog 2,5 --export-vgm"
   }
 }

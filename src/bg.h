@@ -23,13 +23,20 @@ void bg_set_speed(uint8_t speed_q8); /* pixels per frame in 1/256 */
  * hyper beam pass through.
  */
 extern bool bg_hazard;
-/* Is there a solid sky tile at this game pixel? */
-bool bg_sky_hit(int16_t gx, int16_t gy);
-/* The same, at a bullet-space pixel. */
+/* Is this game pixel inside a tower's art, not just its tile? What the
+ * ship crashes on, tested at its middle, so it can graze one as it can a
+ * bullet. */
+bool bg_sky_hit_fine(int16_t gx, int16_t gy);
+/* Is there a solid sky tile at this bullet-space pixel? */
 bool bg_sky_hit_bs(uint8_t bx, uint8_t by);
 /* The sky row at this game pixel row: bit c set where column c (16 pixels
  * wide) is clear of towers. All clear off the screen or with none. */
 uint16_t bg_sky_clear(int16_t gy);
+/* Is a flare erupting at this game pixel? (stage_def_t's flare_a) */
+bool bg_flare_hit(int16_t gx, int16_t gy);
+/* Remember the boss layer palette's cycling colors, after a boss file
+ * is loaded. */
+void bg_capture_layer(void);
 
 /* A boss takes over plane 1's layer: a w x h tile map, PAL_LAYER colors.
  * bg_layer_move() places its top left in game pixels. */

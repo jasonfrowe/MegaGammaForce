@@ -116,6 +116,7 @@ Extra lives (EXTEND!) come at 50,000 and 100,000 points, then every 100,000 afte
 | 6 | **Ascent**, climbing out of the atmosphere | The ocean darkens below, the Earth's glowing limb passes under you into black space; satellites to dodge | HALO STATION |
 | 7 | **Sea of Tranquility**, the Moon | Craters, lunar bases with domes and landing pads, rovers on the roads; open sky | MASS DRIVER |
 | 8 | **Deep Field**, open space | Two starfields at two depths and a nebula; drifts of asteroids to dodge and hide behind | HIVE MOTHERSHIP |
+| 9 | **Corona**, over the surface of the Sun | A boiling surface and sunspots; solar flares that erupt in turn; a boss rush | GAMMA PRIME |
 
 On the title screen, left and right choose the stage a game starts on.
 Score, lives and the chain carry from one stage to the next. Clearing
@@ -125,6 +126,11 @@ Stage 2's towers, stage 5's icebergs, stage 6's satellites and stage 8's asteroi
 they stop your Vulcan, Spread, Homing darts and the Wide Shot's rear shots,
 and every enemy bullet too, so they make cover as well as walls. Homing
 Missiles and Homing Plasma reach over them, and so do the swords.
+
+Stage 9's solar flares are another kind of hazard. They lie on the
+surface as dark filaments, flicker faster and faster in warning, then
+erupt for a moment, and flying through one then is fatal. They come in
+two sets that take turns. Shots, bullets and enemies pass through them.
 
 Enemy waves are laid out clear of them: the sky scrolls a fixed amount for
 every pixel the ground does, so `tools/art/airpath.py` flies every wave
@@ -171,6 +177,14 @@ too long and the boss escapes.
   slugs straight down, so get out from under it. Capacitor pods spray pink,
   turrets and hatches cover the rest. The breech is the core, and spirals
   once the muzzle is gone.
+- **The boss rush** (stage 9): the SPIRE WARDEN, the DUNE WYRM and the
+  HALO STATION return, one after another, each with its own music. Each
+  one's destruction bonus is paid as it goes down.
+- **GAMMA PRIME** (two minutes): the Gamma Core's true form, a sunburst
+  fortress of gold plate. Four prisms orbit it, ring cannons either side
+  throw pink, turrets aim, and a beam emitter below glows before three
+  fans of needles. The core spirals once the emitter is gone, and burns
+  when hurt.
 - **HIVE MOTHERSHIP** (100 seconds): an alien ship grown, not built, its
   honeycomb carapace pulsing with veins. Two spore pods launch saucers,
   two mandibles spray pink, four turrets cover the rest. The great eye is
@@ -218,12 +232,15 @@ arrives. A stage can also fade part of the ground's palette toward black
 as it scrolls: stage 6 darkens its ocean and clouds as you climb, while
 the Earth's limb and the stars keep their light. Fill layers cost no sprite time, which is why the battleship's
 hull is a tile map that the game moves around, with its guns as sprites
-on top. Stage 5's crawler, stage 6's station, stage 7's mass driver and stage 8's mothership are built the same way,
+on top. Stage 5's crawler, stage 6's station, stage 7's mass driver, stage 8's mothership and stage 9's GAMMA PRIME are built the same way,
 but from tables alone:
 a scripted boss can name a `hull_t` (its map, tiles and each part's
 socket), and the boss engine shows and moves the layer and writes craters
 for it. The boss file is reloaded whenever a stage starts, so the craters
-from the last attempt are gone.
+from the last attempt are gone. A stage can
+also name a boss rush (`stage_def_t`'s `rush`): before its own boss, it
+loads other stages' boss files over the current one in turn and fights
+them, then reloads its own.
 
 XRAM holds what every stage shares (the ship, weapons, enemies, effects,
 sound effects, HUD) and, after it, about 34 KB for the current stage, in
@@ -256,7 +273,7 @@ results.
 | Tool | Makes |
 |---|---|
 | `tools/gen_art.py` | Shared sheets in `images/*.png`; each stage's sheets, maps and palettes in `images/stage<N>/`; `src/gen/assets.h`, `src/gen/stage<N>.h` (bank offsets) and `src/gen/stage<N>_data.h` (enemy type checks) |
-| `tools/art/` | The pixel-art kit: shapes with heights, lit from the top left, outlined. Banking frames are real rolls of the ship. `stages.py` lists what each stage's files hold and places ground units, `waves.py` has every stage's air waves; `tiles.py`, `city.py`, `ocean.py`, `desert.py`, `arctic.py`, `orbit.py`, `luna.py`, `deep.py` draw the stages, `boss.py`, `boss2.py`, `ship.py`, `wyrm.py`, `crawler.py`, `station.py`, `driver.py`, `hive.py` the bosses, `airpath.py` checks the waves against the sky, `hud.py` the HUD graphics. |
+| `tools/art/` | The pixel-art kit: shapes with heights, lit from the top left, outlined. Banking frames are real rolls of the ship. `stages.py` lists what each stage's files hold and places ground units, `waves.py` has every stage's air waves; `tiles.py`, `city.py`, `ocean.py`, `desert.py`, `arctic.py`, `orbit.py`, `luna.py`, `deep.py`, `sun.py` draw the stages, `boss.py`, `boss2.py`, `ship.py`, `wyrm.py`, `crawler.py`, `station.py`, `driver.py`, `hive.py`, `gamma.py` the bosses, `airpath.py` checks the waves against the sky, `hud.py` the HUD graphics. |
 | `tools/mkbank.py` | Run by the build: packs `images/stage<N>/` into `ROM:stage<N>.bin` and `ROM:boss<N>.bin` |
 | `tools/gen_sfx.py` | OPL2 sound effects in `music/sfx.bin`, `src/gen/sfx_ids.h` |
 | `tools/generate_music.py` | OPL2 music via Furnace (from RPDemo's composer): `music/fur_levels/*.fur` and `music/*.vgm` |
@@ -287,7 +304,7 @@ to try with `--style`:
 | 12 **chiparcade** | Square leads, a fast one-row-per-note chord arpeggio, bouncing bass, and the pad channel used as an echo of the lead |
 | 13 **fusion** | Sax or synth lead, electric piano stabs, slap bass with octave pops and ghost notes, a busy funk kit |
 
-Stage 2 uses eurobeat, stage 3 fusion and the battleship fmrock, stage 4 silvergun with Phrygian chords (`--prog 6,7`) and the wyrm fmrock, stage 5 chiparcade and the crawler eurobeat, stage 6 fusion and the station silvergun, stage 7 eurobeat and the mass driver fmrock, stage 8 trance and the mothership dnb; the stage 2 boss reuses `Boss.vgm`.
+Stage 2 uses eurobeat, stage 3 fusion and the battleship fmrock, stage 4 silvergun with Phrygian chords (`--prog 6,7`) and the wyrm fmrock, stage 5 chiparcade and the crawler eurobeat, stage 6 fusion and the station silvergun, stage 7 eurobeat and the mass driver fmrock, stage 8 trance and the mothership dnb, stage 9 silvergun and GAMMA PRIME fmrock (`Final.vgm`); the stage 2 boss reuses `Boss.vgm`.
 `Victory.vgm` (and its `.fur`) comes from RPDemo as it is, and plays once after a boss is destroyed.
 `Gameover.vgm` is generated (style 9, `"form": "jingle"` in its mood: one phrase and a cadence home, played once).
 All four are in 4/4. On a 6/8 track (the boss), they keep the same eighth-note

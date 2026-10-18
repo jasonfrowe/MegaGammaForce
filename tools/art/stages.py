@@ -24,6 +24,7 @@ import crawler
 import deep
 import desert
 import driver
+import gamma
 import hive
 import hud
 import logo
@@ -33,6 +34,7 @@ import ocean
 import palettes
 import ship
 import station
+import sun
 import tiles
 import waves
 import wyrm
@@ -48,10 +50,31 @@ def sky_clear(smap, solid):
     return np.array(rows, dtype="<u2").tobytes()
 
 
-def solid_sky(smap, solid, sky_speed):
-    """A sky with towers: its clear mask for the bank, and what gen_art.py
-    needs to fly the waves over it (airpath.py)."""
-    return {"name": "sky_clear", "data": sky_clear(smap, solid)}, (smap, solid, sky_speed)
+def sky_fine(tiles, ids):
+    """What the ship crashes into, finer than whole tiles, so it can graze
+    a tower as it can a bullet: for each tile id 16 bits, a 4 x 4 grid of
+    4-pixel cells, bit row * 4 + column set where a solid tile is filled
+    in (12 of the cell's 16 pixels). ids: the tiles to look in."""
+    out = []
+    for i, t in enumerate(tiles):
+        bits = 0
+        if i in ids:
+            for r in range(4):
+                for c in range(4):
+                    if (t[r * 4:r * 4 + 4, c * 4:c * 4 + 4] != 0).sum() >= 12:
+                        bits |= 1 << (r * 4 + c)
+        out.append(bits)
+    return np.array(out, dtype="<u2").tobytes()
+
+
+def solid_sky(smap, solid, sky_speed, tiles, fine_ids=None):
+    """A sky with towers: its masks for the bank, and what gen_art.py needs
+    to fly the waves over it (airpath.py). The ship crashes on the art of
+    fine_ids' tiles, the solid ones unless given."""
+    solid = set(solid)
+    return ([{"name": "sky_clear", "data": sky_clear(smap, solid)},
+             {"name": "sky_fine", "data": sky_fine(tiles, set(fine_ids) if fine_ids else solid)}],
+            (smap, solid, sky_speed))
 
 
 def map_defines(prefix, m, loop_rows=0):
@@ -102,7 +125,7 @@ def stage2():
     sky_speed = 6  # quarters: the sky scrolls 1.5 times as fast as the ground
     sky_rows = (WAVES_END * sky_speed // 4 + 240) // 16 + 1
     st, smap, solid, towers = city.stage2_sky(sky_rows)
-    clear, check = solid_sky(smap, solid, sky_speed)
+    clear, check = solid_sky(smap, solid, sky_speed, st)
     pal = {"TILES": city.CITY, "SKY": city.SKY, "BOSS": palettes.BOSS2, "BOSS_WRECK": palettes.BOSS2_WRECK}
     units = []
     # Guns on three pads in four; the rest stay empty.
@@ -129,7 +152,7 @@ def stage2():
             {"name": "map", "data": gmap.astype(np.uint8).tobytes()},
             {"name": "sky_tiles", "frames": st, "pal": city.SKY},
             {"name": "sky_map", "data": smap.astype(np.uint8).tobytes()},
-            clear,
+            *clear,
             {"name": "boss_core", "boss": True, "frames": boss2.core(), "pal": palettes.BOSS2},
             {"name": "portrait", "boss": True, "frames": hud.portrait(boss2.core()[0]), "pal": palettes.BOSS2},
             {"name": "boss_pod", "boss": True, "frames": boss2.pod(), "pal": palettes.BOSS2},
@@ -263,7 +286,7 @@ def stage5():
     gt, gmap, bunkers, roads, water = arctic.stage5_ground()
     sky_speed = 6
     st, smap, solid = arctic.stage5_sky(sky_stage_rows(sky_speed))
-    clear, check = solid_sky(smap, solid, sky_speed)
+    clear, check = solid_sky(smap, solid, sky_speed, st)
     ht, hids = crawler.hull_tileset()
     hmap = crawler.hull_map(hids)
     pal = {"TILES": arctic.ICE, "SKY": arctic.FROST, "LAYER": crawler.HULL5, "BOSS": crawler.BOSS5,
@@ -295,7 +318,7 @@ def stage5():
             {"name": "map", "data": gmap.astype(np.uint8).tobytes()},
             {"name": "sky_tiles", "frames": st, "pal": arctic.FROST},
             {"name": "sky_map", "data": smap.astype(np.uint8).tobytes()},
-            clear,
+            *clear,
             {"name": "hull_tiles", "boss": True, "frames": ht, "pal": crawler.HULL5},
             {"name": "hull_map", "boss": True, "data": hmap.astype(np.uint8).tobytes()},
             {"name": "boss_reactor", "boss": True, "frames": crawler.reactor(), "pal": crawler.BOSS5},
@@ -319,7 +342,7 @@ def stage6():
     # Satellites from where the ground's limb is about to come into view.
     sat_from = (1300 * sky_speed // 4) // 16
     st, smap, solid = orbit.stage6_sky(sky_stage_rows(sky_speed), sat_from)
-    clear, check = solid_sky(smap, solid, sky_speed)
+    clear, check = solid_sky(smap, solid, sky_speed, st)
     ht, hids, hmap = station.hull()
     pal = {"TILES": orbit.ORBIT, "SKY": orbit.ORBIT_SKY, "LAYER": station.STATION, "BOSS": station.BOSS6,
            "BOSS_WRECK": station.BOSS6_WRECK}
@@ -335,7 +358,7 @@ def stage6():
             {"name": "map", "data": gmap.astype(np.uint8).tobytes()},
             {"name": "sky_tiles", "frames": st, "pal": orbit.ORBIT_SKY},
             {"name": "sky_map", "data": smap.astype(np.uint8).tobytes()},
-            clear,
+            *clear,
             {"name": "hull_tiles", "boss": True, "frames": ht, "pal": station.STATION},
             {"name": "hull_map", "boss": True, "data": hmap.astype(np.uint8).tobytes()},
             {"name": "boss_core", "boss": True, "frames": station.core(), "pal": station.BOSS6},
@@ -394,8 +417,8 @@ def stage7():
 def stage8():
     gt, gmap = deep.stage8_ground()
     sky_speed = 6
-    st, smap, solid = deep.stage8_sky(sky_stage_rows(sky_speed))
-    clear, check = solid_sky(smap, solid, sky_speed)
+    st, smap, solid, rock = deep.stage8_sky(sky_stage_rows(sky_speed))
+    clear, check = solid_sky(smap, solid, sky_speed, st, rock)
     ht, hids, hmap = hive.hull()
     pal = {"TILES": deep.DEEP, "SKY": deep.DEEP_SKY, "LAYER": hive.HIVE, "BOSS": hive.BOSS8,
            "BOSS_WRECK": hive.BOSS8_WRECK}
@@ -411,7 +434,7 @@ def stage8():
             {"name": "map", "data": gmap.astype(np.uint8).tobytes()},
             {"name": "sky_tiles", "frames": st, "pal": deep.DEEP_SKY},
             {"name": "sky_map", "data": smap.astype(np.uint8).tobytes()},
-            clear,
+            *clear,
             {"name": "hull_tiles", "boss": True, "frames": ht, "pal": hive.HIVE},
             {"name": "hull_map", "boss": True, "data": hmap.astype(np.uint8).tobytes()},
             {"name": "boss_eye", "boss": True, "frames": hive.eye(), "pal": hive.BOSS8},
@@ -429,5 +452,41 @@ def stage8():
     }
 
 
+def stage9():
+    gt, gmap = sun.stage9_ground()
+    sky_speed = 6
+    st, smap, flare_a, flare_b = sun.stage9_sky(sky_stage_rows(sky_speed))
+    ht, hids, hmap = gamma.hull()
+    pal = {"TILES": sun.SUN, "SKY": sun.FLARE, "LAYER": gamma.GAMMA, "BOSS": gamma.BOSS9,
+           "BOSS_WRECK": gamma.BOSS9_WRECK}
+    defines = map_defines("MAP", gmap, LOOP_ROWS_DEFAULT)
+    defines.update({"TILES_N": len(gt), "SKY_ROWS": smap.shape[0], "SKY_SPEED": sky_speed, "SKY_TILES_N": len(st),
+                    "FLARE_A": flare_a, "FLARE_B": flare_b, "HULL_TILES_N": len(ht)})
+    hull_defines(defines, gamma, hids, ("crater", "crater_big0"))
+    return {
+        "n": 9,
+        "palettes": pal,
+        "items": [
+            {"name": "tiles", "frames": gt, "pal": sun.SUN},
+            {"name": "map", "data": gmap.astype(np.uint8).tobytes()},
+            {"name": "sky_tiles", "frames": st, "pal": sun.FLARE_VIEW},
+            {"name": "sky_map", "data": smap.astype(np.uint8).tobytes()},
+            {"name": "hull_tiles", "boss": True, "frames": ht, "pal": gamma.GAMMA},
+            {"name": "hull_map", "boss": True, "data": hmap.astype(np.uint8).tobytes()},
+            {"name": "boss_core", "boss": True, "frames": gamma.core(), "pal": gamma.BOSS9},
+            {"name": "boss_prism", "boss": True, "frames": gamma.prism(), "pal": gamma.BOSS9},
+            {"name": "boss_cannon", "boss": True, "frames": ship.main_gun(), "pal": gamma.BOSS9},
+            {"name": "boss_emitter", "boss": True, "frames": driver.muzzle(), "pal": gamma.BOSS9},
+            {"name": "boss_turret", "boss": True, "frames": boss.turret(), "pal": gamma.BOSS9},
+            {"name": "portrait", "boss": True, "frames": hud.portrait(gamma.core()[1]), "pal": gamma.BOSS9},
+        ],
+        "defines": defines,
+        "waves": waves.S9_WAVES,
+        "ground": [],
+        "previews": {"ground": (tilemap_image(gt, gmap), sun.SUN), "sky": (tilemap_image(st, smap), sun.FLARE_VIEW),
+                     "hull": (tilemap_image(ht, hmap), gamma.GAMMA)},
+    }
+
+
 def all_stages():
-    return [stage1(), stage2(), stage3(), stage4(), stage5(), stage6(), stage7(), stage8()]
+    return [stage1(), stage2(), stage3(), stage4(), stage5(), stage6(), stage7(), stage8(), stage9()]

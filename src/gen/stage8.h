@@ -17,12 +17,14 @@
 #define S8_SKY_TILES 7760
 #define S8_SKY_TILES_W 16
 #define S8_SKY_TILES_H 16
-#define S8_SKY_TILES_FRAMES 73
+#define S8_SKY_TILES_FRAMES 72
 #define S8_SKY_TILES_FRAME_BYTES 128
 
-#define S8_SKY_MAP 17104
+#define S8_SKY_MAP 16976
 
-#define S8_SKY_CLEAR 20608
+#define S8_SKY_CLEAR 20480
+
+#define S8_SKY_FINE 21064
 
 #define B8_HULL_TILES 0
 #define B8_HULL_TILES_W 16
@@ -62,7 +64,7 @@
 #define B8_PORTRAIT_FRAMES 1
 #define B8_PORTRAIT_FRAME_BYTES 128
 
-#define S8_BANK_BYTES 21192
+#define S8_BANK_BYTES 21208
 #define B8_BANK_BYTES 8154
 #define S8_MAP_ROWS 208
 #define S8_MAP_COLS 12
@@ -70,7 +72,7 @@
 #define S8_TILES_N 39
 #define S8_SKY_ROWS 292
 #define S8_SKY_SPEED 6
-#define S8_SKY_TILES_N 73
+#define S8_SKY_TILES_N 72
 #define S8_HULL_TILES_N 30
 #define S8_HULL_W 10
 #define S8_HULL_H 9

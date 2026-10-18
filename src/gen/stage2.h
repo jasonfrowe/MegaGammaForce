@@ -24,6 +24,8 @@
 
 #define S2_SKY_CLEAR 20178
 
+#define S2_SKY_FINE 20762
+
 #define B2_BOSS_CORE 0
 #define B2_BOSS_CORE_W 64
 #define B2_BOSS_CORE_H 64
@@ -54,7 +56,7 @@
 #define B2_BOSS_TURRET_FRAMES 8
 #define B2_BOSS_TURRET_FRAME_BYTES 128
 
-#define S2_BANK_BYTES 20762
+#define S2_BANK_BYTES 20854
 #define B2_BANK_BYTES 5248
 #define S2_MAP_ROWS 208
 #define S2_MAP_COLS 12

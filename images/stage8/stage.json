@@ -23,20 +23,25 @@
    "png": "images/stage8/sky_tiles.png",
    "w": 16,
    "h": 16,
-   "frames": 73,
+   "frames": 72,
    "offset": 7760,
-   "size": 9344
+   "size": 9216
   },
   {
    "bin": "images/stage8/sky_map.bin",
-   "offset": 17104,
+   "offset": 16976,
    "size": 3504
   },
   {
    "bin": "images/stage8/sky_clear.bin",
-   "offset": 20608,
+   "offset": 20480,
    "size": 584
+  },
+  {
+   "bin": "images/stage8/sky_fine.bin",
+   "offset": 21064,
+   "size": 144
   }
  ],
- "size": 21192
+ "size": 21208
 }

@@ -12,5 +12,6 @@ extern const boss_def_t boss5;
 extern const boss_def_t boss6;
 extern const boss_def_t boss7;
 extern const boss_def_t boss8;
+extern const boss_def_t boss9;
 
 #endif

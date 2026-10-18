@@ -311,8 +311,8 @@ int main(void)
                     gtimer = 0x8000;
                     clear_playfield();
                     hud_center(8, "ALL CLEAR!", HC_YELLOW);
-                    hud_center(11, "THE GAMMA FLEET IS SUNK.", HC_WHITE);
-                    hud_center(13, "THE SKY IS QUIET AGAIN.", HC_GRAY);
+                    hud_center(11, "THE GAMMA CORE IS DEAD.", HC_WHITE);
+                    hud_center(13, "THE SUN BURNS CLEAN.", HC_GRAY);
                     hud_center(17, "FINAL SCORE", HC_CYAN);
                     hud_digits(16, 19, score_d, SCORE_DIGITS, HC_YELLOW);
                     sfx_player(SFX_CLEAR, SFX_PRI_TOP);

@@ -228,9 +228,11 @@ def near_star(k):
 
 
 def stage8_sky(rows, intro_rows=18, tail_rows=17, seed=8):
-    """Returns tiles, the map (top row first) and the solid tile ids."""
+    """Returns tiles, the map (top row first), the solid tile ids (whole
+    tiles: what stops bullets and what enemies steer round) and the tile
+    ids with rock in them at all (what the ship crashes on, finely)."""
     rng = np.random.default_rng(seed)
-    tiles, solid = [np.zeros((T, T), dtype=np.uint8)], set()
+    tiles, solid, rock = [np.zeros((T, T), dtype=np.uint8)], set(), set()
     stars = []
     for k in range(4):
         stars.append(len(tiles))
@@ -238,6 +240,9 @@ def stage8_sky(rows, intro_rows=18, tail_rows=17, seed=8):
     # Each template cut into tiles; a tile mostly rock is solid.
     tmpl = []
     for i, (w, h) in enumerate(TEMPLATES):
+        if i == 1:  # the debris shares one image: XRAM is tight
+            tmpl.append(tmpl[0])
+            continue
         img = asteroid(w, h, i)
         ids = np.zeros((h, w), dtype=int)
         for r in range(h):
@@ -247,8 +252,10 @@ def stage8_sky(rows, intro_rows=18, tail_rows=17, seed=8):
                     continue
                 ids[r, c] = len(tiles)
                 tiles.append(t.copy())
-                if (t >= ROCK[0]).mean() >= 0.5 and w > 1:
-                    solid.add(ids[r, c])
+                if w > 1:
+                    rock.add(ids[r, c])
+                    if (t >= ROCK[0]).mean() >= 0.5:
+                        solid.add(ids[r, c])
         tmpl.append(ids)
     sky = np.zeros((rows, COLS), dtype=np.uint8)
     used = np.zeros((rows, COLS), dtype=bool)
@@ -304,4 +311,4 @@ def stage8_sky(rows, intro_rows=18, tail_rows=17, seed=8):
                 sky[y, x] = stars[int(rng.choice(4, p=[0.4, 0.3, 0.12, 0.18]))]
     sky[end:, :] = 0
     assert len(tiles) <= 256
-    return tiles, sky[::-1].copy(), solid
+    return tiles, sky[::-1].copy(), solid, rock

@@ -30,7 +30,7 @@ static uint8_t speed = 128;
 static bool sky_on;
 static int16_t sky_top; /* sky map pixel row at the top of the screen */
 static uint16_t sky_frac;
-static uint16_t sky_map, sky_clear;
+static uint16_t sky_map, sky_clear, sky_fine;
 
 static bool layer_dirty;
 
@@ -50,6 +50,42 @@ static uint16_t lamp[CYCLED][2];  /* entries 13-14 */
 static uint16_t fade_base[FADE_MAX];
 static uint8_t fade_level;
 static bool fade_dirty;
+
+/*
+ * Flares (stage_def_t's flare_a): two groups of sky tiles drawn in SKY
+ * entries 5-7 (A) and 8-10 (B), which this sets as they go. Each group
+ * lies dark, a filament, then flickers faster and faster in warning, then
+ * erupts, then fades; B half a cycle behind A, so they take turns.
+ */
+#define FLARE_WARN 144
+#define FLARE_ERUPT 208
+#define FLARE_FADE 248
+enum
+{
+    FL_DARK,
+    FL_WARN,
+    FL_ERUPT,
+    FL_FADE,
+};
+#define RGB(r, g, b) ((uint16_t)(COLOR_FROM_RGB8(r, g, b) | COLOR_ALPHA_MASK))
+static const uint16_t flare_rgb[4][3] = {
+    [FL_DARK] = {RGB(96, 22, 0), RGB(110, 28, 0), RGB(124, 34, 0)},
+    [FL_WARN] = {RGB(200, 60, 0), RGB(230, 100, 10), RGB(250, 140, 30)},
+    [FL_ERUPT] = {RGB(230, 50, 10), RGB(255, 190, 60), RGB(255, 250, 210)},
+    [FL_FADE] = {RGB(200, 60, 0), RGB(220, 100, 20), RGB(240, 150, 60)},
+};
+static uint8_t flare_t;
+static uint8_t flare_state[2];
+static bool flare_dirty;
+
+static uint8_t flare_phase(uint8_t t)
+{
+    if (t < FLARE_WARN)
+        return FL_DARK;
+    if (t < FLARE_ERUPT) /* flicker, faster toward the end */
+        return (t & (t < FLARE_WARN + 40 ? 8 : 4)) ? FL_WARN : FL_DARK;
+    return t < FLARE_FADE ? FL_ERUPT : FL_FADE;
+}
 
 #define LAMP_RED_DIM ((uint16_t)(COLOR_FROM_RGB8(80, 10, 20) | COLOR_ALPHA_MASK))
 #define LAMP_GREEN_DIM ((uint16_t)(COLOR_FROM_RGB8(30, 90, 70) | COLOR_ALPHA_MASK))
@@ -92,14 +128,23 @@ void bg_init(void)
     xreg_vga_mode2(MODE2_4BPP | MODE2_16X16, XRAM_LAYER_CONFIG, 1, 0, 0);
 }
 
+static void capture(uint8_t p)
+{
+    uint16_t base = PAL_ADDR(PAL_TILES + p);
+    xram0_read(shade[p], base + 2 * 2, sizeof(shade[p]));
+    lamp[p][0] = xram0_peek16(base + 13 * 2);
+    lamp[p][1] = xram0_peek16(base + 14 * 2);
+}
+
+void bg_capture_layer(void)
+{
+    capture(2);
+}
+
 void bg_capture_palettes(void)
 {
-    for (uint8_t p = 0; p < CYCLED; p++) {
-        uint16_t base = PAL_ADDR(PAL_TILES + p);
-        xram0_read(shade[p], base + 2 * 2, sizeof(shade[p]));
-        lamp[p][0] = xram0_peek16(base + 13 * 2);
-        lamp[p][1] = xram0_peek16(base + 14 * 2);
-    }
+    for (uint8_t p = 0; p < CYCLED; p++)
+        capture(p);
     xram0_read(fade_base, PAL_ADDR(PAL_TILES) + stage->fade_first * 2, stage->fade_n * 2);
 }
 
@@ -126,6 +171,7 @@ void bg_load(void)
     if (sky_on) {
         sky_map = XRAM_BANK + s->sky_map;
         sky_clear = XRAM_BANK + s->sky_clear;
+        sky_fine = XRAM_BANK + s->sky_fine;
         layer_config(sky_map, 12, s->sky_rows, XRAM_BANK + s->sky_tiles, PAL_SKY);
     } else {
         bg_layer_hide();
@@ -145,6 +191,8 @@ void bg_reset(void)
     sky_frac = 0;
     fade_level = 16;
     fade_dirty = stage->fade_n != 0; /* undo the last attempt's fade */
+    flare_t = 0;
+    flare_state[0] = flare_state[1] = 0xFF;
 }
 
 void bg_set_speed(uint8_t speed_q8)
@@ -176,6 +224,17 @@ uint8_t bg_update(void)
     if (sky_top <= 0)
         bg_hazard = false; /* the sky's last screen is empty */
 
+    if (stage->flare_a) {
+        flare_t++;
+        for (uint8_t g = 0; g < 2; g++) {
+            uint8_t st = flare_phase((uint8_t)(flare_t + g * 128));
+            if (st != flare_state[g]) {
+                flare_state[g] = st;
+                flare_dirty = true;
+            }
+        }
+    }
+
     /* Palette cycling: water shimmers, lights run, lamps blink. */
     if (++cycle_timer >= 16) {
         cycle_timer = 0;
@@ -205,18 +264,21 @@ static bool solid_at(uint8_t gx, uint8_t gy)
     return !((clear_row(gy) >> (gx >> 4)) & 1);
 }
 
+bool bg_sky_hit_fine(int16_t gx, int16_t gy)
+{
+    if (!bg_hazard || gx < 0 || gx >= PF_W || gy < 0 || gy >= PF_H)
+        return false;
+    uint16_t y = (uint16_t)(sky_top + gy);
+    uint8_t tile = xram0_peek8(sky_map + (y >> 4) * 12 + ((uint8_t)gx >> 4));
+    uint16_t fine = xram0_peek16(sky_fine + tile * 2);
+    return (fine >> (((y >> 2) & 3) * 4 + (((uint8_t)gx >> 2) & 3))) & 1;
+}
+
 uint16_t bg_sky_clear(int16_t gy)
 {
     if (!bg_hazard || gy < 0 || gy >= PF_H)
         return 0xFFFF;
     return clear_row((uint8_t)gy);
-}
-
-bool bg_sky_hit(int16_t gx, int16_t gy)
-{
-    if (!bg_hazard || gx < 0 || gx >= PF_W || gy < 0 || gy >= PF_H)
-        return false;
-    return solid_at((uint8_t)gx, (uint8_t)gy);
 }
 
 bool bg_sky_hit_bs(uint8_t bx, uint8_t by)
@@ -225,6 +287,19 @@ bool bg_sky_hit_bs(uint8_t bx, uint8_t by)
     if (!bg_hazard || gx >= PF_W || gy >= PF_H)
         return false;
     return solid_at(gx, gy);
+}
+
+bool bg_flare_hit(int16_t gx, int16_t gy)
+{
+    if (!sky_on || !stage->flare_a || gx < 0 || gx >= PF_W || gy < 0 || gy >= PF_H)
+        return false;
+    if (flare_state[0] != FL_ERUPT && flare_state[1] != FL_ERUPT)
+        return false;
+    uint16_t row = (uint16_t)(sky_top + gy) >> 4;
+    uint8_t tile = xram0_peek8(sky_map + row * 12 + ((uint8_t)gx >> 4));
+    if (tile < stage->flare_a)
+        return false;
+    return flare_state[tile >= stage->flare_b] == FL_ERUPT;
 }
 
 void bg_layer_show(uint16_t map, uint8_t w, uint8_t h, uint16_t tiles)
@@ -267,6 +342,17 @@ void bg_commit(void)
             RIA.rw0 = (uint8_t)c;
             RIA.rw0 = (uint8_t)(c >> 8);
         }
+    }
+    if (flare_dirty) {
+        flare_dirty = false;
+        RIA.addr0 = PAL_ADDR(PAL_SKY) + 5 * 2;
+        RIA.step0 = 1;
+        for (uint8_t g = 0; g < 2; g++)
+            for (uint8_t i = 0; i < 3; i++) {
+                uint16_t c = flare_rgb[flare_state[g]][i];
+                RIA.rw0 = (uint8_t)c;
+                RIA.rw0 = (uint8_t)(c >> 8);
+            }
     }
     if (pal_dirty) {
         pal_dirty = false;

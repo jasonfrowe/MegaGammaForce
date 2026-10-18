@@ -36,7 +36,12 @@
    "bin": "images/stage2/sky_clear.bin",
    "offset": 20178,
    "size": 584
+  },
+  {
+   "bin": "images/stage2/sky_fine.bin",
+   "offset": 20762,
+   "size": 92
   }
  ],
- "size": 20762
+ "size": 20854
 }

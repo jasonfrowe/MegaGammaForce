@@ -1,0 +1,67 @@
+{
+ "palettes": "images/stage9/boss_palettes.bin",
+ "items": [
+  {
+   "png": "images/stage9/hull_tiles.png",
+   "w": 16,
+   "h": 16,
+   "frames": 29,
+   "offset": 0,
+   "size": 3712
+  },
+  {
+   "bin": "images/stage9/hull_map.bin",
+   "offset": 3712,
+   "size": 90
+  },
+  {
+   "png": "images/stage9/boss_core.png",
+   "w": 32,
+   "h": 32,
+   "frames": 2,
+   "offset": 3802,
+   "size": 1024
+  },
+  {
+   "png": "images/stage9/boss_prism.png",
+   "w": 32,
+   "h": 32,
+   "frames": 2,
+   "offset": 4826,
+   "size": 1024
+  },
+  {
+   "png": "images/stage9/boss_cannon.png",
+   "w": 32,
+   "h": 32,
+   "frames": 8,
+   "offset": 5850,
+   "size": 4096
+  },
+  {
+   "png": "images/stage9/boss_emitter.png",
+   "w": 32,
+   "h": 32,
+   "frames": 2,
+   "offset": 9946,
+   "size": 1024
+  },
+  {
+   "png": "images/stage9/boss_turret.png",
+   "w": 16,
+   "h": 16,
+   "frames": 8,
+   "offset": 10970,
+   "size": 1024
+  },
+  {
+   "png": "images/stage9/portrait.png",
+   "w": 16,
+   "h": 16,
+   "frames": 1,
+   "offset": 11994,
+   "size": 128
+  }
+ ],
+ "size": 12122
+}

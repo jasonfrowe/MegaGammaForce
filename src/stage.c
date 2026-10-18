@@ -8,6 +8,7 @@
 #include "game.h"
 #include "hud.h"
 #include "music.h"
+#include "score.h"
 #include "sfx.h"
 #include "sprites.h"
 #include "stage.h"
@@ -28,8 +29,13 @@
 #include "gen/stage7_data.h"
 #include "gen/stage8.h"
 #include "gen/stage8_data.h"
+#include "gen/stage9.h"
+#include "gen/stage9_data.h"
 
 #define N(a) ((uint8_t)(sizeof(a) / sizeof((a)[0])))
+
+/* Stage 9's boss rush: the Spire Warden, the Dune Wyrm, the Halo Station. */
+static const uint8_t rush9[] = {1, 3, 5};
 
 static const stage_def_t stage_defs[] = {
     {
@@ -67,6 +73,7 @@ static const stage_def_t stage_defs[] = {
         .sky_rows = S2_SKY_ROWS,
         .sky_speed = S2_SKY_SPEED,
         .sky_clear = S2_SKY_CLEAR,
+        .sky_fine = S2_SKY_FINE,
         .boss = &boss2,
     },
     {
@@ -129,6 +136,7 @@ static const stage_def_t stage_defs[] = {
         .sky_rows = S5_SKY_ROWS,
         .sky_speed = S5_SKY_SPEED,
         .sky_clear = S5_SKY_CLEAR,
+        .sky_fine = S5_SKY_FINE,
         .boss = &boss5,
     },
     {
@@ -150,6 +158,7 @@ static const stage_def_t stage_defs[] = {
         .sky_rows = S6_SKY_ROWS,
         .sky_speed = S6_SKY_SPEED,
         .sky_clear = S6_SKY_CLEAR,
+        .sky_fine = S6_SKY_FINE,
         /* The ocean and clouds darken as the ship climbs, until the limb. */
         .fade_first = S6_FADE_FIRST,
         .fade_n = S6_FADE_N,
@@ -192,7 +201,33 @@ static const stage_def_t stage_defs[] = {
         .sky_rows = S8_SKY_ROWS,
         .sky_speed = S8_SKY_SPEED,
         .sky_clear = S8_SKY_CLEAR,
+        .sky_fine = S8_SKY_FINE,
         .boss = &boss8,
+    },
+    {
+        .bank = "ROM:stage9.bin",
+        .boss_bank = "ROM:boss9.bin",
+        .name = "STAGE 9",
+        .title = "CORONA",
+        .warning = "THE GUARDIANS RETURN",
+        .final_warning = "GAMMA PRIME IGNITES",
+        .music = "ROM:Stage9.vgm",
+        .boss_music = "ROM:Final.vgm",
+        .speed = 160,
+        .gspr_n = 8,
+        .tiles = S9_TILES,
+        .map = S9_MAP,
+        .map_rows = S9_MAP_ROWS,
+        .loop_rows = S9_MAP_LOOP_ROWS,
+        .sky_tiles = S9_SKY_TILES,
+        .sky_map = S9_SKY_MAP,
+        .sky_rows = S9_SKY_ROWS,
+        .sky_speed = S9_SKY_SPEED,
+        .flare_a = S9_FLARE_A,
+        .flare_b = S9_FLARE_B,
+        .rush = rush9,
+        .rush_n = N(rush9),
+        .boss = &boss9,
     },
 };
 _Static_assert(N(stage_defs) == STAGE_COUNT, "a stage in the art has no stage_defs entry, or the other way");
@@ -206,6 +241,7 @@ const stage_def_t *stage = &stage_defs[0];
 volatile uint8_t first_stage; /* poked by test scripts */
 static uint8_t loaded = 0xFF; /* the stage whose bank is in XRAM */
 static uint8_t next_wave, next_ground;
+static uint8_t rush_i; /* bosses of the rush begun */
 static uint16_t phase_timer;
 static uint8_t msg_timer, popup_timer;
 
@@ -231,6 +267,7 @@ static void load_file(const char *name, uint8_t first_pal, uint8_t npal, uint16_
 void boss_bank_load(uint8_t n)
 {
     load_file(stage_defs[n].boss_bank, PAL_LAYER, 3, XRAM_BOSS);
+    bg_capture_layer();
 }
 
 /* The stage's waves and ground units, read from the front of its bank. */
@@ -330,6 +367,7 @@ void stage_reset(void)
     stage_phase = SP_INTRO;
     next_wave = 0;
     next_ground = 0;
+    rush_i = 0;
     phase_timer = 0;
     popup_timer = 0;
     for (uint8_t i = 0; i < GROUPS; i++)
@@ -370,6 +408,49 @@ static void run_groups(void)
     }
 }
 
+static void warn(const char *text)
+{
+    stage_phase = SP_WARNING;
+    phase_timer = 0;
+    music_stop();
+    stage_message(0, text, 200);
+    warning_banner(true);
+    sfx_enemy(SFX_WARNING, SFX_PRI_TOP);
+}
+
+/* The next boss: in a rush, the next of the rush (its file loaded over the
+ * last one's), then the stage's own. */
+static void begin_boss(void)
+{
+    uint8_t n = rush_i < stage->rush_n ? stage->rush[rush_i] : stage_num;
+    if (stage->rush_n) {
+        boss_bank_load(n);
+        frame_loaded = true;
+    }
+    stage_phase = SP_BOSS;
+    phase_timer = 0;
+    boss_start(stage_defs[n].boss);
+    music_play(stage_defs[n].boss_music);
+    if (n != stage_num)
+        stage_message(0, stage_defs[n].warning, 120);
+}
+
+/* A boss of the rush is done: its bonus now, as the results would. */
+static void rush_done(void)
+{
+    static char line[] = "DESTROYED 000%";
+    uint8_t d = boss_destruction;
+    line[10] = (char)('0' + d / 100);
+    line[11] = (char)('0' + d / 10 % 10);
+    line[12] = (char)('0' + d % 10);
+    score_add((uint16_t)d * 100 + (d >= 100 ? 10000 : 0));
+    stage_message(boss_escaped ? "BOSS ESCAPED" : "BOSS DOWN", line, 150);
+    music_stop();
+    rush_i++;
+    stage_phase = SP_RUSH;
+    phase_timer = 0;
+}
+
 void stage_update(uint8_t scroll)
 {
     (void)scroll;
@@ -403,14 +484,8 @@ void stage_update(uint8_t scroll)
         while (next_wave < n_waves && bg_distance >= waves[next_wave].at)
             start_group(next_wave++);
         run_groups();
-        if (bg_looping && next_wave >= n_waves) {
-            stage_phase = SP_WARNING;
-            phase_timer = 0;
-            music_stop();
-            stage_message(0, stage->warning, 200);
-            warning_banner(true);
-            sfx_enemy(SFX_WARNING, SFX_PRI_TOP);
-        }
+        if (bg_looping && next_wave >= n_waves)
+            warn(stage->warning);
         break;
     case SP_WARNING:
         run_groups();
@@ -419,20 +494,29 @@ void stage_update(uint8_t scroll)
         if ((phase_timer & 15) == 0)
             warning_banner(!(phase_timer & 16));
         if (phase_timer > 200) {
-            stage_phase = SP_BOSS;
-            phase_timer = 0;
             msg_timer = 0;
             hud_clear_row(12);
             hud_clear_row(14);
             banner(false);
-            boss_start(stage->boss);
-            music_play(stage->boss_music);
+            begin_boss();
         }
         break;
     case SP_BOSS:
         if (boss_done()) {
-            stage_phase = SP_CLEAR;
-            phase_timer = 0;
+            if (rush_i < stage->rush_n) {
+                rush_done();
+            } else {
+                stage_phase = SP_CLEAR;
+                phase_timer = 0;
+            }
+        }
+        break;
+    case SP_RUSH:
+        if (phase_timer > 180) {
+            if (rush_i < stage->rush_n)
+                begin_boss();
+            else
+                warn(stage->final_warning);
         }
         break;
     case SP_CLEAR:
