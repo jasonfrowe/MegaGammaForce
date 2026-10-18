@@ -60,8 +60,12 @@ static void set_velocity(uint8_t i)
     svy[i] = vel88(SIN8(sang[i]), sspeed[i]);
 }
 
-/* The weapon that fired each shot, to credit its kills. */
-static uint8_t sweap[SH_N];
+/* The weapon that fired each shot, to credit its kills, and its damage. */
+static uint8_t sweap[SH_N], sdmg[SH_N];
+
+/* Spread orbs fade after this many frames, about 175 pixels, which keeps a
+ * levelled-up Spread within the shot slots. */
+#define SPREAD_LIFE 32
 
 void shot_fire(uint8_t kind, uint8_t bx, uint8_t by, uint8_t angle, uint8_t speed)
 {
@@ -71,11 +75,14 @@ void shot_fire(uint8_t kind, uint8_t bx, uint8_t by, uint8_t angle, uint8_t spee
     uint8_t i = (uint8_t)j;
     skind[i] = kind;
     sweap[i] = pl_weapon;
+    sdmg[i] = kind_dmg[kind];
+    if (kind == SK_SPREAD && wp_level[WP_SPREAD] >= 3)
+        sdmg[i] = 2; /* from LV4 orbs hit harder instead of coming faster */
     sx[i] = (uint16_t)bx << 8;
     sy[i] = (uint16_t)by << 8;
     sang[i] = angle;
     sspeed[i] = speed;
-    slife[i] = kind == SK_HOMING ? 90 : 255;
+    slife[i] = kind == SK_HOMING ? 90 : kind == SK_SPREAD ? SPREAD_LIFE : 255;
     set_velocity(i);
     mode5_csprite_t *s = &spr[SPR_SHOT + i];
     switch (kind) {
@@ -120,6 +127,7 @@ void shot_missile(uint8_t bx, uint8_t by, uint8_t angle, uint8_t ref)
     uint8_t i = (uint8_t)j;
     skind[i] = SK_MISSILE;
     sweap[i] = WP_MISSILE;
+    sdmg[i] = kind_dmg[SK_MISSILE];
     sx[i] = (uint16_t)bx << 8;
     sy[i] = (uint16_t)by << 8;
     sang[i] = angle;
@@ -168,6 +176,10 @@ void shots_update(void)
         if (k == SK_SPARK) {
             if (slife[i]-- == 0)
                 kill(i);
+            continue;
+        }
+        if (k == SK_SPREAD && --slife[i] == 0) {
+            kill(i);
             continue;
         }
         if (k == SK_MISSILE) {
@@ -219,7 +231,7 @@ void shots_update(void)
             t = tgt_hit(x, (uint8_t)(y + 8)); /* the bolt is 16 tall */
         if (t >= 0) {
             hit_weapon = sweap[i];
-            tgt_damage((uint8_t)t, kind_dmg[k]);
+            tgt_damage((uint8_t)t, sdmg[i]);
             fx_spark(x, y);
             kill(i);
             continue;

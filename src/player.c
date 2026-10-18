@@ -34,7 +34,7 @@ uint8_t wp_level[10];
 uint8_t hit_weapon;
 static uint16_t wp_xp[10];
 /* Experience to reach each level. */
-static const uint16_t level_xp[WP_LEVELS] = {0, 50, 100, 200, 500};
+static const uint16_t level_xp[WP_LEVELS] = {0, 50, 200, 500, 1000};
 #define LEVEL_ROW 19
 
 /* A firing interval at the current weapon's level: x1 down to x1/2. */
@@ -276,11 +276,13 @@ static void fire(uint8_t w)
         break;
     case WP_SPREAD:
         if (fire_cd == 0) {
-            /* Five orbs; seven from LV3. */
+            /* Five orbs; seven from LV3. Its rate only climbs to LV2's, and
+             * from LV4 the orbs hit harder instead (shots.c). */
+            static const uint8_t spread_cd[WP_LEVELS] = {10, 9, 9, 8, 8};
             int8_t step = wp_level[w] >= 2 ? 8 : 12;
             for (int8_t a = -24; a <= 24; a += step)
                 shot_fire(SK_SPREAD, nx, ny, (uint8_t)(ANG_UP + a), 88);
-            fire_cd = cd(w, 10);
+            fire_cd = spread_cd[wp_level[w]];
             sfx_player(SFX_SPREAD, SFX_PRI_FIRE);
         }
         break;

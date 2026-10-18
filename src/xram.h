@@ -219,7 +219,7 @@ typedef struct
 #define SPR_ENEMY (SPR_BOSS + SPR_BOSS_N)
 #define SPR_ENEMY_N 24
 #define SPR_SHOT (SPR_ENEMY + SPR_ENEMY_N)
-#define SPR_SHOT_N 24
+#define SPR_SHOT_N 32
 #define SPR_PLAYER (SPR_SHOT + SPR_SHOT_N)
 #define SPR_FLAME (SPR_PLAYER + 1)
 #define SPR_SWORD (SPR_FLAME + 2)
