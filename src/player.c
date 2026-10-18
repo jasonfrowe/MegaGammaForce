@@ -34,7 +34,7 @@ uint8_t wp_level[10];
 uint8_t hit_weapon;
 static uint16_t wp_xp[10];
 /* Experience to reach each level. */
-static const uint16_t level_xp[WP_LEVELS] = {0, 50, 200, 500, 1000};
+static const uint16_t level_xp[WP_LEVELS] = {0, 50, 150, 300, 500};
 #define LEVEL_ROW 19
 
 /* A firing interval at the current weapon's level: x1 down to x1/2. */
