@@ -17,11 +17,12 @@ PLAYER_MATS = {
 def player_sprite() -> Sprite:
     s = Sprite(24, 24)
     # Main wings, swept forward-delta, with drooping tips.
-    s.poly([(10, 9), (3, 16), (1, 20), (2, 21), (10, 18)], "hull", z=0, amp=1.2, bevel=2, sym=True)
+    s.poly([(10, 9), (4, 16), (2, 20), (3, 21), (10, 18)], "hull", z=0, amp=1.2, bevel=2, sym=True)
     s.poly([(9, 12), (4, 16.5), (4, 18), (9, 16.5)], "blue", z=0.6, amp=0.6, bevel=1, sym=True)
-    # Wingtip vulcan pods.
-    s.rect((1, 12, 3, 20), "dark", z=0.5, amp=0.8, bevel=1, sym=True)
-    s.dot(1, 11, "glow", z=1, sym=True)
+    # Wingtip vulcan pods, a pixel in from the edge to leave room for the
+    # outline (shapes land half a pixel left of where they are given).
+    s.rect((2, 12, 4, 20), "dark", z=0.5, amp=0.8, bevel=1, sym=True)
+    s.dot(2, 11, "glow", z=1, sym=True)
     # Engine nacelles.
     s.rect((7, 14, 10, 23), "hull", z=1.0, amp=1.5, bevel=1.5, sym=True)
     s.rect((7.5, 21, 9.5, 23), "dark", z=1.0, amp=0.5, bevel=1, sym=True)
