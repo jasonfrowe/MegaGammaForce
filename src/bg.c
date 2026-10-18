@@ -85,6 +85,16 @@ void bg_init(void)
     xreg_vga_mode2(MODE2_4BPP | MODE2_16X16, XRAM_LAYER_CONFIG, 1, 0, 0);
 }
 
+void bg_capture_palettes(void)
+{
+    for (uint8_t p = 0; p < CYCLED; p++) {
+        uint16_t base = PAL_ADDR(PAL_TILES + p);
+        xram0_read(shade[p], base + 2 * 2, sizeof(shade[p]));
+        lamp[p][0] = xram0_peek16(base + 13 * 2);
+        lamp[p][1] = xram0_peek16(base + 14 * 2);
+    }
+}
+
 void bg_load(void)
 {
     const stage_def_t *s = stage;
@@ -113,13 +123,6 @@ void bg_load(void)
         bg_layer_hide();
     }
     layer_dirty = true;
-
-    for (uint8_t p = 0; p < CYCLED; p++) {
-        uint16_t base = PAL_ADDR(PAL_TILES + p);
-        xram0_read(shade[p], base + 2 * 2, sizeof(shade[p]));
-        lamp[p][0] = xram0_peek16(base + 13 * 2);
-        lamp[p][1] = xram0_peek16(base + 14 * 2);
-    }
     bg_reset();
 }
 

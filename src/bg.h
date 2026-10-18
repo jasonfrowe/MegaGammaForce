@@ -5,6 +5,9 @@
 #include <stdint.h>
 
 void bg_init(void);
+/* Remember the stage palettes' cycling colors. Only right after they are
+ * read from the ROM: once cycling, XRAM holds rotated and dimmed copies. */
+void bg_capture_palettes(void);
 /* Point the layers at the current stage's bank, once it is loaded. */
 void bg_load(void);
 void bg_reset(void);

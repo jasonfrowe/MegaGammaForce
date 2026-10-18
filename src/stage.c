@@ -238,6 +238,7 @@ void stage_load(uint8_t n)
                 addr += (uint16_t)got;
             close(fd);
         }
+        bg_capture_palettes();
         loaded = n;
     }
     spr_ground_count(stage->gspr_n);
