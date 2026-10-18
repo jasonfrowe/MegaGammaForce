@@ -31,6 +31,8 @@ void chain_break(void);
 void score_hud(bool force);
 /* Just the high score, for the title screen. */
 void score_hud_hiscore(void);
+/* Put the boss rush's high score in play, or the normal one. */
+void hiscore_select(bool rush);
 void hiscore_load(void);
 void hiscore_save(void);
 

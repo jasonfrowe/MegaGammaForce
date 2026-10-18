@@ -18,7 +18,9 @@ Destroy three enemies of one color in a row to build the chain;
 keep hitting that color to keep it paying, or switch after a full set.
 Extra lives at 50,000 and 100,000 points, then every 100,000.
 Shoot each boss apart before its core for 100% destruction.
-Left and right on the title screen choose the starting stage.
+Left and right on the title screen choose the starting stage, or the
+BOSS RUSH past stage 9: all nine bosses, one after another, with its
+own high score.
 The stages: the Sky Fortress, the Neon Spires, the Iron Tide, where the
 battleship LEVIATHAN waits, the Scorched Sands, the Frozen Strait, the
 Ascent into orbit, the Sea of Tranquility on the Moon, the Deep Field,

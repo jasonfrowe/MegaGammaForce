@@ -239,6 +239,7 @@ uint8_t stage_phase;
 uint8_t stage_num;
 const stage_def_t *stage = &stage_defs[0];
 volatile uint8_t first_stage; /* poked by test scripts */
+bool stage_boss_rush;
 static uint8_t loaded = 0xFF; /* the stage whose bank is in XRAM */
 static uint8_t next_wave, next_ground;
 static uint8_t rush_i; /* bosses of the rush begun */
@@ -300,7 +301,13 @@ void stage_load(uint8_t n)
 
 const char *stage_title(uint8_t n)
 {
-    return stage_defs[n].title;
+    return n < STAGE_COUNT ? stage_defs[n].title : "ALL NINE BOSSES";
+}
+
+/* The bosses of this stage's own rush: none in the boss rush mode. */
+static uint8_t rush_n(void)
+{
+    return stage_boss_rush ? 0 : stage->rush_n;
 }
 
 bool stage_is_last(void)
@@ -374,6 +381,13 @@ void stage_reset(void)
         g_left[i] = 0;
     stage_message(0, stage->title, 150);
     banner(true);
+    if (stage_boss_rush) {
+        /* Straight to the end of the stage, quiet, and the warning. */
+        bg_skip_to_end();
+        next_wave = n_waves;
+        next_ground = n_ground;
+        return;
+    }
     music_play(stage->music);
 }
 
@@ -422,8 +436,8 @@ static void warn(const char *text)
  * last one's), then the stage's own. */
 static void begin_boss(void)
 {
-    uint8_t n = rush_i < stage->rush_n ? stage->rush[rush_i] : stage_num;
-    if (stage->rush_n) {
+    uint8_t n = rush_i < rush_n() ? stage->rush[rush_i] : stage_num;
+    if (rush_n()) {
         boss_bank_load(n);
         frame_loaded = true;
     }
@@ -503,7 +517,7 @@ void stage_update(uint8_t scroll)
         break;
     case SP_BOSS:
         if (boss_done()) {
-            if (rush_i < stage->rush_n) {
+            if (rush_i < rush_n()) {
                 rush_done();
             } else {
                 stage_phase = SP_CLEAR;
@@ -513,7 +527,7 @@ void stage_update(uint8_t scroll)
         break;
     case SP_RUSH:
         if (phase_timer > 180) {
-            if (rush_i < stage->rush_n)
+            if (rush_i < rush_n())
                 begin_boss();
             else
                 warn(stage->final_warning);

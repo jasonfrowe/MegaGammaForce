@@ -15,6 +15,9 @@ void bg_reset(void);
 uint8_t bg_update(void);
 void bg_commit(void);
 void bg_set_speed(uint8_t speed_q8); /* pixels per frame in 1/256 */
+/* Jump to the end of the stage: the ground in its loop, the sky at its
+ * empty top, everything faded that fades. For the boss rush. */
+void bg_skip_to_end(void);
 
 /*
  * Towers. On a stage whose sky has solid tiles (bg_hazard), the ship

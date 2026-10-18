@@ -118,7 +118,11 @@ Extra lives (EXTEND!) come at 50,000 and 100,000 points, then every 100,000 afte
 | 8 | **Deep Field**, open space | Two starfields at two depths and a nebula; drifts of asteroids to dodge and hide behind | HIVE MOTHERSHIP |
 | 9 | **Corona**, over the surface of the Sun | A boiling surface and sunspots; solar flares that erupt in turn; a boss rush | GAMMA PRIME |
 
-On the title screen, left and right choose the stage a game starts on.
+On the title screen, left and right choose the stage a game starts on,
+or, past stage 9, the **BOSS RUSH**: all nine bosses in order, each over
+its own stage, with the results between them and no waves (and stage 9
+goes straight to GAMMA PRIME). The boss rush keeps its own high score
+(RUSH HI), saved alongside the main one.
 Score, lives and the chain carry from one stage to the next. Clearing
 the last stage ends the game.
 

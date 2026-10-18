@@ -8,6 +8,10 @@
 
 uint8_t score_d[SCORE_DIGITS];
 uint8_t hiscore_d[SCORE_DIGITS] = {0, 0, 5, 0, 0, 0, 0};
+/* The boss rush keeps its own high score. hiscore_d is the one in play;
+ * this is the other, and hi_rush says which is which. */
+static uint8_t hi_other[SCORE_DIGITS] = {0, 0, 5, 0, 0, 0, 0};
+static bool hi_rush;
 
 uint8_t chain_level;
 uint8_t chain_max;
@@ -161,20 +165,37 @@ void score_hud(bool force)
 
 #define HISCORE_FILE "SAVE:megagammaforce.hi"
 
-void hiscore_load(void)
+void hiscore_select(bool rush)
+{
+    if (rush == hi_rush)
+        return;
+    uint8_t t[SCORE_DIGITS];
+    memcpy(t, hiscore_d, SCORE_DIGITS);
+    memcpy(hiscore_d, hi_other, SCORE_DIGITS);
+    memcpy(hi_other, t, SCORE_DIGITS);
+    hi_rush = rush;
+}
+
+/* The file: the high score, then the boss rush's (a file from before
+ * the boss rush has only the first). */
+static void load_one(int fd, uint8_t *to)
 {
     uint8_t d[SCORE_DIGITS];
+    if (read(fd, d, sizeof(d)) != sizeof(d))
+        return;
+    for (uint8_t i = 0; i < SCORE_DIGITS; i++)
+        if (d[i] > 9)
+            return;
+    memcpy(to, d, sizeof(d));
+}
+
+void hiscore_load(void)
+{
     int fd = open(HISCORE_FILE, O_RDONLY);
     if (fd < 0)
         return;
-    if (read(fd, d, sizeof(d)) == sizeof(d)) {
-        bool ok = true;
-        for (uint8_t i = 0; i < SCORE_DIGITS; i++)
-            if (d[i] > 9)
-                ok = false;
-        if (ok)
-            memcpy(hiscore_d, d, sizeof(d));
-    }
+    load_one(fd, hi_rush ? hi_other : hiscore_d);
+    load_one(fd, hi_rush ? hiscore_d : hi_other);
     close(fd);
 }
 
@@ -183,6 +204,7 @@ void hiscore_save(void)
     int fd = open(HISCORE_FILE, O_WRONLY | O_CREAT | O_TRUNC);
     if (fd < 0)
         return;
-    write(fd, hiscore_d, sizeof(hiscore_d));
+    write(fd, hi_rush ? hi_other : hiscore_d, SCORE_DIGITS);
+    write(fd, hi_rush ? hiscore_d : hi_other, SCORE_DIGITS);
     close(fd);
 }

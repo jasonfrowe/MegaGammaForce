@@ -84,7 +84,11 @@ typedef struct
 extern uint8_t stage_phase;
 extern uint8_t stage_num;           /* 0-based */
 extern const stage_def_t *stage;    /* stage_defs[stage_num] */
-extern volatile uint8_t first_stage; /* where a new game starts, for testing */
+extern volatile uint8_t first_stage; /* where a new game starts, for testing;
+                                     * STAGE_COUNT for the boss rush */
+/* The boss rush, chosen on the title screen: every stage, but straight
+ * to its boss, and stage 9 without its own rush. */
+extern bool stage_boss_rush;
 
 /* Make stage n current and load its files, behind a black curtain. */
 void stage_load(uint8_t n);

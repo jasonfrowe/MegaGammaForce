@@ -83,7 +83,7 @@ static void draw_labels(void)
 {
     hud_frame();
     hud_text(0, 1, "SCORE", HC_CYAN, HC_PANEL);
-    hud_text(0, 5, "HISCORE", HC_CYAN, HC_PANEL);
+    hud_text(0, 5, stage_boss_rush ? "RUSH HI" : "HISCORE", HC_CYAN, HC_PANEL);
     rule(0, 8);
     hud_text(0, 9, "CHAIN", HC_CYAN, HC_PANEL);
     hud_text(0, 12, "BONUS", HC_GRAY, HC_PANEL);
@@ -107,15 +107,20 @@ static void title_stage(void)
     char t[] = "<  STAGE 1  >";
     t[9] = (char)('1' + first_stage);
     hud_clear_row(16);
-    hud_center(16, t, HC_CYAN);
+    hud_center(16, first_stage < STAGE_COUNT ? t : "<  BOSS RUSH  >", HC_CYAN);
     hud_clear_row(17);
     hud_center(17, stage_title(first_stage), HC_WHITE);
+    /* Each mode shows its own high score. */
+    hiscore_select(first_stage >= STAGE_COUNT);
+    hud_text(0, 5, first_stage >= STAGE_COUNT ? "RUSH HI" : "HISCORE", HC_CYAN, HC_PANEL);
+    score_hud_hiscore();
 }
 
 static void enter_title(void)
 {
     gstate = GS_TITLE;
     gtimer = 0;
+    stage_boss_rush = false;
     reset_world();
     stage_load(0); /* the title flies over stage 1, and its bank has the logo */
     bg_reset();
@@ -135,8 +140,6 @@ static void enter_title(void)
     hud_center(23, "C SPREAD  SPACE SWORD", HC_GRAY);
     hud_center(24, "Z+X+C HYPER SWORD", HC_GRAY);
     hud_center(25, "COMBINE Z X C FOR MORE", HC_GRAY);
-    hud_text(0, 5, "HISCORE", HC_CYAN, HC_PANEL);
-    score_hud_hiscore();
     music_play("ROM:Title.vgm");
 }
 
@@ -160,7 +163,9 @@ static void enter_play(void)
     music_stop();
     score_reset();
     player_reset();
-    stage_load(first_stage);
+    stage_boss_rush = first_stage >= STAGE_COUNT;
+    hiscore_select(stage_boss_rush);
+    stage_load(stage_boss_rush ? 0 : first_stage);
     begin_stage();
 }
 
@@ -279,7 +284,8 @@ int main(void)
             gtimer++;
             hud_center(19, (gtimer & 32) ? "PRESS START" : "           ", HC_YELLOW);
             if (in_pressed & (IN_LEFT | IN_RIGHT)) {
-                first_stage = (uint8_t)((first_stage + (in_pressed & IN_LEFT ? STAGE_COUNT - 1 : 1)) % STAGE_COUNT);
+                /* The stages, then the boss rush. */
+                first_stage = (uint8_t)((first_stage + (in_pressed & IN_LEFT ? STAGE_COUNT : 1)) % (STAGE_COUNT + 1));
                 title_stage();
                 sfx_player(SFX_LOCK, SFX_PRI_EVENT);
             } else if (in_pressed & (IN_START | IN_FIRE)) {
@@ -310,7 +316,7 @@ int main(void)
                     /* The ending: one more screen, then the title. */
                     gtimer = 0x8000;
                     clear_playfield();
-                    hud_center(8, "ALL CLEAR!", HC_YELLOW);
+                    hud_center(8, stage_boss_rush ? "BOSS RUSH CLEAR!" : "ALL CLEAR!", HC_YELLOW);
                     hud_center(11, "THE GAMMA CORE IS DEAD.", HC_WHITE);
                     hud_center(13, "THE SUN BURNS CLEAN.", HC_GRAY);
                     hud_center(17, "FINAL SCORE", HC_CYAN);

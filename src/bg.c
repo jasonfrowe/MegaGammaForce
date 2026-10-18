@@ -195,6 +195,16 @@ void bg_reset(void)
     flare_state[0] = flare_state[1] = 0xFF;
 }
 
+void bg_skip_to_end(void)
+{
+    bg_distance = (uint16_t)(map_h_px - PF_H - loop_h_px);
+    view_top = (int16_t)loop_h_px;
+    bg_looping = true;
+    sky_top = 0;
+    bg_hazard = false;
+    layer_dirty = true;
+}
+
 void bg_set_speed(uint8_t speed_q8)
 {
     speed = speed_q8;
