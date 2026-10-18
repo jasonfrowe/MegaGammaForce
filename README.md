@@ -111,10 +111,11 @@ Extra lives (EXTEND!) come at 50,000 and 100,000 points, then every 100,000 afte
 | 1 | **Sky Fortress**, a fortress deck over the sea | Ground turrets | GAMMA CORE |
 | 2 | **Neon Spires**, a city at night | Tall towers to dodge (flying into one is fatal), tanks on the roads, wasps | SPIRE WARDEN |
 | 3 | **Iron Tide**, open ocean and jungle islands | Gunboats, island bunkers | Battleship LEVIATHAN |
+| 4 | **Scorched Sands**, desert dunes, plateaus and oases | Armoured trains on a railway, a sandstorm drifting over | DUNE WYRM |
 
 On the title screen, left and right choose the stage a game starts on.
 Score, lives and the chain carry from one stage to the next. Clearing
-stage 3 ends the game.
+the last stage ends the game.
 
 Stage 2's towers stand as high as you fly. Flying into one is fatal, and
 they stop your Vulcan, Spread, Homing darts and the Wide Shot's rear shots,
@@ -142,6 +143,9 @@ too long and the boss escapes.
   bays that open to launch fighters. Its core, the reactor, is at the
   stern, so it has to sail past before you can finish it. Destroyed parts
   leave craters in the deck.
+- **DUNE WYRM** (90 seconds): a sandworm whose head winds a figure of
+  eight with nine armoured segments and a tail trailing its path. Every
+  segment can be shot off; the head is the core.
 
 ## Building
 
@@ -185,11 +189,22 @@ hull is a tile map that the game moves around, with its guns as sprites
 on top.
 
 XRAM holds what every stage shares (the ship, weapons, enemies, effects,
-sound effects, HUD) and, after it, one **stage bank** of about 39 KB.
-Each stage's own tiles, maps, boss art and palettes are packed into
-`ROM:stage<N>.bin`, which the game reads into the bank when the stage
-starts, with the HUD blacking out the playfield while it loads. The title
-uses stage 1's bank, which also holds the logo.
+sound effects, HUD) and, after it, about 34 KB for the current stage, in
+two parts. `ROM:stage<N>.bin` holds the stage's script (its air waves and
+ground units), ground and sky tiles and maps, its palettes and any art
+only it uses (stage 4's trains); it loads into `XRAM_BANK`.
+`ROM:boss<N>.bin` holds the boss's art and palettes and loads into
+`XRAM_BOSS`, so a boss can be swapped in mid-stage. The HUD blacks out the
+playfield while they load. The title uses stage 1's files, which also
+hold the logo. The build checks that the largest stage and boss fit.
+
+Bosses 1-3 are code (`boss1.c`-`boss3.c`). Later ones are data: a
+`motion_t` (entry, hover, parts that orbit, parts that trail the head like a
+snake's body) and a table of `pattern_t` attacks (aimed fans, downward
+fans, rings, spirals, launched enemies, each from a part, on a period,
+always or once the core is angry or another part is gone), run by
+`boss.c`. That costs a few hundred bytes a boss instead of a few KB,
+which matters: the program and its data live in the 6502's 64 KB too.
 
 Every sprite list is mirrored in RAM and copied to XRAM once a frame,
 right after VSYNC. Bullets and shots keep 8.8 fixed point positions in a
@@ -204,8 +219,8 @@ results.
 | Tool | Makes |
 |---|---|
 | `tools/gen_art.py` | Shared sheets in `images/*.png`; each stage's sheets, maps and palettes in `images/stage<N>/`; `src/gen/assets.h`, `src/gen/stage<N>.h` (bank offsets) and `src/gen/stage<N>_data.h` (ground units, solid tiles) |
-| `tools/art/` | The pixel-art kit: shapes with heights, lit from the top left, outlined. Banking frames are real rolls of the ship. `stages.py` lists what each stage's bank holds; `tiles.py`, `city.py`, `ocean.py` draw the stages, `boss.py`, `boss2.py`, `ship.py` the bosses, `hud.py` the HUD graphics. |
-| `tools/mkbank.py` | Run by the build: packs `images/stage<N>/` into `ROM:stage<N>.bin` |
+| `tools/art/` | The pixel-art kit: shapes with heights, lit from the top left, outlined. Banking frames are real rolls of the ship. `stages.py` lists what each stage's files hold and places ground units, `waves.py` has every stage's air waves; `tiles.py`, `city.py`, `ocean.py`, `desert.py` draw the stages, `boss.py`, `boss2.py`, `ship.py`, `wyrm.py` the bosses, `hud.py` the HUD graphics. |
+| `tools/mkbank.py` | Run by the build: packs `images/stage<N>/` into `ROM:stage<N>.bin` and `ROM:boss<N>.bin` |
 | `tools/gen_sfx.py` | OPL2 sound effects in `music/sfx.bin`, `src/gen/sfx_ids.h` |
 | `tools/generate_music.py` | OPL2 music via Furnace (from RPDemo's composer): `music/fur_levels/*.fur` and `music/*.vgm` |
 | `tools/gen_tables.py` | Trig tables in `src/gen/tables.c` |
@@ -235,8 +250,9 @@ to try with `--style`:
 | 12 **chiparcade** | Square leads, a fast one-row-per-note chord arpeggio, bouncing bass, and the pad channel used as an echo of the lead |
 | 13 **fusion** | Sax or synth lead, electric piano stabs, slap bass with octave pops and ghost notes, a busy funk kit |
 
-Stage 2 uses eurobeat, stage 3 fusion and the battleship fmrock; the stage 2 boss reuses `Boss.vgm`.
+Stage 2 uses eurobeat, stage 3 fusion and the battleship fmrock, stage 4 silvergun with Phrygian chords (`--prog 6,7`) and the wyrm fmrock; the stage 2 boss reuses `Boss.vgm`.
 `Victory.vgm` (and its `.fur`) comes from RPDemo as it is, and plays once after a boss is destroyed.
+`Gameover.vgm` is generated (style 9, `"form": "jingle"` in its mood: one phrase and a cadence home, played once).
 All four are in 4/4. On a 6/8 track (the boss), they keep the same eighth-note
 pulse, so they play 1.5 times as fast.
 

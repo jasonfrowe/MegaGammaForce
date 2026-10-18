@@ -39,5 +39,8 @@ enum
 };
 
 extern uint8_t frame_count; /* increments every game frame */
+/* Set by a frame that loaded from the ROM behind the curtain, so its
+ * overrun is not counted in lag_frames. */
+extern bool frame_loaded;
 
 #endif

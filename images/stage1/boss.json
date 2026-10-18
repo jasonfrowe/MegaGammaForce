@@ -1,33 +1,12 @@
 {
- "palettes": "images/stage1/palettes.bin",
+ "palettes": "images/stage1/boss_palettes.bin",
  "items": [
-  {
-   "png": "images/stage1/tiles.png",
-   "w": 16,
-   "h": 16,
-   "frames": 30,
-   "offset": 0,
-   "size": 3840
-  },
-  {
-   "bin": "images/stage1/map.bin",
-   "offset": 3840,
-   "size": 2496
-  },
-  {
-   "png": "images/stage1/logo.png",
-   "w": 64,
-   "h": 64,
-   "frames": 3,
-   "offset": 6336,
-   "size": 6144
-  },
   {
    "png": "images/stage1/boss_core.png",
    "w": 64,
    "h": 64,
    "frames": 1,
-   "offset": 12480,
+   "offset": 0,
    "size": 2048
   },
   {
@@ -35,7 +14,7 @@
    "w": 16,
    "h": 16,
    "frames": 1,
-   "offset": 14528,
+   "offset": 2048,
    "size": 128
   },
   {
@@ -43,7 +22,7 @@
    "w": 32,
    "h": 64,
    "frames": 1,
-   "offset": 14656,
+   "offset": 2176,
    "size": 1024
   },
   {
@@ -51,7 +30,7 @@
    "w": 32,
    "h": 32,
    "frames": 2,
-   "offset": 15680,
+   "offset": 3200,
    "size": 1024
   },
   {
@@ -59,9 +38,9 @@
    "w": 16,
    "h": 16,
    "frames": 8,
-   "offset": 16704,
+   "offset": 4224,
    "size": 1024
   }
  ],
- "size": 17728
+ "size": 5248
 }

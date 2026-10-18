@@ -19,7 +19,7 @@ keep hitting that color to keep it paying, or switch after a full set.
 Extra lives at 50,000 and 100,000 points, then every 100,000.
 Shoot each boss apart before its core for 100% destruction.
 Left and right on the title screen choose the starting stage.
-Three stages: the Sky Fortress, the Neon Spires and the Iron Tide,
-where the battleship LEVIATHAN waits. Don't fly into the Neon Spires'
+Stages so far: the Sky Fortress, the Neon Spires, the Iron Tide, where
+the battleship LEVIATHAN waits, and the Scorched Sands. Don't fly into the Neon Spires'
 towers. They block most shots and enemy bullets, but missiles and
 plasma reach over them.

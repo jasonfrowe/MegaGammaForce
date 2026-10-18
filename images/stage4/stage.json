@@ -1,0 +1,45 @@
+{
+ "palettes": "images/stage4/stage_palettes.bin",
+ "items": [
+  {
+   "bin": "images/stage4/script.bin",
+   "offset": 0,
+   "size": 360
+  },
+  {
+   "png": "images/stage4/tiles.png",
+   "w": 16,
+   "h": 16,
+   "frames": 41,
+   "offset": 360,
+   "size": 5248
+  },
+  {
+   "bin": "images/stage4/map.bin",
+   "offset": 5608,
+   "size": 2496
+  },
+  {
+   "png": "images/stage4/sky_tiles.png",
+   "w": 16,
+   "h": 16,
+   "frames": 17,
+   "offset": 8104,
+   "size": 2176
+  },
+  {
+   "bin": "images/stage4/sky_map.bin",
+   "offset": 10280,
+   "size": 3504
+  },
+  {
+   "png": "images/stage4/train.png",
+   "w": 32,
+   "h": 32,
+   "frames": 2,
+   "offset": 13784,
+   "size": 1024
+  }
+ ],
+ "size": 14808
+}

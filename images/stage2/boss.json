@@ -1,0 +1,46 @@
+{
+ "palettes": "images/stage2/boss_palettes.bin",
+ "items": [
+  {
+   "png": "images/stage2/boss_core.png",
+   "w": 64,
+   "h": 64,
+   "frames": 1,
+   "offset": 0,
+   "size": 2048
+  },
+  {
+   "png": "images/stage2/portrait.png",
+   "w": 16,
+   "h": 16,
+   "frames": 1,
+   "offset": 2048,
+   "size": 128
+  },
+  {
+   "png": "images/stage2/boss_pod.png",
+   "w": 32,
+   "h": 32,
+   "frames": 2,
+   "offset": 2176,
+   "size": 1024
+  },
+  {
+   "png": "images/stage2/boss_cannon.png",
+   "w": 32,
+   "h": 32,
+   "frames": 2,
+   "offset": 3200,
+   "size": 1024
+  },
+  {
+   "png": "images/stage2/boss_turret.png",
+   "w": 16,
+   "h": 16,
+   "frames": 8,
+   "offset": 4224,
+   "size": 1024
+  }
+ ],
+ "size": 5248
+}

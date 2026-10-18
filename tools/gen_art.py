@@ -67,56 +67,97 @@ def palette_blob(pals):
     return bytes(blob)
 
 
-def write_stage(st, preview):
-    """One stage's bank: sheets and binaries, packed in order."""
-    n = st["n"]
-    d = IMAGES / f"stage{n}"
-    d.mkdir(exist_ok=True)
-    pfx = f"S{n}"
-    h = [HEADER, f"#ifndef GEN_STAGE{n}_H", f"#define GEN_STAGE{n}_H", ""]
-    items = []
+# Enemy types and chain colors as the C enums number them (enemies.h,
+# game.h); stage<N>_data.h checks them with _Static_assert.
+ENEMY_TYPES = ["ET_NONE", "ET_DART", "ET_SAUCER", "ET_DRONE", "ET_GUNSHIP", "ET_TURRET", "ET_TANK", "ET_WASP",
+               "ET_GUNBOAT", "ET_TRAIN"]
+COLORS = ["COL_RED", "COL_BLUE", "COL_YELLOW", "COL_GRAY"]
+
+
+def script_blob(st):
+    """The stage's script, read into RAM when it loads: wave and ground
+    counts, then waves (wave_t, 9 bytes) and ground units (ground_t, 6)."""
+    waves, ground = st.get("waves", []), sorted(st.get("ground", []))
+    assert len(waves) <= 48 and len(ground) <= 64, "more than stage.h's WAVES_MAX or GROUND_MAX"
+    out = bytearray([len(waves), len(ground)])
+    for at, t, c, x, dx, count, gap, param in waves:
+        out += struct.pack("<HBBBbBBB", at, ENEMY_TYPES.index(t), COLORS.index(c), x, dx, count, gap, param)
+    for y, x, t, c, param in ground:
+        out += struct.pack("<HBBBB", y, x, ENEMY_TYPES.index(t), COLORS.index(c), param)
+    if len(out) & 1:
+        out.append(0)
+    return bytes(out)
+
+
+def write_bank(kind, n, items, pals, d, h, pfx, preview):
+    """Pack items (sheets and binaries) for one ROM file; returns its spec and size."""
+    out = []
     off = 0
-    for it in st["items"]:
+    for it in items:
         name = it["name"]
         up = f"{pfx}_{name.upper()}"
         h.append(f"#define {up} {off}")
         if "frames" in it:
             frames = it["frames"]
-            pal = it.get("pal", st["palettes"]["BOSS"])
-            save_indexed(d / f"{name}.png", sheet(frames), palettes.view(pal))
+            save_indexed(d / f"{name}.png", sheet(frames), palettes.view(it["pal"]))
             h += sheet_defines(up, frames, it.get("idx", {}))
             fh, fw = frames[0].shape
             size = fw * fh // 2 * len(frames)
-            items.append({"png": f"images/stage{n}/{name}.png", "w": fw, "h": fh, "frames": len(frames),
-                          "offset": off, "size": size})
+            out.append({"png": f"images/stage{n}/{name}.png", "w": fw, "h": fh, "frames": len(frames),
+                        "offset": off, "size": size})
             if preview:
                 from preview import preview as pv
-                pv(Path(preview) / f"stage{n}_{name}.png", frames, pal, scale=3 if fw >= 32 else 4)
+                pv(Path(preview) / f"stage{n}_{name}.png", frames, it["pal"], scale=3 if fw >= 32 else 4)
         else:
             data = bytes(it["data"])
             (d / f"{name}.bin").write_bytes(data)
             size = len(data)
-            items.append({"bin": f"images/stage{n}/{name}.bin", "offset": off, "size": size})
+            out.append({"bin": f"images/stage{n}/{name}.bin", "offset": off, "size": size})
         assert size % 2 == 0, name
         off += size
         h.append("")
-    h.append(f"#define {pfx}_BANK_BYTES {off}")
+    (d / f"{kind}_palettes.bin").write_bytes(palette_blob(pals))
+    spec = {"palettes": f"images/stage{n}/{kind}_palettes.bin", "items": out, "size": off}
+    (d / f"{kind}.json").write_text(json.dumps(spec, indent=1) + "\n")
+    return off
+
+
+def write_stage(st, preview):
+    """A stage's two ROM files: stage<N>.bin (its script, ground and sky, with
+    the TILES and SKY palettes) and boss<N>.bin (its boss, with the LAYER,
+    BOSS and BOSS_WRECK palettes). Items with "boss": True go in the second."""
+    n = st["n"]
+    d = IMAGES / f"stage{n}"
+    d.mkdir(exist_ok=True)
+    for old in ("bank.json", "palettes.bin"):
+        if (d / old).exists():
+            (d / old).unlink()
+    h = [HEADER, f"#ifndef GEN_STAGE{n}_H", f"#define GEN_STAGE{n}_H", "",
+         "/* Offsets in XRAM_BANK (S<N>_) and XRAM_BOSS (B<N>_). */", ""]
+    for it in st["items"]:
+        it.setdefault("pal", st["palettes"]["BOSS"])
+    script = {"name": "script", "data": script_blob(st)}
+    stage_items = [script] + [it for it in st["items"] if not it.get("boss")]
+    boss_items = [it for it in st["items"] if it.get("boss")]
+    pal = lambda names: [(nm, st["palettes"].get(nm, palettes.BLANK)) for nm in names]  # noqa: E731
+    s_size = write_bank("stage", n, stage_items, pal(palettes.STAGE_SLOTS[:2]), d, h, f"S{n}", preview)
+    b_size = write_bank("boss", n, boss_items, pal(palettes.STAGE_SLOTS[2:]), d, h, f"B{n}", preview)
+    h.append(f"#define S{n}_BANK_BYTES {s_size}")
+    h.append(f"#define B{n}_BANK_BYTES {b_size}")
     for k, v in st.get("defines", {}).items():
-        h.append(f"#define {pfx}_{k} {v}")
+        h.append(f"#define S{n}_{k} {v}")
     h += ["", "#endif", ""]
     (GEN / f"stage{n}.h").write_text("\n".join(h))
-
-    pals = [(name, st["palettes"].get(name, palettes.BLANK)) for name in palettes.STAGE_SLOTS]
-    (d / "palettes.bin").write_bytes(palette_blob(pals))
-    spec = {"palettes": f"images/stage{n}/palettes.bin", "items": items, "size": off}
-    (d / "bank.json").write_text(json.dumps(spec, indent=1) + "\n")
-    (GEN / f"stage{n}_data.h").write_text(HEADER + "\n" + st.get("data_h", "") + "\n")
+    checks = sorted({w[1] for w in st.get("waves", [])} | {g[2] for g in st.get("ground", [])})
+    data = [HEADER] + [f"_Static_assert({t} == {ENEMY_TYPES.index(t)}, \"gen_art.py's ENEMY_TYPES is out of date\");"
+                       for t in checks]
+    (GEN / f"stage{n}_data.h").write_text("\n".join(data) + "\n" + st.get("data_h", "") + "\n")
     if preview:
-        for name, (img, pal) in st.get("previews", {}).items():
+        for name, (img, pal_) in st.get("previews", {}).items():
             from preview import preview as pv
-            pv(Path(preview) / f"stage{n}_{name}.png", [img], pal, scale=2)
-    print(f"stage {n}: bank {off} bytes, {len(items)} items")
-    return off
+            pv(Path(preview) / f"stage{n}_{name}.png", [img], pal_, scale=2)
+    print(f"stage {n}: stage file {s_size} bytes, boss file {b_size} bytes")
+    return s_size, b_size
 
 
 def main():
@@ -181,7 +222,9 @@ def main():
 
     sizes = [write_stage(st, args.preview) for st in stages.all_stages()]
     h += [f"#define STAGE_COUNT {len(sizes)}",
-          f"#define STAGE_BANK_MAX {max(sizes)} /* the largest stage bank */", "", "#endif", ""]
+          f"#define STAGE_BANK_MAX {max(s for s, _ in sizes)} /* the largest stage file, less its palettes */",
+          f"#define BOSS_BANK_MAX {max(b for _, b in sizes)} /* the largest boss file, less its palettes */",
+          "", "#endif", ""]
     (GEN / "assets.h").write_text("\n".join(h))
     print(f"wrote {len(sheets)} resident sheets, {len(palettes.ALL)} palettes")
 

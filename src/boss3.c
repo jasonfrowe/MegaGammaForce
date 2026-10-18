@@ -38,8 +38,8 @@ enum
     BP_N
 };
 
-#define IMG(name) (XRAM_BANK + S3_##name)
-#define HULL_MAP (XRAM_BANK + S3_HULL_MAP)
+#define IMG(name) (XRAM_BOSS + B3_##name)
+#define HULL_MAP (XRAM_BOSS + B3_HULL_MAP)
 #define HULL_HALF_W (S3_HULL_W * 8)
 #define HULL_HALF_H (S3_HULL_H * 8)
 
@@ -112,7 +112,7 @@ static void place(void)
 static void start(void)
 {
     /* The hull map came fresh from the ROM with the stage, so no craters yet. */
-    bg_layer_show(HULL_MAP, S3_HULL_W, S3_HULL_H, XRAM_BANK + S3_HULL_TILES);
+    bg_layer_show(HULL_MAP, S3_HULL_W, S3_HULL_H, XRAM_BOSS + B3_HULL_TILES);
     boss_y = Q4(-HULL_HALF_H - 8);
     bay_t[0] = 0;
     bay_t[1] = 80;
@@ -199,7 +199,7 @@ static void fight(void)
 static void frame(uint8_t i, mode5_csprite_t *s)
 {
     if (i == BP_REACTOR && !part_dead[i])
-        s->xram_sprite_ptr = IMG(BOSS_REACTOR) + ((boss_t >> 3) & 1) * S3_BOSS_REACTOR_FRAME_BYTES;
+        s->xram_sprite_ptr = IMG(BOSS_REACTOR) + ((boss_t >> 3) & 1) * B3_BOSS_REACTOR_FRAME_BYTES;
 }
 
 static void destroyed(uint8_t i)

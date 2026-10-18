@@ -10,6 +10,7 @@
 #include "stage.h"
 #include "targets.h"
 #include "util.h"
+#include "gen/stage4.h"
 
 typedef struct
 {
@@ -32,6 +33,8 @@ static const etype_t etypes[] = {
     [ET_WASP] = {3, 150, 6, 6, 16, 16, XRAM_IMG_ENEMY16 + ENEMY16_WASP * ENEMY16_FRAME_BYTES, ENEMY16_FRAME_BYTES, 2},
     [ET_GUNBOAT] = {40, 1500, 8, 14, 32, 32, XRAM_IMG_ENEMY32 + ENEMY32_GUNBOAT * ENEMY32_FRAME_BYTES, ENEMY32_FRAME_BYTES,
                     2},
+    /* Stage art: only stage 4 has trains, so its file holds them. */
+    [ET_TRAIN] = {24, 800, 7, 14, 32, 32, XRAM_BANK + S4_TRAIN, S4_TRAIN_FRAME_BYTES, 1},
 };
 
 static uint8_t e_type[EN_N], e_color[EN_N], e_hp[EN_N], e_state[EN_N], e_flash[EN_N], e_param[EN_N];
@@ -106,7 +109,7 @@ static void destroy(uint8_t i)
 {
     int16_t gx = e_x[i] >> 4, gy = e_y[i] >> 4;
     const etype_t *t = &etypes[e_type[i]];
-    if (e_type[i] == ET_GUNSHIP || e_type[i] == ET_GUNBOAT) {
+    if (e_type[i] == ET_GUNSHIP || e_type[i] == ET_GUNBOAT || e_type[i] == ET_TRAIN) {
         fx_explode(gx, gy, 1);
         fx_explode(gx - 10, gy - 8, 0);
         fx_explode(gx + 10, gy + 6, 0);
@@ -302,6 +305,17 @@ static void think(uint8_t i)
                 bullet_fire(gx, gy + 6, (uint8_t)(a + k * 10), 38, BK_NEEDLE);
         }
         break;
+    case ET_TRAIN:
+        /* Rolls up the track; gun cars shoot, the locomotive sprays pink. */
+        e_vy[i] = -6;
+        if (alive && on_screen(i)) {
+            uint8_t c = (uint8_t)((t + i * 19) % 96);
+            if (e_param[i] && c == 0)
+                bullet_fire(gx, gy - 6, aim_at_player(i), 30, BK_BLUE);
+            else if (!e_param[i] && c == 48)
+                bullet_fan(gx, gy + 12, ANG_DOWN, 24, BK_PINK, 5, 14);
+        }
+        break;
     case ET_GUNBOAT:
         /* Sails up against the scroll; aimed fans and a pink ring. */
         e_vy[i] = -5;
@@ -351,7 +365,9 @@ void enemies_update(uint8_t scroll)
             bool left = e_param[i] & 0x80;
             f = left ? (uint8_t)((8 - e_aim[i]) & 7) : e_aim[i];
             s->options = OPT4 | (left ? MODE5_HFLIP : 0);
-        } else
+        } else if (type == ET_TRAIN)
+            f = e_param[i] ? 1 : 0;
+        else
             f = (uint8_t)(anim % t->frames);
         s->xram_sprite_ptr = t->img + f * t->frame_bytes;
         if (e_flash[i]) {

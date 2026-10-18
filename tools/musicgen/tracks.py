@@ -48,7 +48,10 @@ class MoodPreset:
     arp_octave: int = 4
     bass_octave: int = 2
     use_drums: bool = True
-    meter: str = "4/4"  # "4/4", "6/8" or "3/4"; only style 9 (silvergun) reads it
+    meter: str = "4/4"  # "4/4", "6/8" or "3/4"; styles 9 and up read it
+    # "song" (intro, themes, bridge, outro; loops) or "jingle": two phrases,
+    # the second a cadence home, played once (styles 9 and up)
+    form: str = "song"
 
 
 @dataclass
@@ -91,6 +94,26 @@ TRACKS: list = [
         description="Boss battle, battleship LEVIATHAN",
         aliases=["boss3"],
         mood=MoodPreset(key_root=0, scale="minor", bpm=180, intensity=0.95, target_seconds=120.0, lead_octave=5),
+    ),
+    TrackSpec(
+        resource="Stage4",
+        description="Stage 4, Scorched Sands",
+        aliases=["stage4", "level4"],
+        mood=MoodPreset(key_root=4, scale="minor", bpm=150, intensity=0.75, target_seconds=150.0, lead_octave=5),
+    ),
+    TrackSpec(
+        resource="Boss4",
+        description="Boss battle, DUNE WYRM",
+        aliases=["boss4"],
+        mood=MoodPreset(key_root=1, scale="minor", bpm=180, intensity=0.95, target_seconds=120.0, lead_octave=5),
+    ),
+    TrackSpec(
+        resource="Gameover",
+        description="Game over",
+        aliases=["gameover"],
+        # Slow and dark: a phrase, then a cadence home, once.
+        mood=MoodPreset(key_root=9, scale="minor", bpm=84, intensity=0.3, target_seconds=20.0, lead_octave=5,
+                        form="jingle"),
     ),
     TrackSpec(
         resource="Boss",

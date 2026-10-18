@@ -26,7 +26,7 @@ enum
     BP_N
 };
 
-#define IMG(name) (XRAM_BANK + S2_##name)
+#define IMG(name) (XRAM_BOSS + B2_##name)
 
 static const part_t parts[BP_N] = {
     [BP_CANNON] = {0, 42, 32, 32, 11, 10, 160, 20, IMG(BOSS_CANNON), 0, PK_SPRITE, NO_PARENT, 2000},
@@ -140,10 +140,10 @@ static void place(void)
 static void frame(uint8_t i, mode5_csprite_t *s)
 {
     if (i >= BP_POD0 && i <= BP_POD2)
-        s->xram_sprite_ptr = IMG(BOSS_POD) + (((boss_t >> 3) + i) & 1) * S2_BOSS_POD_FRAME_BYTES;
+        s->xram_sprite_ptr = IMG(BOSS_POD) + (((boss_t >> 3) + i) & 1) * B2_BOSS_POD_FRAME_BYTES;
     else if (i == BP_CANNON)
         s->xram_sprite_ptr = IMG(BOSS_CANNON) +
-                             ((!part_dead[i] && boss_t % 200 > 170 && (boss_t & 4)) ? S2_BOSS_CANNON_FRAME_BYTES : 0);
+                             ((!part_dead[i] && boss_t % 200 > 170 && (boss_t & 4)) ? B2_BOSS_CANNON_FRAME_BYTES : 0);
 }
 
 const boss_def_t boss2 = {

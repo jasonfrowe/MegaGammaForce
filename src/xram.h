@@ -302,8 +302,9 @@ typedef struct
     uint8_t img_warn_a[WARN_A_FRAMES][WARN_A_FRAME_BYTES];
     uint8_t img_warn_b[WARN_B_FRAMES][WARN_B_FRAME_BYTES];
     uint8_t sfx_data[SFX_DATA_MAX];
-    /* XRAM_BANK, the rest of XRAM, follows: the current stage's own art,
-     * loaded from the ROM when the stage starts (see stage.c). */
+    /* XRAM_BANK, the rest of XRAM, follows: the current stage's script,
+     * ground and sky, then XRAM_BOSS, its boss, each loaded from the ROM
+     * (see stage.c). */
 } xram_layout_t;
 
 #define XRAM_OPL offsetof(xram_layout_t, opl)
@@ -343,6 +344,7 @@ _Static_assert((XRAM_OPL & 0xFF) == 0, "The OPL2 registers must start on a page 
 #define XRAM_IMG_WARN_B offsetof(xram_layout_t, img_warn_b)
 #define XRAM_SFX_DATA offsetof(xram_layout_t, sfx_data)
 #define XRAM_BANK sizeof(xram_layout_t)
+#define XRAM_BOSS (XRAM_BANK + STAGE_BANK_MAX)
 /* The top page of XRAM is left free. */
 #define XRAM_BANK_SIZE (0xFF00 - XRAM_BANK)
 
@@ -351,6 +353,6 @@ _Static_assert((XRAM_OPL & 0xFF) == 0, "The OPL2 registers must start on a page 
 /* The FPGA VGA caches 1 KB of palettes: keep them all together, within it. */
 _Static_assert(sizeof(palette_t) * PAL_COUNT / sizeof(uint16_t) <= 512,
                "palettes hold more than 512 colors.");
-_Static_assert(STAGE_BANK_MAX <= XRAM_BANK_SIZE, "a stage bank does not fit in XRAM.");
+_Static_assert((uint32_t)STAGE_BANK_MAX + BOSS_BANK_MAX <= XRAM_BANK_SIZE, "a stage and its boss do not fit in XRAM.");
 
 #endif

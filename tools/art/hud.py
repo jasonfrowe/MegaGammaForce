@@ -182,6 +182,12 @@ GLYPHS = {
     "1": ["..X..", ".XX..", "..X..", "..X..", "..X..", "..X..", ".XXX."],
     "2": [".XXX.", "X...X", "....X", "...X.", "..X..", ".X...", "XXXXX"],
     "3": ["XXXX.", "....X", "....X", ".XXX.", "....X", "....X", "XXXX."],
+    "4": ["X..X.", "X..X.", "X..X.", "XXXXX", "...X.", "...X.", "...X."],
+    "5": ["XXXXX", "X....", "XXXX.", "....X", "....X", "X...X", ".XXX."],
+    "6": [".XXX.", "X....", "X....", "XXXX.", "X...X", "X...X", ".XXX."],
+    "7": ["XXXXX", "....X", "...X.", "..X..", "..X..", ".X...", ".X..."],
+    "8": [".XXX.", "X...X", "X...X", ".XXX.", "X...X", "X...X", ".XXX."],
+    "9": [".XXX.", "X...X", "X...X", ".XXXX", "....X", "....X", ".XXX."],
 }
 
 BANNER_MATS = {"gold": Material([7, 8, 9, 5]), "edge": Material([6], shaded=False)}
@@ -198,13 +204,13 @@ def _glyphs(s, text, x0, y0, cell=2):
 
 
 def banner():
-    """The stage banner: "STAGE" in 64x16, then the digits 1-3 in 16x16 (palette SHOTS),
+    """The stage banner: "STAGE" in 64x16, then the digits 1-9 in 16x16 (palette SHOTS),
     drawn doubled."""
     word = Sprite(64, 16)
     _glyphs(word, "STAGE", 2, 1)
     out = [word.render(BANNER_MATS, gloss=0.4, outline=6)]
     nums = []
-    for d in "123":
+    for d in "123456789":
         s = Sprite(16, 16)
         _glyphs(s, d, 3, 1)
         nums.append(s.render(BANNER_MATS, gloss=0.4, outline=6))

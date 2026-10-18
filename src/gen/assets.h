@@ -114,7 +114,7 @@
 
 #define BANNERNUM_W 16
 #define BANNERNUM_H 16
-#define BANNERNUM_FRAMES 3
+#define BANNERNUM_FRAMES 9
 #define BANNERNUM_FRAME_BYTES 128
 
 #define WARN_A_W 64
@@ -147,7 +147,8 @@
 #define PAL_STAGE 11 /* first of the palettes a stage loads */
 #define PAL_STAGE_N 5
 
-#define STAGE_COUNT 3
-#define STAGE_BANK_MAX 25072 /* the largest stage bank */
+#define STAGE_COUNT 4
+#define STAGE_BANK_MAX 20178 /* the largest stage file, less its palettes */
+#define BOSS_BANK_MAX 12804 /* the largest boss file, less its palettes */
 
 #endif

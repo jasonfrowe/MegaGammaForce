@@ -55,29 +55,31 @@ mgf_sheet(warn_b 24 16)
 rp6502_asset(MegaGammaForce XRAM(XRAM_PALETTES) images/palettes.bin)
 rp6502_asset(MegaGammaForce XRAM(XRAM_SFX_DATA) music/sfx.bin)
 
-# Each stage's own art, packed as ROM:stage<N>.bin and loaded into
-# XRAM_BANK when the stage starts.
-function(mgf_bank n)
-    set(out ${CMAKE_CURRENT_BINARY_DIR}/stage${n}.bin)
+# Each stage's own art, packed as ROM:stage<N>.bin (script, ground, sky),
+# loaded into XRAM_BANK when the stage starts, and ROM:boss<N>.bin (the
+# boss), loaded into XRAM_BOSS.
+function(mgf_bank n kind)
+    set(out ${CMAKE_CURRENT_BINARY_DIR}/${kind}${n}.bin)
     file(GLOB deps CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/images/stage${n}/*)
     add_custom_command(
         OUTPUT ${out}
         COMMAND ${ART_PYTHON} ${CMAKE_CURRENT_SOURCE_DIR}/tools/mkbank.py
-            ${CMAKE_CURRENT_SOURCE_DIR}/images/stage${n}/bank.json ${out}
+            ${CMAKE_CURRENT_SOURCE_DIR}/images/stage${n}/${kind}.json ${out}
         DEPENDS tools/mkbank.py tools/png2bin.py ${deps}
         VERBATIM
     )
-    rp6502_asset(MegaGammaForce stage${n}.bin ${out})
+    rp6502_asset(MegaGammaForce ${kind}${n}.bin ${out})
 endfunction()
 
-foreach(n 1 2 3)
-    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/images/stage${n}/bank.json)
-        mgf_bank(${n})
+foreach(n RANGE 1 9)
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/images/stage${n}/stage.json)
+        mgf_bank(${n} stage)
+        mgf_bank(${n} boss)
     endif()
 endforeach()
 
 # Music, streamed from the ROM while playing.
-foreach(track Title Stage1 Boss Stage2 Stage3 Boss3 Victory)
+foreach(track Title Stage1 Boss Stage2 Stage3 Boss3 Stage4 Boss4 Victory Gameover)
     if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/music/${track}.vgm)
         rp6502_asset(MegaGammaForce ${track}.vgm music/${track}.vgm)
     endif()
@@ -88,7 +90,7 @@ rp6502_executable(MegaGammaForce DATA default RESET default)
 rp6502_web(MegaGammaForce)
 
 target_include_directories(MegaGammaForce PRIVATE src)
-target_compile_options(MegaGammaForce PRIVATE -Os -Wall)
+target_compile_options(MegaGammaForce PRIVATE -Oz -Wall)
 
 target_sources(MegaGammaForce PRIVATE
     src/main.c
@@ -110,6 +112,7 @@ target_sources(MegaGammaForce PRIVATE
     src/boss1.c
     src/boss2.c
     src/boss3.c
+    src/boss4.c
     src/opl.c
     src/vgm.c
     src/music.c

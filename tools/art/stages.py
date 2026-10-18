@@ -3,10 +3,13 @@
 A stage is a dict:
   n          stage number, 1 up
   palettes   {slot: palette} for palettes.STAGE_SLOTS (missing ones are blank)
-  items      bank contents in order: {"name", "frames", "pal", "idx"} for a
-             sheet, or {"name", "data"} for raw bytes (a tile map)
+  items      contents in order: {"name", "frames", "pal", "idx"} for a
+             sheet, or {"name", "data"} for raw bytes (a tile map); with
+             "boss": True it goes in the boss file instead of the stage file
+  waves      the air waves (waves.py)
+  ground     ground units: (map y from the bottom, x, type, color, param)
   defines    extra #defines for src/gen/stage<N>.h, prefixed S<N>_
-  data_h     C for src/gen/stage<N>_data.h: ground units, solid tiles
+  data_h     C for src/gen/stage<N>_data.h: solid tiles
   previews   {name: (image, palette)} written with --preview
 """
 
@@ -15,24 +18,17 @@ import numpy as np
 import boss
 import boss2
 import city
+import desert
 import hud
 import logo
 import ocean
 import palettes
 import ship
 import tiles
+import waves
+import wyrm
 
 COLOR = ["COL_RED", "COL_BLUE", "COL_YELLOW", "COL_GRAY"]
-
-
-def ground_table(n, units):
-    """units: (map y from the bottom, playfield x, C type, C color, param), any order."""
-    units = sorted(units)
-    out = [f"#define S{n}_GROUND_N {len(units)}",
-           f"static const ground_t s{n}_ground[S{n}_GROUND_N] = {{"]
-    out += [f"    {{{y}, {x}, {t}, {c}, {p}}}," for y, x, t, c, p in units]
-    out += ["};", ""]
-    return "\n".join(out)
 
 
 def solid_table(n, name, solid_ids, count):
@@ -64,14 +60,15 @@ def stage1():
             {"name": "tiles", "frames": tl, "pal": pal["TILES"]},
             {"name": "map", "data": stage_map.astype(np.uint8).tobytes()},
             {"name": "logo", "frames": logo.logo(), "pal": pal["BOSS"]},
-            {"name": "boss_core", "frames": boss.core()},
-            {"name": "portrait", "frames": hud.portrait(boss.core()[0])},
-            {"name": "boss_wing", "frames": boss.wing()},
-            {"name": "boss_cannon", "frames": boss.cannon()},
-            {"name": "boss_turret", "frames": boss.turret()},
+            {"name": "boss_core", "boss": True, "frames": boss.core()},
+            {"name": "portrait", "boss": True, "frames": hud.portrait(boss.core()[0])},
+            {"name": "boss_wing", "boss": True, "frames": boss.wing()},
+            {"name": "boss_cannon", "boss": True, "frames": boss.cannon()},
+            {"name": "boss_turret", "boss": True, "frames": boss.turret()},
         ],
         "defines": defines,
-        "data_h": ground_table(1, units),
+        "waves": waves.S1_WAVES,
+        "ground": units,
     }
 
 
@@ -93,16 +90,16 @@ def stage2():
     st, smap, solid, towers = city.stage2_sky(sky_rows)
     pal = {"TILES": city.CITY, "SKY": city.SKY, "BOSS": palettes.BOSS2, "BOSS_WRECK": palettes.BOSS2_WRECK}
     units = []
-    # A gun on every other pad; the rest stay empty.
-    for i, (r, c) in enumerate(sorted(pads)[::2]):
+    # Guns on three pads in four; the rest stay empty.
+    for i, (r, c) in enumerate(p for k, p in enumerate(sorted(pads)) if k % 4 != 3):
         y = (r + 1) * 16
         if 300 < y < WAVES_END:
             units.append((y, (c + 1) * 16, "ET_TURRET", COLOR[i % 3], 0))
-    # Tanks on every fourth road, alternating directions, colors in threes.
+    # Tanks on three roads in eight, alternating directions, colors in threes.
     k = 0
     for r in roads:
         y = r * 16 + 8
-        if y < 500 or y > WAVES_END - 100 or (r // city.BLOCK) % 4:
+        if y < 500 or y > WAVES_END - 100 or (r // city.BLOCK) % 8 not in (0, 3, 5):
             continue
         left = k % 2 == 1
         units.append((y, 200 if left else 0, "ET_TANK", COLOR[(k // 3) % 3], (0x80 if left else 0) | 10))
@@ -117,14 +114,16 @@ def stage2():
             {"name": "map", "data": gmap.astype(np.uint8).tobytes()},
             {"name": "sky_tiles", "frames": st, "pal": city.SKY},
             {"name": "sky_map", "data": smap.astype(np.uint8).tobytes()},
-            {"name": "boss_core", "frames": boss2.core(), "pal": palettes.BOSS2},
-            {"name": "portrait", "frames": hud.portrait(boss2.core()[0]), "pal": palettes.BOSS2},
-            {"name": "boss_pod", "frames": boss2.pod(), "pal": palettes.BOSS2},
-            {"name": "boss_cannon", "frames": boss2.cannon(), "pal": palettes.BOSS2},
-            {"name": "boss_turret", "frames": boss.turret(), "pal": palettes.BOSS2},
+            {"name": "boss_core", "boss": True, "frames": boss2.core(), "pal": palettes.BOSS2},
+            {"name": "portrait", "boss": True, "frames": hud.portrait(boss2.core()[0]), "pal": palettes.BOSS2},
+            {"name": "boss_pod", "boss": True, "frames": boss2.pod(), "pal": palettes.BOSS2},
+            {"name": "boss_cannon", "boss": True, "frames": boss2.cannon(), "pal": palettes.BOSS2},
+            {"name": "boss_turret", "boss": True, "frames": boss.turret(), "pal": palettes.BOSS2},
         ],
         "defines": defines,
-        "data_h": ground_table(2, units) + solid_table(2, "sky", solid, len(st)),
+        "waves": waves.S2_WAVES,
+        "ground": units,
+        "data_h": solid_table(2, "sky", solid, len(st)),
         "previews": {"ground": (tilemap_image(gt, gmap), city.CITY), "sky": (tilemap_image(st, smap), city.SKY)},
     }
 
@@ -168,20 +167,67 @@ def stage3():
             {"name": "map", "data": gmap.astype(np.uint8).tobytes()},
             {"name": "sky_tiles", "frames": st, "pal": ocean.SKY},
             {"name": "sky_map", "data": smap.astype(np.uint8).tobytes()},
-            {"name": "hull_tiles", "frames": ht, "pal": ship.HULL},
-            {"name": "hull_map", "data": hmap.astype(np.uint8).tobytes()},
-            {"name": "boss_bridge", "frames": ship.bridge(), "pal": ship.BOSS3},
-            {"name": "portrait", "frames": hud.portrait(ship.bridge()[0]), "pal": ship.BOSS3},
-            {"name": "boss_reactor", "frames": ship.reactor(), "pal": ship.BOSS3},
-            {"name": "boss_gun", "frames": ship.main_gun(), "pal": ship.BOSS3},
-            {"name": "boss_turret", "frames": boss.turret(), "pal": ship.BOSS3},
+            {"name": "hull_tiles", "boss": True, "frames": ht, "pal": ship.HULL},
+            {"name": "hull_map", "boss": True, "data": hmap.astype(np.uint8).tobytes()},
+            {"name": "boss_bridge", "boss": True, "frames": ship.bridge(), "pal": ship.BOSS3},
+            {"name": "portrait", "boss": True, "frames": hud.portrait(ship.bridge()[0]), "pal": ship.BOSS3},
+            {"name": "boss_reactor", "boss": True, "frames": ship.reactor(), "pal": ship.BOSS3},
+            {"name": "boss_gun", "boss": True, "frames": ship.main_gun(), "pal": ship.BOSS3},
+            {"name": "boss_turret", "boss": True, "frames": boss.turret(), "pal": ship.BOSS3},
         ],
         "defines": defines,
-        "data_h": ground_table(3, units),
+        "waves": waves.S3_WAVES,
+        "ground": units,
         "previews": {"ground": (tilemap_image(gt, gmap), ocean.OCEAN), "sky": (tilemap_image(st, smap), ocean.SKY),
                      "hull": (tilemap_image(ht, hmap), ship.HULL)},
     }
 
 
+def sky_stage_rows(sky_speed):
+    return (WAVES_END * sky_speed // 4 + 240) // 16 + 1
+
+
+def stage4():
+    gt, gmap, bunkers = desert.stage4_ground()
+    sky_speed = 6
+    st, smap = desert.stage4_sky(sky_stage_rows(sky_speed))
+    pal = {"TILES": desert.SAND, "SKY": desert.DUST, "BOSS": wyrm.BOSS4, "BOSS_WRECK": wyrm.BOSS4_WRECK}
+    units = []
+    for i, (r, c) in enumerate(sorted(bunkers)):
+        y = (r + 1) * 16
+        if 300 < y < WAVES_END:
+            units.append((y, (c + 1) * 16, "ET_TURRET", COLOR[i % 3], 0))
+    # Armoured trains: five cars, one color each, a locomotive in front
+    # (param 0), heading up the track. The rail's middle is RAIL * 16 + 16.
+    x = desert.RAIL * 16 + 16
+    for k, y0 in enumerate((700, 1500, 2300)):
+        for car in range(5):
+            units.append((y0 - car * 30, x, "ET_TRAIN", COLOR[k % 3], car))
+    defines = map_defines("MAP", gmap, LOOP_ROWS_DEFAULT)
+    defines.update({"TILES_N": len(gt), "SKY_ROWS": smap.shape[0], "SKY_SPEED": sky_speed})
+    return {
+        "n": 4,
+        "palettes": pal,
+        "items": [
+            {"name": "tiles", "frames": gt, "pal": desert.SAND},
+            {"name": "map", "data": gmap.astype(np.uint8).tobytes()},
+            {"name": "sky_tiles", "frames": st, "pal": desert.DUST},
+            {"name": "sky_map", "data": smap.astype(np.uint8).tobytes()},
+            {"name": "train", "frames": desert.train(), "pal": palettes.ENEMY_RED},
+            {"name": "boss_head", "boss": True, "frames": wyrm.head(), "pal": wyrm.BOSS4},
+            {"name": "boss_seg", "boss": True, "frames": wyrm.segment(), "pal": wyrm.BOSS4},
+            {"name": "boss_tail", "boss": True, "frames": wyrm.tail(), "pal": wyrm.BOSS4},
+            {"name": "portrait", "boss": True, "frames": hud.portrait(wyrm.head()[0]), "pal": wyrm.BOSS4},
+        ],
+        "defines": defines,
+        "waves": waves.S4_WAVES,
+        "ground": units,
+        "previews": {"ground": (tilemap_image(gt, gmap), desert.SAND), "sky": (tilemap_image(st, smap), desert.DUST)},
+    }
+
+
+LOOP_ROWS_DEFAULT = 16
+
+
 def all_stages():
-    return [stage1(), stage2(), stage3()]
+    return [stage1(), stage2(), stage3(), stage4()]

@@ -7,5 +7,6 @@
 extern const boss_def_t boss1;
 extern const boss_def_t boss2;
 extern const boss_def_t boss3;
+extern const boss_def_t boss4;
 
 #endif

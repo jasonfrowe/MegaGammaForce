@@ -849,8 +849,19 @@ def _generate_kit(kit, name: str, mood: MoodPreset, rng: random.Random, bank: Li
     unused = set(range(CHANNEL_COUNT)) - set(ROLE_TO_CHANNEL.values())
     for ch in range(CHANNEL_COUNT):
         song.patterns[(ch, empty)] = {} if ch in unused else {0: RowCell(note=NOTE_OFF)}
-    for section in _plan_sections(rng, replace(mood, bpm=tempo), semitone_bump=semitone_bump, rows_per_chunk=chunk_rows,
-                                  rows_per_beat=beat):
+    if mood.form == "jingle":
+        # A phrase on the A progression, then a cadence home (iv V i i), both
+        # with everything playing; the song ends there instead of looping.
+        cad = [(5, "M" if major else "m"), (7, "M"), (0, "M" if major else "m"), (0, "M" if major else "m")]
+        chunks["END"] = kit.generate_chunk(rng, mood, ins, cad, mood.key_root, base_vol, ROLE_VOLUME_JITTER, CHUNK_BARS)
+        pidx["END"] = len(order) + 1
+        song.patterns.update({(ch, pidx["END"]): {} for ch in unused})
+        full = FULL_ROLES if mood.use_drums else MELODIC_ROLES
+        sections = [_Section("A1", set(full)), _Section("END", set(full))]
+    else:
+        sections = _plan_sections(rng, replace(mood, bpm=tempo), semitone_bump=semitone_bump,
+                                  rows_per_chunk=chunk_rows, rows_per_beat=beat)
+    for section in sections:
         p = pidx[section.chunk_key]
         for role, ch in ROLE_TO_CHANNEL.items():
             if role in section.active_roles:

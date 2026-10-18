@@ -20,6 +20,7 @@
 #include "gen/stage1.h"
 
 uint8_t frame_count;
+bool frame_loaded;
 
 /* Frames the game logic overran, for profiling from the emulator. */
 volatile uint16_t lag_frames;
@@ -205,7 +206,7 @@ static void enter_gameover(void)
     gstate = GS_GAMEOVER;
     gtimer = 0;
     hud_center(13, "GAME OVER", HC_RED);
-    music_stop();
+    music_play_once("ROM:Gameover.vgm");
 }
 
 static void play_frame(void)
@@ -260,8 +261,9 @@ int main(void)
         uint8_t now;
         while ((now = ria_vsync()) == vs)
             ;
-        if ((uint8_t)(now - vs) > 1)
+        if ((uint8_t)(now - vs) > 1 && !frame_loaded)
             lag_frames++;
+        frame_loaded = false;
         vs = now;
 
         spr_commit();
@@ -330,7 +332,8 @@ int main(void)
             bullets_update();
             fx_update(0);
             gtimer++;
-            if (gtimer > 300 || (gtimer > 90 && (in_pressed & (IN_START | IN_FIRE))))
+            /* Back to the title when the music ends, or on a button. */
+            if (gtimer > 1440 || (gtimer > 90 && (in_pressed & (IN_START | IN_FIRE))))
                 enter_title();
             break;
         }

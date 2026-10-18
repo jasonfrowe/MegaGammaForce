@@ -41,6 +41,57 @@ typedef struct
     uint16_t score;
 } part_t;
 
+/*
+ * Scripted bosses. A boss_def_t with no fight() is run from tables instead
+ * of code: a motion_t for how it moves, and a pattern_t per attack.
+ */
+enum
+{
+    PT_AIM,    /* a fan of count, step apart, aimed at the player */
+    PT_DOWN,   /* a fan of count, step apart, straight down */
+    PT_RING,   /* count evenly around, turning step each time */
+    PT_SPIRAL, /* count arms, turning step each time: fire it often */
+    PT_SPAWN,  /* launch an enemy: type arg, color step */
+};
+
+enum
+{
+    WHEN_ALWAYS,
+    WHEN_ANGRY,  /* the core is below half its hit points */
+    WHEN_DEAD,   /* part arg (or, for PT_SPAWN, the core angry) is destroyed */
+    WHEN_LATE,   /* angry, or a minute in */
+};
+
+typedef struct
+{
+    uint8_t part;   /* the part that fires; nothing once it is destroyed */
+    uint8_t kind;   /* PT_ */
+    uint8_t bullet; /* BK_ */
+    uint8_t speed;
+    uint8_t period; /* frames between volleys */
+    uint8_t phase;  /* frame within the period it fires on */
+    uint8_t count;
+    uint8_t step;   /* angle step (256 to a turn) */
+    uint8_t when;   /* WHEN_ */
+    uint8_t arg;
+} pattern_t;
+
+typedef struct
+{
+    uint8_t enter_speed; /* Q4 pixels a frame, coming down from the top */
+    uint8_t y;           /* where it fights, game pixels */
+    uint8_t amp_x, amp_y; /* hover: sine sway in pixels... */
+    uint8_t rate_x, rate_y; /* ...at boss_t >> rate (0 = fastest) */
+    /* Parts orbit_first to orbit_first + orbit_n - 1 circle the center on
+     * an rx by ry ellipse, faster as they fall. orbit_n 0 for none. */
+    uint8_t orbit_first, orbit_n, orbit_rx, orbit_ry;
+    /* Parts chain_first to chain_first + chain_n - 1 trail the center one
+     * after another, chain_gap frames apart, like a snake's body: the last
+     * of them nearest the center. chain_n 0 for none; chain_n * chain_gap
+     * up to 127 frames. */
+    uint8_t chain_first, chain_n, chain_gap;
+} motion_t;
+
 struct boss_def
 {
     const char *core_label; /* names the HUD bar */
@@ -64,6 +115,10 @@ struct boss_def
     void (*dying)(void);
     /* Optional: the boss is gone (destroyed, escaped, or the game reset). */
     void (*finish)(void);
+    /* A scripted boss (no enter or fight): its motion and attacks. */
+    const motion_t *motion;
+    const pattern_t *patterns;
+    uint8_t n_patterns;
 };
 
 /* Shared with the boss scripts. */

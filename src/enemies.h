@@ -15,11 +15,12 @@ enum
     ET_TANK,    /* ground, drives along a road; param: speed, bit 7 = left */
     ET_WASP,    /* weaves down, stings with aimed needles */
     ET_GUNBOAT, /* on the sea, sails up the screen, heavy guns */
+    ET_TRAIN,   /* armoured car on stage 4's railway; param 0 = locomotive */
 };
 
 /* Slots below gspr_n can hold ground units, on plane 0's sprites. */
 #define EN_N SPR_ENEMY_N
-#define EN_GROUND(type) ((type) == ET_TURRET || (type) == ET_TANK || (type) == ET_GUNBOAT)
+#define EN_GROUND(type) ((type) == ET_TURRET || (type) == ET_TANK || (type) == ET_GUNBOAT || (type) == ET_TRAIN)
 
 void enemies_reset(void);
 /* Position in game pixels. Returns the slot, or -1 if full. */

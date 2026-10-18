@@ -1,0 +1,32 @@
+{
+ "palettes": "images/stage1/stage_palettes.bin",
+ "items": [
+  {
+   "bin": "images/stage1/script.bin",
+   "offset": 0,
+   "size": 380
+  },
+  {
+   "png": "images/stage1/tiles.png",
+   "w": 16,
+   "h": 16,
+   "frames": 30,
+   "offset": 380,
+   "size": 3840
+  },
+  {
+   "bin": "images/stage1/map.bin",
+   "offset": 4220,
+   "size": 2496
+  },
+  {
+   "png": "images/stage1/logo.png",
+   "w": 64,
+   "h": 64,
+   "frames": 3,
+   "offset": 6716,
+   "size": 6144
+  }
+ ],
+ "size": 12860
+}

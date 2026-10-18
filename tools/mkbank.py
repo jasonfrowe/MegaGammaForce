@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""Pack one stage's bank for the ROM, from what gen_art.py wrote.
+"""Pack one of a stage's ROM files, from what gen_art.py wrote.
 
-The bank file is the stage's palettes followed by its bank contents
-(tile sets, maps, boss sheets) at the offsets in src/gen/stage<N>.h.
-The game reads the palettes into the stage palette slots and the rest
-into XRAM_BANK. Sheets are read from their PNGs, so edits made in
+stage<N>.bin is the stage's TILES and SKY palettes, then its script,
+ground and sky; boss<N>.bin is the LAYER, BOSS and BOSS_WRECK palettes,
+then the boss. Contents sit at the offsets in src/gen/stage<N>.h. The
+game reads the palettes into the stage palette slots and the rest into
+XRAM_BANK or XRAM_BOSS. Sheets are read from their PNGs, so edits made in
 Aseprite go into the next build; they must keep their frame size and count.
 
 Standard library only, so the build needs no packages.
 
-Usage: mkbank.py images/stage<N>/bank.json out.bin
+Usage: mkbank.py images/stage<N>/{stage,boss}.json out.bin
 """
 
 import json

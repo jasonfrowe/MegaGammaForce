@@ -1,5 +1,6 @@
 #include "boss.h"
 #include "bullets.h"
+#include "enemies.h"
 #include "fx.h"
 #include "game.h"
 #include "hud.h"
@@ -30,6 +31,110 @@ uint8_t boss_destruction;
 bool boss_escaped;
 
 static const boss_def_t *def;
+
+/* ---- scripted bosses ---------------------------------------------- */
+
+static uint8_t orbit, spin[16];
+/* The center's path over the last TRAIL frames, for chains: x as is,
+ * y + 64 so the entry from above the screen fits in a byte. */
+#define TRAIL 128
+static uint8_t trail_x[TRAIL], trail_y[TRAIL];
+static uint8_t trail_i;
+
+static bool core_angry(void)
+{
+    return part_hp[def->core] < def->parts[def->core].hp / 2;
+}
+
+static bool script_enter(void)
+{
+    boss_y += def->motion->enter_speed;
+    return boss_y >= Q4(def->motion->y);
+}
+
+static void script_attack(void)
+{
+    uint16_t t = boss_t;
+    bool angry = core_angry();
+    for (uint8_t k = 0; k < def->n_patterns; k++) {
+        const pattern_t *p = &def->patterns[k];
+        uint8_t i = p->part;
+        if (part_dead[i] || (uint8_t)(t % p->period) != p->phase)
+            continue;
+        if ((p->when == WHEN_ANGRY && !angry) || (p->when == WHEN_DEAD && !part_dead[p->arg]) ||
+            (p->when == WHEN_LATE && !angry && t < 3600))
+            continue;
+        int16_t x = part_px[i], y = part_py[i];
+        if (y < 0 || y >= PF_H)
+            continue;
+        uint8_t a;
+        switch (p->kind) {
+        case PT_AIM:
+        case PT_DOWN:
+            a = p->kind == PT_AIM ? angle_to((pl_x >> 4) - x, (pl_y >> 4) - y) : ANG_DOWN;
+            bullet_fan(x, y, a, p->speed, p->bullet, p->count, p->step);
+            break;
+        case PT_RING:
+        case PT_SPIRAL: {
+            uint8_t s = spin[k & 15];
+            uint8_t gap = (uint8_t)(256 / p->count);
+            for (uint8_t n = 0; n < p->count; n++)
+                bullet_fire(x, y, (uint8_t)(s + n * gap), p->speed, p->bullet);
+            spin[k & 15] = (uint8_t)(s + p->step);
+            break;
+        }
+        case PT_SPAWN:
+            enemy_spawn(p->arg, p->step, x, y, 0);
+            break;
+        }
+        if (p->count >= 5)
+            sfx_enemy(SFX_ENEMY_FIRE, SFX_PRI_FIRE);
+    }
+}
+
+static void script_fight(void)
+{
+    const motion_t *m = def->motion;
+    uint16_t t = boss_t;
+    boss_x = Q4(PF_W / 2) + (int16_t)(((int16_t)SIN8((uint8_t)(t >> m->rate_x)) * m->amp_x) >> 3);
+    boss_y = Q4(m->y) + (int16_t)(((int16_t)SIN8((uint8_t)(t >> m->rate_y)) * m->amp_y) >> 3);
+    /* Turrets track the player. */
+    for (uint8_t i = 0; i < def->n; i++)
+        if (def->parts[i].kind == PK_TURRET && !part_dead[i])
+            boss_aim(i);
+    if (pl_state == PL_ALIVE)
+        script_attack();
+}
+
+static void script_place(void)
+{
+    const motion_t *m = def->motion;
+    if (m->orbit_n) {
+        uint8_t fallen = 0;
+        for (uint8_t k = 0; k < m->orbit_n; k++)
+            fallen += part_dead[m->orbit_first + k];
+        orbit += (uint8_t)(1 + fallen);
+        int16_t cx = boss_x >> 4, cy = boss_y >> 4;
+        uint8_t gap = (uint8_t)(256 / m->orbit_n);
+        for (uint8_t k = 0; k < m->orbit_n; k++) {
+            uint8_t a = (uint8_t)(orbit + k * gap);
+            part_px[m->orbit_first + k] = cx + (int16_t)(((int16_t)COS8(a) * m->orbit_rx) >> 7);
+            part_py[m->orbit_first + k] = cy + (int16_t)(((int16_t)SIN8(a) * m->orbit_ry) >> 7);
+        }
+    }
+    if (m->chain_n) {
+        /* The links nearest the center are the last parts, drawn on top. */
+        trail_i = (uint8_t)((trail_i + 1) & (TRAIL - 1));
+        trail_x[trail_i] = (uint8_t)(boss_x >> 4);
+        trail_y[trail_i] = (uint8_t)((boss_y >> 4) + 64);
+        uint8_t last = (uint8_t)(m->chain_first + m->chain_n - 1);
+        for (uint8_t k = 0; k < m->chain_n; k++) {
+            uint8_t j = (uint8_t)((trail_i - (k + 1) * m->chain_gap) & (TRAIL - 1));
+            part_px[last - k] = trail_x[j];
+            part_py[last - k] = (int16_t)trail_y[j] - 64;
+        }
+    }
+}
 static uint8_t state;
 static uint16_t state_t;
 static uint8_t flash[BOSS_PARTS_MAX];
@@ -76,6 +181,13 @@ void boss_start(const boss_def_t *d)
         part_aim[i] = 0;
         if (p->kind != PK_HIDDEN)
             spr_setup(&spr[SPR_BOSS + i], p->img, PAL_ADDR(PAL_BOSS), WH(p->w, p->h), OPT4 | p->opt);
+    }
+    orbit = 0;
+    for (uint8_t k = 0; k < 16; k++)
+        spin[k] = 0;
+    for (uint8_t k = 0; k < TRAIL; k++) {
+        trail_x[k] = (uint8_t)(boss_x >> 4);
+        trail_y[k] = (uint8_t)((boss_y >> 4) + 64);
     }
     if (def->start)
         def->start();
@@ -153,6 +265,8 @@ static void place(void)
         part_px[i] = x + def->parts[i].ox;
         part_py[i] = y + def->parts[i].oy;
     }
+    if (def->motion)
+        script_place();
     if (def->place)
         def->place();
 }
@@ -195,13 +309,16 @@ void boss_update(void)
 
     switch (state) {
     case BS_ENTER:
-        if (def->enter()) {
+        if (def->enter ? def->enter() : script_enter()) {
             state = BS_FIGHT;
             state_t = 0;
         }
         break;
     case BS_FIGHT:
-        def->fight();
+        if (def->fight)
+            def->fight();
+        else
+            script_fight();
         if (state_t > def->time_limit) {
             state = BS_ESCAPE;
             boss_escaped = true;

@@ -13,7 +13,9 @@ enum
     SP_CLEAR,
 };
 
-/* A group of enemies: count of them, gap frames apart, each dx further across. */
+/* A group of enemies: count of them, gap frames apart, each dx further
+ * across. Waves and ground units are written by tools/art (waves.py,
+ * stages.py) and read from the stage's ROM file, packed as below. */
 typedef struct
 {
     uint16_t at; /* scroll distance in pixels */
@@ -25,6 +27,7 @@ typedef struct
     uint8_t gap;
     uint8_t param;
 } wave_t;
+_Static_assert(sizeof(wave_t) == 9, "wave_t must match gen_art.py's script_blob()");
 
 /* A ground unit placed on the map: y is its center measured up from the
  * bottom of the map, and it spawns as that row scrolls onto the screen. */
@@ -36,12 +39,16 @@ typedef struct
     uint8_t color;
     uint8_t param;
 } ground_t;
+_Static_assert(sizeof(ground_t) == 6, "ground_t must match gen_art.py's script_blob()");
+
+#define WAVES_MAX 48
+#define GROUND_MAX 64
 
 typedef struct boss_def boss_def_t;
 
 typedef struct
 {
-    const char *bank; /* ROM file: the stage's palettes, then its bank */
+    const char *bank, *boss_bank; /* ROM files, see stage_load() */
     const char *name, *title, *warning;
     const char *music, *boss_music;
     uint8_t speed;  /* ground scroll, pixels per frame in 1/256 */
@@ -53,10 +60,6 @@ typedef struct
     uint16_t sky_tiles, sky_map, sky_rows;
     uint8_t sky_speed;
     const uint8_t *sky_solid; /* a bit per tile: solid towers, or 0 for none */
-    const wave_t *waves;
-    uint8_t n_waves;
-    const ground_t *ground;
-    uint8_t n_ground;
     const boss_def_t *boss;
 } stage_def_t;
 
@@ -65,8 +68,10 @@ extern uint8_t stage_num;           /* 0-based */
 extern const stage_def_t *stage;    /* stage_defs[stage_num] */
 extern volatile uint8_t first_stage; /* where a new game starts, for testing */
 
-/* Make stage n current and load its bank, behind a black curtain. */
+/* Make stage n current and load its files, behind a black curtain. */
 void stage_load(uint8_t n);
+/* Load stage n's boss into XRAM_BOSS, palettes and all. */
+void boss_bank_load(uint8_t n);
 bool stage_is_last(void);
 const char *stage_title(uint8_t n);
 void stage_reset(void);
