@@ -134,6 +134,8 @@ def main():
     e16_idx = {"DART": 0, "SAUCER": 2, "DRONE": 6, "TURRET": 8, "TANK": 16, "WASP": 24}
     assert len(dart + saucer + drone + turret) == 16 and len(tank) == 8
 
+    banner_word, banner_nums = hud.banner()
+
     # name, palette (for the PNG only), frames, {frame-index names}
     sheets = [
         ("player", palettes.PLAYER, ships.player_frames(), {}),
@@ -153,6 +155,9 @@ def main():
         ("miniship", palettes.PLAYER, hud.mini_ship(), {}),
         ("gem", palettes.ENEMY_RED, hud.gems(), {}),
         ("icons", palettes.SHOTS, hud.weapon_icons(), {}),
+        ("digits", palettes.SHOTS, hud.digits(False) + hud.digits(True), {"GOLD": 10}),
+        ("banner", palettes.SHOTS, banner_word, {}),
+        ("bannernum", palettes.SHOTS, banner_nums, {}),
     ]
 
     h = [HEADER, "#ifndef GEN_ASSETS_H", "#define GEN_ASSETS_H", ""]

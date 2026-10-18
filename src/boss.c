@@ -50,6 +50,7 @@ static void finish(void)
 
 void boss_reset(void)
 {
+    spr_hide(&hspr[HSPR_PORTRAIT]);
     if (state != BS_OFF && state != BS_DONE)
         finish();
     state = BS_OFF;
@@ -252,20 +253,26 @@ void boss_hud(bool force)
     if (state == BS_OFF) {
         return;
     }
+    /* Right panel, below the lives: the boss's portrait and name, how much
+     * of it is destroyed, and its core's health. */
     if (force || shown_pct == 0xFF) {
-        hud_text(33, 14, "BOSS", HC_RED, HC_PANEL);
-        hud_text(33, 15, "DESTROY", HC_GRAY, HC_PANEL);
-        hud_text(33, 18, def->core_label, HC_GRAY, HC_PANEL);
+        mode5_csprite_t *s = &hspr[HSPR_PORTRAIT];
+        spr_setup(s, def->portrait, PAL_ADDR(PAL_BOSS), WH(16, 16), OPT4);
+        s->x_pos_px = 33 * 8;
+        s->y_pos_px = 14 * 8;
+        hud_text(36, 14, "BOSS", HC_RED, HC_PANEL);
+        hud_text(33, 16, "DESTROY", HC_GRAY, HC_PANEL);
+        hud_text(33, 19, def->core_label, HC_GRAY, HC_PANEL);
     }
     if (boss_destruction != shown_pct || force) {
         shown_pct = boss_destruction;
-        hud_u16(33, 16, boss_destruction, 3, boss_destruction >= 100 ? HC_YELLOW : HC_WHITE, HC_PANEL);
-        hud_text(36, 16, "%", HC_GRAY, HC_PANEL);
+        hud_u16(33, 17, boss_destruction, 3, boss_destruction >= 100 ? HC_YELLOW : HC_WHITE, HC_PANEL);
+        hud_text(36, 17, "%", HC_GRAY, HC_PANEL);
     }
     uint8_t c = def->core;
     uint8_t h = (uint8_t)(((uint32_t)part_hp[c] * 14) / def->parts[c].hp);
     if (h != shown_hp || force) {
         shown_hp = h;
-        hud_bar(33, 19, 7, h, HC_RED);
+        hud_bar(33, 20, 7, h, HC_RED);
     }
 }

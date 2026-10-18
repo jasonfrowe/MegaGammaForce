@@ -233,6 +233,7 @@ static void finish(void)
 }
 
 const boss_def_t boss3 = {
+    .portrait = IMG(PORTRAIT),
     .core_label = "REACTOR",
     .parts = parts,
     .n = BP_N,

@@ -114,6 +114,7 @@ static void frame(uint8_t i, mode5_csprite_t *s)
 }
 
 const boss_def_t boss1 = {
+    .portrait = IMG(PORTRAIT),
     .core_label = "CORE",
     .parts = parts,
     .n = BP_N,

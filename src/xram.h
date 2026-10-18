@@ -239,10 +239,16 @@ typedef struct
 #define GSPR_MAX 16
 
 /* Plane 2 sprite list: HUD graphics, in front of the text panels. */
-#define HSPR_ICON 0 /* the weapon's icon */
-#define HSPR_LIFE 1 /* the ship beside the lives count */
-#define HSPR_GEM 2  /* three chain gems */
-#define HSPR_N 5
+#define HSPR_ICON 0      /* the weapon's icon */
+#define HSPR_LIFE 1      /* the ship beside the lives count */
+#define HSPR_GEM 2       /* three chain gems */
+#define HSPR_SCORE 5     /* seven score digits */
+#define HSPR_HI 12       /* seven high score digits */
+#define HSPR_STAGE 19    /* the stage number */
+#define HSPR_HYPER 20    /* the Hyper Sword's ready sign */
+#define HSPR_PORTRAIT 21 /* the boss */
+#define HSPR_BANNER 22   /* "STAGE", then its number, doubled */
+#define HSPR_N 24
 
 /* HUD text grid, 8x8 font on the 320x240 canvas. */
 #define HUD_COLS 40
@@ -290,6 +296,9 @@ typedef struct
     uint8_t img_miniship[MINISHIP_FRAMES][MINISHIP_FRAME_BYTES];
     uint8_t img_gem[GEM_FRAMES][GEM_FRAME_BYTES];
     uint8_t img_icons[ICONS_FRAMES][ICONS_FRAME_BYTES];
+    uint8_t img_digits[DIGITS_FRAMES][DIGITS_FRAME_BYTES];
+    uint8_t img_banner[BANNER_FRAMES][BANNER_FRAME_BYTES];
+    uint8_t img_bannernum[BANNERNUM_FRAMES][BANNERNUM_FRAME_BYTES];
     uint8_t sfx_data[SFX_DATA_MAX];
     /* XRAM_BANK, the rest of XRAM, follows: the current stage's own art,
      * loaded from the ROM when the stage starts (see stage.c). */
@@ -325,6 +334,9 @@ _Static_assert((XRAM_OPL & 0xFF) == 0, "The OPL2 registers must start on a page 
 #define XRAM_IMG_MINISHIP offsetof(xram_layout_t, img_miniship)
 #define XRAM_IMG_GEM offsetof(xram_layout_t, img_gem)
 #define XRAM_IMG_ICONS offsetof(xram_layout_t, img_icons)
+#define XRAM_IMG_DIGITS offsetof(xram_layout_t, img_digits)
+#define XRAM_IMG_BANNER offsetof(xram_layout_t, img_banner)
+#define XRAM_IMG_BANNERNUM offsetof(xram_layout_t, img_bannernum)
 #define XRAM_SFX_DATA offsetof(xram_layout_t, sfx_data)
 #define XRAM_BANK sizeof(xram_layout_t)
 /* The top page of XRAM is left free. */

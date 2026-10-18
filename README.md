@@ -172,7 +172,7 @@ The 320x240 canvas uses all three planes:
 |---|---|---|
 | 0 | Mode 2 ground map, 16x16 4bpp tiles | Ground units: turrets, tanks, gunboats (8, 12 or 16 by stage) |
 | 1 | Mode 2 sky layer: stage 2's towers and clouds, stage 3's clouds, then the battleship's hull | Everything airborne: boss, enemies, shots, ship, sword, explosions, bullets (Mode 5 custom, 4bpp) |
-| 2 | Mode 1 text HUD | — |
+| 2 | Mode 1 text HUD | HUD graphics: big score digits, weapon icon, chain gems, lives ship, Hyper sign, boss portrait, stage banner |
 
 The playfield is 192 pixels wide, close to an arcade's vertical screen.
 The HUD's two side panels are opaque, so they also hide sprites leaving
@@ -204,7 +204,7 @@ results.
 | Tool | Makes |
 |---|---|
 | `tools/gen_art.py` | Shared sheets in `images/*.png`; each stage's sheets, maps and palettes in `images/stage<N>/`; `src/gen/assets.h`, `src/gen/stage<N>.h` (bank offsets) and `src/gen/stage<N>_data.h` (ground units, solid tiles) |
-| `tools/art/` | The pixel-art kit: shapes with heights, lit from the top left, outlined. Banking frames are real rolls of the ship. `stages.py` lists what each stage's bank holds; `tiles.py`, `city.py`, `ocean.py` draw the stages, `boss.py`, `boss2.py`, `ship.py` the bosses. |
+| `tools/art/` | The pixel-art kit: shapes with heights, lit from the top left, outlined. Banking frames are real rolls of the ship. `stages.py` lists what each stage's bank holds; `tiles.py`, `city.py`, `ocean.py` draw the stages, `boss.py`, `boss2.py`, `ship.py` the bosses, `hud.py` the HUD graphics. |
 | `tools/mkbank.py` | Run by the build: packs `images/stage<N>/` into `ROM:stage<N>.bin` |
 | `tools/gen_sfx.py` | OPL2 sound effects in `music/sfx.bin`, `src/gen/sfx_ids.h` |
 | `tools/generate_music.py` | OPL2 music via Furnace (from RPDemo's composer): `music/fur_levels/*.fur` and `music/*.vgm` |

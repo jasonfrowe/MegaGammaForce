@@ -115,12 +115,29 @@ void chain_break(void)
     chain_dirty = true;
 }
 
+/* Seven big digits (HUD sprites) across the left panel, at canvas row y. */
+static void big_digits(uint8_t first, const uint8_t *d, int16_t y, uint8_t set)
+{
+    for (uint8_t i = 0; i < SCORE_DIGITS; i++) {
+        mode5_csprite_t *s = &hspr[first + i];
+        spr_setup(s, XRAM_IMG_DIGITS + (uint16_t)(d[i] + set) * DIGITS_FRAME_BYTES, PAL_ADDR(PAL_SHOTS), WH(8, 16), OPT4);
+        s->x_pos_px = (int16_t)(i * 8);
+        s->y_pos_px = y;
+    }
+}
+
+void score_hud_hiscore(void)
+{
+    big_digits(HSPR_HI, hiscore_d, 6 * 8, DIGITS_GOLD);
+}
+
 void score_hud(bool force)
 {
+    /* Score in cyan on rows 2-3, high score in gold on rows 6-7. */
     if (score_dirty || force) {
         score_dirty = false;
-        hud_digits(0, 3, score_d, SCORE_DIGITS, HC_WHITE);
-        hud_digits(0, 6, hiscore_d, SCORE_DIGITS, HC_YELLOW);
+        big_digits(HSPR_SCORE, score_d, 2 * 8, 0);
+        score_hud_hiscore();
     }
     if (chain_dirty || force) {
         chain_dirty = false;

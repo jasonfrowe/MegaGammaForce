@@ -55,17 +55,47 @@ static void reset_world(void)
     tgt_clear();
 }
 
+/* A double rule across a panel, between its sections. */
+static void rule(uint8_t col, uint8_t row)
+{
+    hud_fill(col, row, 7, 0xCD, HC_BORDER, HC_PANEL);
+}
+
+/*
+ * The side panels. Big digits, icons, gems and the boss portrait are HUD
+ * sprites on plane 2 (score.c, player.c, boss.c); the text is plane 2's
+ * character layer.
+ *
+ *   left                    right
+ *    1  SCORE                2-3  [weapon icon] LV, progress
+ *    2-3  score digits       4-5  weapon name
+ *    5  HISCORE              6    SWORD, 7 gauge, 8-9 hyper sign
+ *    6-7  high score         10   LIVES, 12 "03 x" and a ship
+ *    8  ===                  13   ===
+ *    9  CHAIN, 10 x9,        14-15 [portrait] BOSS
+ *       11 gems              16   DESTROY, 17 percent
+ *    12 BONUS, 13 value      19   core label, 20 its health
+ *    14 ===
+ *    26 STAGE, 27-28 number
+ */
 static void draw_labels(void)
 {
     hud_frame();
-    hud_text(0, 2, "SCORE", HC_CYAN, HC_PANEL);
+    hud_text(0, 1, "SCORE", HC_CYAN, HC_PANEL);
     hud_text(0, 5, "HISCORE", HC_CYAN, HC_PANEL);
+    rule(0, 8);
     hud_text(0, 9, "CHAIN", HC_CYAN, HC_PANEL);
     hud_text(0, 12, "BONUS", HC_GRAY, HC_PANEL);
+    rule(0, 14);
     hud_text(0, 26, "STAGE", HC_GRAY, HC_PANEL);
-    hud_u16(0, 27, (uint16_t)(stage_num + 1), 2, HC_WHITE, HC_PANEL);
+    mode5_csprite_t *s = &hspr[HSPR_STAGE];
+    spr_setup(s, XRAM_IMG_DIGITS + (uint16_t)(stage_num + 1 + DIGITS_GOLD) * DIGITS_FRAME_BYTES, PAL_ADDR(PAL_SHOTS),
+              WH(8, 16), OPT4);
+    s->x_pos_px = 6 * 8;
+    s->y_pos_px = 26 * 8 - 4;
     hud_text(33, 6, "SWORD", HC_CYAN, HC_PANEL);
     hud_text(33, 10, "LIVES", HC_CYAN, HC_PANEL);
+    rule(33, 13);
     score_hud(true);
     player_hud(true);
 }
@@ -105,7 +135,7 @@ static void enter_title(void)
     hud_center(24, "Z+X+C HYPER SWORD", HC_GRAY);
     hud_center(25, "COMBINE Z X C FOR MORE", HC_GRAY);
     hud_text(0, 5, "HISCORE", HC_CYAN, HC_PANEL);
-    hud_digits(0, 6, hiscore_d, SCORE_DIGITS, HC_YELLOW);
+    score_hud_hiscore();
     music_play("ROM:Title.vgm");
 }
 

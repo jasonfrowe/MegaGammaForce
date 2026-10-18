@@ -44,6 +44,7 @@ typedef struct
 struct boss_def
 {
     const char *core_label; /* names the HUD bar */
+    uint16_t portrait;      /* XRAM address of its 16x16 HUD portrait */
     const part_t *parts;
     uint8_t n, core;
     uint16_t time_limit; /* frames before it escapes */

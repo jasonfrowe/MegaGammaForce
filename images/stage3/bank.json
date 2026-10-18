@@ -49,11 +49,19 @@
    "size": 2048
   },
   {
+   "png": "images/stage3/portrait.png",
+   "w": 16,
+   "h": 16,
+   "frames": 1,
+   "offset": 17908,
+   "size": 128
+  },
+  {
    "png": "images/stage3/boss_reactor.png",
    "w": 32,
    "h": 32,
    "frames": 2,
-   "offset": 17908,
+   "offset": 18036,
    "size": 1024
   },
   {
@@ -61,7 +69,7 @@
    "w": 32,
    "h": 32,
    "frames": 8,
-   "offset": 18932,
+   "offset": 19060,
    "size": 4096
   },
   {
@@ -69,9 +77,9 @@
    "w": 16,
    "h": 16,
    "frames": 8,
-   "offset": 23028,
+   "offset": 23156,
    "size": 1024
   }
  ],
- "size": 24052
+ "size": 24180
 }

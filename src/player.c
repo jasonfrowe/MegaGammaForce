@@ -602,7 +602,19 @@ void player_hud(bool force)
         shown_gauge = g;
         uint8_t halves = (uint8_t)((uint16_t)g * 14 / SWORD_GAUGE_MAX);
         hud_bar(33, 7, 7, halves, g >= SWORD_GAUGE_MAX ? ((frame_count & 8) ? HC_WHITE : HC_CYAN) : HC_VIOLET);
-        hud_text(33, 8, g >= SWORD_GAUGE_MAX ? "HYPER!" : "      ", HC_YELLOW, HC_PANEL);
+        /* Full: a pulsing Hyper Sword sign and READY. */
+        mode5_csprite_t *s = &hspr[HSPR_HYPER];
+        if (g >= SWORD_GAUGE_MAX) {
+            bool hi = frame_count & 8;
+            spr_setup(s, XRAM_IMG_ICONS + WP_HYPER * ICONS_FRAME_BYTES, PAL_ADDR(hi ? PAL_FLASH : PAL_SHOTS), WH(16, 16),
+                      OPT4);
+            s->x_pos_px = 33 * 8;
+            s->y_pos_px = 8 * 8;
+            hud_text(35, 8, "READY", hi ? HC_WHITE : HC_YELLOW, HC_PANEL);
+        } else {
+            spr_hide(s);
+            hud_fill(33, 8, 7, ' ', HC_WHITE, HC_PANEL);
+        }
     }
     if (g >= SWORD_GAUGE_MAX && (frame_count & 7) == 0)
         shown_gauge = 0xFF; /* keep the full gauge flashing */

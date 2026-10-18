@@ -36,11 +36,19 @@
    "size": 2048
   },
   {
+   "png": "images/stage2/portrait.png",
+   "w": 16,
+   "h": 16,
+   "frames": 1,
+   "offset": 21872,
+   "size": 128
+  },
+  {
    "png": "images/stage2/boss_pod.png",
    "w": 32,
    "h": 32,
    "frames": 2,
-   "offset": 21872,
+   "offset": 22000,
    "size": 1024
   },
   {
@@ -48,7 +56,7 @@
    "w": 32,
    "h": 32,
    "frames": 2,
-   "offset": 22896,
+   "offset": 23024,
    "size": 1024
   },
   {
@@ -56,9 +64,9 @@
    "w": 16,
    "h": 16,
    "frames": 8,
-   "offset": 23920,
+   "offset": 24048,
    "size": 1024
   }
  ],
- "size": 24944
+ "size": 25072
 }

@@ -31,11 +31,19 @@
    "size": 2048
   },
   {
+   "png": "images/stage1/portrait.png",
+   "w": 16,
+   "h": 16,
+   "frames": 1,
+   "offset": 14528,
+   "size": 128
+  },
+  {
    "png": "images/stage1/boss_wing.png",
    "w": 32,
    "h": 64,
    "frames": 1,
-   "offset": 14528,
+   "offset": 14656,
    "size": 1024
   },
   {
@@ -43,7 +51,7 @@
    "w": 32,
    "h": 32,
    "frames": 2,
-   "offset": 15552,
+   "offset": 15680,
    "size": 1024
   },
   {
@@ -51,9 +59,9 @@
    "w": 16,
    "h": 16,
    "frames": 8,
-   "offset": 16576,
+   "offset": 16704,
    "size": 1024
   }
  ],
- "size": 17600
+ "size": 17728
 }

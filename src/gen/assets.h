@@ -101,6 +101,22 @@
 #define ICONS_FRAMES 10
 #define ICONS_FRAME_BYTES 128
 
+#define DIGITS_W 8
+#define DIGITS_H 16
+#define DIGITS_FRAMES 20
+#define DIGITS_FRAME_BYTES 64
+#define DIGITS_GOLD 10
+
+#define BANNER_W 64
+#define BANNER_H 16
+#define BANNER_FRAMES 1
+#define BANNER_FRAME_BYTES 512
+
+#define BANNERNUM_W 16
+#define BANNERNUM_H 16
+#define BANNERNUM_FRAMES 3
+#define BANNERNUM_FRAME_BYTES 128
+
 #define PAL_PLAYER 0
 #define PAL_SHOTS 1
 #define PAL_ENEMY_RED 2
@@ -122,6 +138,6 @@
 #define PAL_STAGE_N 5
 
 #define STAGE_COUNT 3
-#define STAGE_BANK_MAX 24944 /* the largest stage bank */
+#define STAGE_BANK_MAX 25072 /* the largest stage bank */
 
 #endif

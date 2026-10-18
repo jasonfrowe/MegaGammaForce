@@ -15,6 +15,7 @@ import numpy as np
 import boss
 import boss2
 import city
+import hud
 import logo
 import ocean
 import palettes
@@ -64,6 +65,7 @@ def stage1():
             {"name": "map", "data": stage_map.astype(np.uint8).tobytes()},
             {"name": "logo", "frames": logo.logo(), "pal": pal["BOSS"]},
             {"name": "boss_core", "frames": boss.core()},
+            {"name": "portrait", "frames": hud.portrait(boss.core()[0])},
             {"name": "boss_wing", "frames": boss.wing()},
             {"name": "boss_cannon", "frames": boss.cannon()},
             {"name": "boss_turret", "frames": boss.turret()},
@@ -116,6 +118,7 @@ def stage2():
             {"name": "sky_tiles", "frames": st, "pal": city.SKY},
             {"name": "sky_map", "data": smap.astype(np.uint8).tobytes()},
             {"name": "boss_core", "frames": boss2.core(), "pal": palettes.BOSS2},
+            {"name": "portrait", "frames": hud.portrait(boss2.core()[0]), "pal": palettes.BOSS2},
             {"name": "boss_pod", "frames": boss2.pod(), "pal": palettes.BOSS2},
             {"name": "boss_cannon", "frames": boss2.cannon(), "pal": palettes.BOSS2},
             {"name": "boss_turret", "frames": boss.turret(), "pal": palettes.BOSS2},
@@ -168,6 +171,7 @@ def stage3():
             {"name": "hull_tiles", "frames": ht, "pal": ship.HULL},
             {"name": "hull_map", "data": hmap.astype(np.uint8).tobytes()},
             {"name": "boss_bridge", "frames": ship.bridge(), "pal": ship.BOSS3},
+            {"name": "portrait", "frames": hud.portrait(ship.bridge()[0]), "pal": ship.BOSS3},
             {"name": "boss_reactor", "frames": ship.reactor(), "pal": ship.BOSS3},
             {"name": "boss_gun", "frames": ship.main_gun(), "pal": ship.BOSS3},
             {"name": "boss_turret", "frames": boss.turret(), "pal": ship.BOSS3},

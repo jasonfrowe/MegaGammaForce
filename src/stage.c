@@ -263,6 +263,26 @@ void stage_chain_popup(uint16_t bonus)
     sfx_player(SFX_CHAIN, SFX_PRI_EVENT);
 }
 
+/* "STAGE 2" in big gold letters across the playfield, doubled. */
+static void banner(bool show)
+{
+    mode5_csprite_t *w = &hspr[HSPR_BANNER], *n = &hspr[HSPR_BANNER + 1];
+    if (!show) {
+        spr_hide(w);
+        spr_hide(n);
+        return;
+    }
+    /* 128 + 8 + 32 pixels wide, centered over the stage's name. */
+    int16_t x = PF_X + (PF_W - 168) / 2;
+    spr_setup(w, XRAM_IMG_BANNER, PAL_ADDR(PAL_SHOTS), WH(64, 16), OPT4 | MODE5_HDOUBLE | MODE5_VDOUBLE);
+    w->x_pos_px = x;
+    w->y_pos_px = 62;
+    spr_setup(n, XRAM_IMG_BANNERNUM + stage_num * BANNERNUM_FRAME_BYTES, PAL_ADDR(PAL_SHOTS), WH(16, 16),
+              OPT4 | MODE5_HDOUBLE | MODE5_VDOUBLE);
+    n->x_pos_px = x + 136;
+    n->y_pos_px = 62;
+}
+
 void stage_reset(void)
 {
     stage_phase = SP_INTRO;
@@ -272,7 +292,8 @@ void stage_reset(void)
     popup_timer = 0;
     for (uint8_t i = 0; i < GROUPS; i++)
         g_left[i] = 0;
-    stage_message(stage->name, stage->title, 150);
+    stage_message(0, stage->title, 150);
+    banner(true);
     music_play(stage->music);
 }
 
@@ -314,6 +335,7 @@ void stage_update(uint8_t scroll)
     if (msg_timer && --msg_timer == 0) {
         hud_clear_row(12);
         hud_clear_row(14);
+        banner(false);
     }
     if (popup_timer && --popup_timer == 0)
         hud_clear_row(20);

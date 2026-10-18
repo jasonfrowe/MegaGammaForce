@@ -30,6 +30,8 @@ uint16_t chain_kill(uint8_t color);
 /* Lose the chain (on death); chain_max is kept for the results. */
 void chain_break(void);
 void score_hud(bool force);
+/* Just the high score, for the title screen. */
+void score_hud_hiscore(void);
 void hiscore_load(void);
 void hiscore_save(void);
 
