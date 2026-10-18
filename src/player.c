@@ -32,9 +32,9 @@ static uint8_t extend_timer, level_timer;
 
 uint8_t wp_level[10];
 uint8_t hit_weapon;
-static uint8_t wp_xp[10];
+static uint16_t wp_xp[10];
 /* Experience to reach each level. */
-static const uint8_t level_xp[WP_LEVELS] = {0, 15, 40, 80, 150};
+static const uint16_t level_xp[WP_LEVELS] = {0, 50, 100, 200, 500};
 #define LEVEL_ROW 19
 
 /* A firing interval at the current weapon's level: x1 down to x1/2. */
@@ -191,8 +191,10 @@ void player_reset(void)
     sword_gauge = 0;
     hyper_timer = 0;
     pl_weapon = WP_VULCAN;
-    for (uint8_t w = 0; w < 10; w++)
-        wp_level[w] = wp_xp[w] = 0;
+    for (uint8_t w = 0; w < 10; w++) {
+        wp_level[w] = 0;
+        wp_xp[w] = 0;
+    }
     level_timer = 0;
     shown_weapon = shown_gauge = shown_lives = shown_level = 0xFF;
     extend_timer = 0;
@@ -393,8 +395,7 @@ void weapon_xp(uint8_t xp)
         return;
     if (w == WP_VULCAN)
         xp = (uint8_t)((xp + 1) >> 1); /* the strongest gun learns slowest */
-    uint16_t x = (uint16_t)wp_xp[w] + xp;
-    wp_xp[w] = x > 255 ? 255 : (uint8_t)x;
+    wp_xp[w] += xp; /* stops at the top level, well short of overflowing */
     if (wp_xp[w] >= level_xp[lv + 1]) {
         wp_level[w] = ++lv;
         /* "SPREAD LV3" in the playfield for a moment. */
@@ -564,7 +565,7 @@ void player_hud(bool force)
     if (lw && lw < WP_HYPER) {
         uint8_t lv = wp_level[lw];
         if (lv < WP_LEVELS - 1) {
-            uint8_t lo = level_xp[lv], hi = level_xp[lv + 1];
+            uint16_t lo = level_xp[lv], hi = level_xp[lv + 1];
             halves = (uint8_t)((uint16_t)(wp_xp[lw] - lo) * 6 / (hi - lo));
         }
         shown = (uint8_t)((lw << 4) | (lv << 3) | halves);
