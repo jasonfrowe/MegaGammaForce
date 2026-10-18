@@ -6,4 +6,3 @@ _Static_assert(ET_SAUCER == 2, "gen_art.py's ENEMY_TYPES is out of date");
 _Static_assert(ET_TRAIN == 9, "gen_art.py's ENEMY_TYPES is out of date");
 _Static_assert(ET_TURRET == 5, "gen_art.py's ENEMY_TYPES is out of date");
 _Static_assert(ET_WASP == 7, "gen_art.py's ENEMY_TYPES is out of date");
-

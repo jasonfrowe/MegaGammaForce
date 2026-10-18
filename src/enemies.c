@@ -41,7 +41,10 @@ static uint8_t e_type[EN_N], e_color[EN_N], e_hp[EN_N], e_state[EN_N], e_flash[E
 static uint16_t e_timer[EN_N];
 static int16_t e_x[EN_N], e_y[EN_N], e_vx[EN_N], e_vy[EN_N], e_base[EN_N];
 static uint8_t e_aim[EN_N];
-static int8_t e_dodge[EN_N]; /* which way it is sidestepping a tower, or 0 */
+/* Steering round towers: sideways speed (Q4), the x it is making for (0
+ * for none), and how wide it weaves, in sixteenths of its full weave. */
+static int8_t e_sv[EN_N];
+static uint8_t e_tx[EN_N], e_amp[EN_N];
 
 static const uint8_t color_pal[4] = {PAL_ENEMY_RED, PAL_ENEMY_BLUE, PAL_ENEMY_YELLOW, PAL_ENEMY_GRAY};
 
@@ -92,7 +95,9 @@ int8_t enemy_spawn(uint8_t type, uint8_t color, int16_t gx, int16_t gy, uint8_t 
         e_vx[j] = 0;
         e_vy[j] = 0;
         e_aim[j] = 0;
-        e_dodge[j] = 0;
+        e_sv[j] = 0;
+        e_tx[j] = 0;
+        e_amp[j] = 16;
         spr_setup(sprite_of(j), t->img, PAL_ADDR(color_pal[color]), WH(t->w, t->h), OPT4);
         return (int8_t)j;
     }
@@ -127,47 +132,112 @@ static void destroy(uint8_t i)
 }
 
 /*
- * Flying enemies steer around towers. When one is coming down on them from
- * above, or lies ahead, they sidestep toward the nearer clear side and keep
- * going that way until they are past it; weavers narrow their weave while
- * they do. One that still touches a tower is pushed out along its edge.
+ * Flying enemies steer around towers. The waves are laid out clear of
+ * them (tools/art/airpath.py), so this is for what that cannot plan: a
+ * drone or gunship holding station while the sky slides under it, a dart
+ * once it has turned on the player. Every other frame each one looks at
+ * the sky rows it covers and the ones it will meet next, and if a tower
+ * is in its way picks the nearest place across that is clear; then it
+ * banks toward it, gathering sideways speed and easing off as it arrives,
+ * and weaves narrower meanwhile. Clear again, it straightens out.
  */
-static void avoid_towers(uint8_t i)
+#define STEER_MAX 28 /* sideways speed, Q4: 1.75 px per frame */
+#define STEER_ACC 3  /* and how fast that changes */
+#define AMP_MIN 5
+
+static bool weaving(uint8_t i)
 {
-    int16_t gx = e_x[i] >> 4, gy = e_y[i] >> 4;
-    if (gy < 0)
+    uint8_t t = e_type[i];
+    return t == ET_SAUCER || t == ET_WASP || (t == ET_GUNSHIP && e_state[i] == 1);
+}
+
+/* The weave's half width in pixels, narrowed as it steers. */
+static uint8_t weave_px(uint8_t i)
+{
+    uint8_t full = e_type[i] == ET_GUNSHIP ? 40 : e_param[i];
+    return e_amp[i] == 16 ? full : (uint8_t)((full * e_amp[i]) >> 4);
+}
+
+/* Columns (16 pixels each) that x - hw .. x + hw covers. */
+static uint16_t columns(int16_t x, uint8_t hw)
+{
+    int16_t a = x - hw, b = x + hw;
+    if (a < 0)
+        a = 0;
+    if (b > PF_W - 1)
+        b = PF_W - 1;
+    return (uint16_t)((2u << (b >> 4)) - (1u << (a >> 4)));
+}
+
+static void plan_steer(uint8_t i, int8_t sky_vy)
+{
+    int16_t gy = e_y[i] >> 4;
+    if (gy < -8)
         return;
-    int8_t d = (int8_t)(etypes[e_type[i]].hh + 4);
-    bool inside = bg_sky_hit(gx, gy);
-    /* Look well ahead: up the screen for towers scrolling down on it, down
-     * the screen for those it is flying toward, and to both sides. */
-    bool threat = inside || bg_sky_hit(gx, gy - d - 28) || bg_sky_hit(gx - d, gy - d - 12) ||
-                  bg_sky_hit(gx + d, gy - d - 12) ||
-                  (e_vy[i] >= 0 && (bg_sky_hit(gx, gy + d + 36) || bg_sky_hit(gx - d, gy + d + 16) ||
-                                    bg_sky_hit(gx + d, gy + d + 16)));
-    if (!threat) {
-        e_dodge[i] = 0;
+    const etype_t *t = &etypes[e_type[i]];
+    bool weaves = weaving(i);
+    /* Moving down the sky faster than it scrolls, it meets the towers below
+     * it; slower, those above it come down on it. */
+    int8_t ahead = (int8_t)(t->hh + 28);
+    if (e_vy[i] <= sky_vy)
+        ahead = (int8_t)-ahead;
+    uint16_t clear = bg_sky_clear(gy - t->hh) & bg_sky_clear(gy + t->hh) & bg_sky_clear(gy + ahead / 2) &
+                     bg_sky_clear(gy + ahead);
+    int16_t cx = (weaves ? e_base[i] : e_x[i]) >> 4;
+    uint8_t hw = (uint8_t)(t->hw + 2 + (weaves ? weave_px(i) : 0));
+    uint16_t need = columns(cx, hw);
+    if ((clear & need) == need) {
+        e_tx[i] = 0;
+        /* Weave wide again only where the whole weave is clear. */
+        if (e_amp[i] < 16) {
+            uint8_t full = (uint8_t)(t->hw + (e_type[i] == ET_GUNSHIP ? 40 : e_param[i]));
+            need = columns(cx, (uint8_t)(full + 2));
+            if ((clear & need) == need && cx - full >= 0 && cx + full < PF_W)
+                e_amp[i]++;
+        }
         return;
     }
-    if (e_dodge[i] == 0) {
-        /* The nearer side that is clear of the tower. */
-        e_dodge[i] = gx < PF_W / 2 ? -1 : 1;
-        for (int16_t off = 16; off <= 64; off += 16) {
-            bool l = gx - off > 8 && !bg_sky_hit(gx - off, gy - d - 12) && !bg_sky_hit(gx - off, gy + d + 16);
-            bool r = gx + off < PF_W - 8 && !bg_sky_hit(gx + off, gy - d - 12) && !bg_sky_hit(gx + off, gy + d + 16);
-            if (l != r) {
-                e_dodge[i] = l ? -1 : 1;
-                break;
+    if (weaves && e_amp[i] > AMP_MIN) {
+        e_amp[i]--;
+        hw = (uint8_t)(t->hw + 2 + weave_px(i));
+    }
+    /* The nearest clear place, 8 pixels at a time either way. */
+    for (int16_t off = 8; off < PF_W; off += 8) {
+        for (int8_t side = -1; side <= 1; side += 2) {
+            /* Keep turning the way it is already going. */
+            int16_t x = cx + (e_sv[i] < 0 ? -side : side) * off;
+            if (x - hw < 0 || x + hw >= PF_W)
+                continue;
+            need = columns(x, hw);
+            if ((clear & need) == need) {
+                e_tx[i] = (uint8_t)x;
+                return;
             }
-            if (l)
-                break;
         }
     }
-    if (e_type[i] == ET_SAUCER || e_type[i] == ET_WASP)
-        e_param[i] = (uint8_t)(e_param[i] - (e_param[i] >> 2));
-    int16_t step = e_dodge[i] * (inside ? 128 : 64); /* 4 px every other frame, 8 to get out */
-    e_x[i] += step;
-    e_base[i] += step;
+}
+
+/* Bank toward the target, or straighten out with none. */
+static void steer(uint8_t i)
+{
+    int16_t want = 0;
+    if (e_tx[i]) {
+        int16_t err = Q4(e_tx[i]) - (weaving(i) ? e_base[i] : e_x[i]);
+        if (err > Q4(2) || err < -Q4(2))
+            want = err >> 3;
+        if (want > STEER_MAX)
+            want = STEER_MAX;
+        if (want < -STEER_MAX)
+            want = -STEER_MAX;
+    }
+    int16_t sv = e_sv[i];
+    if (sv < want)
+        sv = sv + STEER_ACC < want ? sv + STEER_ACC : want;
+    else if (sv > want)
+        sv = sv - STEER_ACC > want ? sv - STEER_ACC : want;
+    e_sv[i] = (int8_t)sv;
+    e_x[i] += sv;
+    e_base[i] += sv;
 }
 
 void enemy_damage(uint8_t i, uint8_t dmg)
@@ -226,7 +296,7 @@ static void think(uint8_t i)
         break;
     case ET_SAUCER:
         e_vy[i] = 14;
-        e_x[i] = e_base[i] + (int16_t)(((int16_t)COS8((uint8_t)(t * 3)) * e_param[i]) >> 3);
+        e_x[i] = e_base[i] + (int16_t)(((int16_t)COS8((uint8_t)(t * 3)) * weave_px(i)) >> 3);
         if ((uint8_t)(t + i * 8) % 72 == 40 && on_screen(i) && alive)
             bullet_fan(gx, gy + 4, aim_at_player(i), 30, BK_PINK, 3, 14);
         break;
@@ -261,7 +331,7 @@ static void think(uint8_t i)
             }
         } else if (e_state[i] == 1) {
             e_vy[i] = 0;
-            e_x[i] = e_base[i] + (int16_t)(((int16_t)SIN8((uint8_t)t) * 40) >> 3);
+            e_x[i] = e_base[i] + (int16_t)(((int16_t)SIN8((uint8_t)t) * weave_px(i)) >> 3);
             if (alive && (t % 48) == 24) {
                 for (int8_t k = -1; k <= 1; k++)
                     bullet_fire(gx + k * 8, gy + 14, ANG_DOWN, 40, BK_NEEDLE);
@@ -298,7 +368,7 @@ static void think(uint8_t i)
     case ET_WASP:
         /* Weaves down; stings once on the way. */
         e_vy[i] = 26;
-        e_x[i] = e_base[i] + (int16_t)(((int16_t)SIN8((uint8_t)(t * 4)) * e_param[i]) >> 3);
+        e_x[i] = e_base[i] + (int16_t)(((int16_t)SIN8((uint8_t)(t * 4)) * weave_px(i)) >> 3);
         if (t == 40 && alive) {
             uint8_t a = aim_at_player(i);
             for (int8_t k = -1; k <= 1; k++)
@@ -336,6 +406,8 @@ static void think(uint8_t i)
 void enemies_update(uint8_t scroll)
 {
     uint8_t anim = (uint8_t)(frame_count >> 3);
+    /* How fast the sky slides down the screen, Q4. */
+    int8_t sky_vy = (int8_t)(((uint16_t)stage->speed * stage->sky_speed) >> 6);
     for (uint8_t i = 0; i < EN_N; i++) {
         uint8_t type = e_type[i];
         if (type == ET_NONE)
@@ -343,8 +415,11 @@ void enemies_update(uint8_t scroll)
         think(i);
         if (EN_GROUND(type))
             e_y[i] += (int16_t)scroll << 4;
-        else if (bg_hazard && ((i ^ frame_count) & 1))
-            avoid_towers(i);
+        else if (bg_hazard) {
+            if ((i ^ frame_count) & 1)
+                plan_steer(i, sky_vy);
+            steer(i);
+        }
         e_x[i] += e_vx[i];
         e_y[i] += e_vy[i];
         if (e_y[i] > Q4(PF_H + 40) || e_x[i] < Q4(-40) || e_x[i] > Q4(PF_W + 40) ||

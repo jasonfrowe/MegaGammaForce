@@ -21,7 +21,7 @@ Shoot each boss apart before its core for 100% destruction.
 Left and right on the title screen choose the starting stage.
 Stages so far: the Sky Fortress, the Neon Spires, the Iron Tide, where
 the battleship LEVIATHAN waits, the Scorched Sands, the Frozen Strait,
-the Ascent into orbit and the Sea of Tranquility on the Moon. Don't fly
-into the Neon Spires' towers, the Frozen Strait's icebergs or the
-satellites. They block most shots and enemy bullets, but missiles and
-plasma reach over them.
+the Ascent into orbit, the Sea of Tranquility on the Moon and the Deep
+Field. Don't fly into the Neon Spires' towers, the Frozen Strait's
+icebergs, the satellites or the asteroids. They block most shots and
+enemy bullets, but missiles and plasma reach over them.

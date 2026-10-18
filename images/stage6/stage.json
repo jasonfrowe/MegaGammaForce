@@ -31,7 +31,12 @@
    "bin": "images/stage6/sky_map.bin",
    "offset": 11976,
    "size": 3504
+  },
+  {
+   "bin": "images/stage6/sky_clear.bin",
+   "offset": 15480,
+   "size": 584
   }
  ],
- "size": 15480
+ "size": 16064
 }

@@ -27,6 +27,9 @@ extern bool bg_hazard;
 bool bg_sky_hit(int16_t gx, int16_t gy);
 /* The same, at a bullet-space pixel. */
 bool bg_sky_hit_bs(uint8_t bx, uint8_t by);
+/* The sky row at this game pixel row: bit c set where column c (16 pixels
+ * wide) is clear of towers. All clear off the screen or with none. */
+uint16_t bg_sky_clear(int16_t gy);
 
 /* A boss takes over plane 1's layer: a w x h tile map, PAL_LAYER colors.
  * bg_layer_move() places its top left in game pixels. */

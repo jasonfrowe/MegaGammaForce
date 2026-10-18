@@ -30,8 +30,7 @@ static uint8_t speed = 128;
 static bool sky_on;
 static int16_t sky_top; /* sky map pixel row at the top of the screen */
 static uint16_t sky_frac;
-static uint16_t sky_map;
-static const uint8_t *sky_solid;
+static uint16_t sky_map, sky_clear;
 
 static bool layer_dirty;
 
@@ -123,10 +122,10 @@ void bg_load(void)
     loop_h_px = s->loop_rows * TILE;
 
     sky_on = s->sky_rows != 0;
-    bg_hazard = sky_on && s->sky_solid;
+    bg_hazard = sky_on && s->sky_clear;
     if (sky_on) {
         sky_map = XRAM_BANK + s->sky_map;
-        sky_solid = s->sky_solid;
+        sky_clear = XRAM_BANK + s->sky_clear;
         layer_config(sky_map, 12, s->sky_rows, XRAM_BANK + s->sky_tiles, PAL_SKY);
     } else {
         bg_layer_hide();
@@ -196,11 +195,21 @@ uint8_t bg_update(void)
     return px;
 }
 
+static uint16_t clear_row(uint8_t gy)
+{
+    return xram0_peek16(sky_clear + (((uint16_t)(sky_top + gy) >> 4) << 1));
+}
+
 static bool solid_at(uint8_t gx, uint8_t gy)
 {
-    uint16_t row = (uint16_t)(sky_top + gy) >> 4;
-    uint8_t tile = xram0_peek8(sky_map + row * 12 + (gx >> 4));
-    return (sky_solid[tile >> 3] >> (tile & 7)) & 1;
+    return !((clear_row(gy) >> (gx >> 4)) & 1);
+}
+
+uint16_t bg_sky_clear(int16_t gy)
+{
+    if (!bg_hazard || gy < 0 || gy >= PF_H)
+        return 0xFFFF;
+    return clear_row((uint8_t)gy);
 }
 
 bool bg_sky_hit(int16_t gx, int16_t gy)

@@ -59,7 +59,9 @@ typedef struct
      * sky_speed / 4 times as fast as the ground, and stops at its top row. */
     uint16_t sky_tiles, sky_map, sky_rows;
     uint8_t sky_speed;
-    const uint8_t *sky_solid; /* a bit per tile: solid towers, or 0 for none */
+    /* Solid towers: the offset of a 16-bit mask per sky row, top row first,
+     * bit c set where column c is clear; or 0 for nothing solid. */
+    uint16_t sky_clear;
     /* Ground palette entries fade_first.. (fade_n of them, 0 for none) dim
      * toward black as the scroll goes from fade_from to fade_to pixels. */
     uint8_t fade_first, fade_n;

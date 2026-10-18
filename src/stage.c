@@ -26,6 +26,8 @@
 #include "gen/stage6_data.h"
 #include "gen/stage7.h"
 #include "gen/stage7_data.h"
+#include "gen/stage8.h"
+#include "gen/stage8_data.h"
 
 #define N(a) ((uint8_t)(sizeof(a) / sizeof((a)[0])))
 
@@ -64,7 +66,7 @@ static const stage_def_t stage_defs[] = {
         .sky_map = S2_SKY_MAP,
         .sky_rows = S2_SKY_ROWS,
         .sky_speed = S2_SKY_SPEED,
-        .sky_solid = s2_sky_solid,
+        .sky_clear = S2_SKY_CLEAR,
         .boss = &boss2,
     },
     {
@@ -85,7 +87,7 @@ static const stage_def_t stage_defs[] = {
         .sky_map = S3_SKY_MAP,
         .sky_rows = S3_SKY_ROWS,
         .sky_speed = S3_SKY_SPEED,
-        .sky_solid = 0, /* clouds only: nothing to crash into */
+        /* clouds only: nothing to crash into */
         .boss = &boss3,
     },
     {
@@ -106,7 +108,6 @@ static const stage_def_t stage_defs[] = {
         .sky_map = S4_SKY_MAP,
         .sky_rows = S4_SKY_ROWS,
         .sky_speed = S4_SKY_SPEED,
-        .sky_solid = 0,
         .boss = &boss4,
     },
     {
@@ -127,7 +128,7 @@ static const stage_def_t stage_defs[] = {
         .sky_map = S5_SKY_MAP,
         .sky_rows = S5_SKY_ROWS,
         .sky_speed = S5_SKY_SPEED,
-        .sky_solid = s5_sky_solid,
+        .sky_clear = S5_SKY_CLEAR,
         .boss = &boss5,
     },
     {
@@ -148,7 +149,7 @@ static const stage_def_t stage_defs[] = {
         .sky_map = S6_SKY_MAP,
         .sky_rows = S6_SKY_ROWS,
         .sky_speed = S6_SKY_SPEED,
-        .sky_solid = s6_sky_solid,
+        .sky_clear = S6_SKY_CLEAR,
         /* The ocean and clouds darken as the ship climbs, until the limb. */
         .fade_first = S6_FADE_FIRST,
         .fade_n = S6_FADE_N,
@@ -171,6 +172,27 @@ static const stage_def_t stage_defs[] = {
         .map_rows = S7_MAP_ROWS,
         .loop_rows = S7_MAP_LOOP_ROWS,
         .boss = &boss7,
+    },
+    {
+        .bank = "ROM:stage8.bin",
+        .boss_bank = "ROM:boss8.bin",
+        .name = "STAGE 8",
+        .title = "DEEP FIELD",
+        .warning = "HIVE MOTHERSHIP AWAKENS",
+        .music = "ROM:Stage8.vgm",
+        .boss_music = "ROM:Boss8.vgm",
+        .speed = 160,
+        .gspr_n = 8,
+        .tiles = S8_TILES,
+        .map = S8_MAP,
+        .map_rows = S8_MAP_ROWS,
+        .loop_rows = S8_MAP_LOOP_ROWS,
+        .sky_tiles = S8_SKY_TILES,
+        .sky_map = S8_SKY_MAP,
+        .sky_rows = S8_SKY_ROWS,
+        .sky_speed = S8_SKY_SPEED,
+        .sky_clear = S8_SKY_CLEAR,
+        .boss = &boss8,
     },
 };
 _Static_assert(N(stage_defs) == STAGE_COUNT, "a stage in the art has no stage_defs entry, or the other way");

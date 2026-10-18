@@ -4,5 +4,3 @@ _Static_assert(ET_DRONE == 3, "gen_art.py's ENEMY_TYPES is out of date");
 _Static_assert(ET_GUNSHIP == 4, "gen_art.py's ENEMY_TYPES is out of date");
 _Static_assert(ET_SAUCER == 2, "gen_art.py's ENEMY_TYPES is out of date");
 _Static_assert(ET_WASP == 7, "gen_art.py's ENEMY_TYPES is out of date");
-static const uint8_t s6_sky_solid[3] = {0xE0, 0xFF, 0x01};
-

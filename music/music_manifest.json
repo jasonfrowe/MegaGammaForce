@@ -377,5 +377,57 @@
     "exported_vgm": true,
     "date": "2026-10-18",
     "command": ".venv/bin/python tools/generate_music.py --track boss7 --seed 707 --style 10 --vol 0,0,0,0,0,0,0 --patch 1D,1D,A1,3E,FD,FE,FF --prog 4,3 --export-vgm"
+  },
+  "Stage8": {
+    "seed": 808,
+    "style": 3,
+    "style_name": "trance",
+    "vol": "0,0,0,0,0,0,0",
+    "patch": "55,57,27,5E,FD,FE,FF",
+    "roles": "lead,arp,bass,pad,kick,snare,hat",
+    "mood": {
+      "key_root": 2,
+      "scale": "minor",
+      "bpm": 140,
+      "intensity": 0.8,
+      "target_seconds": 150.0,
+      "lead_octave": 5,
+      "arp_octave": 4,
+      "bass_octave": 2,
+      "use_drums": true,
+      "meter": "4/4",
+      "form": "song"
+    },
+    "prog": null,
+    "bpm": null,
+    "exported_vgm": true,
+    "date": "2026-10-18",
+    "command": ".venv/bin/python tools/generate_music.py --track stage8 --seed 808 --style 3 --vol 0,0,0,0,0,0,0 --patch 55,57,27,5E,FD,FE,FF --export-vgm"
+  },
+  "Boss8": {
+    "seed": 808,
+    "style": 8,
+    "style_name": "dnb",
+    "vol": "0,0,0,0,0,0,0",
+    "patch": "55,57,27,5E,FD,FE,FF",
+    "roles": "lead,arp,bass,pad,kick,snare,hat",
+    "mood": {
+      "key_root": 11,
+      "scale": "minor",
+      "bpm": 174,
+      "intensity": 1.0,
+      "target_seconds": 120.0,
+      "lead_octave": 5,
+      "arp_octave": 4,
+      "bass_octave": 2,
+      "use_drums": true,
+      "meter": "4/4",
+      "form": "song"
+    },
+    "prog": null,
+    "bpm": null,
+    "exported_vgm": true,
+    "date": "2026-10-18",
+    "command": ".venv/bin/python tools/generate_music.py --track boss8 --seed 808 --style 8 --vol 0,0,0,0,0,0,0 --patch 55,57,27,5E,FD,FE,FF --export-vgm"
   }
 }

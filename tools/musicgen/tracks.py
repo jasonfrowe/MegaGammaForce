@@ -144,6 +144,18 @@ TRACKS: list = [
         mood=MoodPreset(key_root=4, scale="minor", bpm=184, intensity=1.0, target_seconds=120.0, lead_octave=5),
     ),
     TrackSpec(
+        resource="Stage8",
+        description="Stage 8, Deep Field",
+        aliases=["stage8", "level8"],
+        mood=MoodPreset(key_root=2, scale="minor", bpm=140, intensity=0.8, target_seconds=150.0, lead_octave=5),
+    ),
+    TrackSpec(
+        resource="Boss8",
+        description="Boss battle, HIVE MOTHERSHIP",
+        aliases=["boss8"],
+        mood=MoodPreset(key_root=11, scale="minor", bpm=174, intensity=1.0, target_seconds=120.0, lead_octave=5),
+    ),
+    TrackSpec(
         resource="Gameover",
         description="Game over",
         aliases=["gameover"],

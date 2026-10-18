@@ -14,7 +14,7 @@ Writes:
   images/stage<N>/bank.json  what tools/mkbank.py packs into stage<N>.bin
   src/gen/assets.h           sizes, frame counts and palette indices
   src/gen/stage<N>.h         offsets of everything in the stage's bank
-  src/gen/stage<N>_data.h    the stage's ground units and solid tiles
+  src/gen/stage<N>_data.h    checks that the stage's enemy types match enemies.h
 
 Usage: .venv/bin/python tools/gen_art.py [--preview DIR]
 """
@@ -30,6 +30,7 @@ sys.path.insert(0, str(ROOT / "tools" / "art"))
 
 import numpy as np  # noqa: E402
 
+import airpath  # noqa: E402
 import enemies  # noqa: E402
 import fx  # noqa: E402
 import hud  # noqa: E402
@@ -77,7 +78,7 @@ COLORS = ["COL_RED", "COL_BLUE", "COL_YELLOW", "COL_GRAY"]
 def script_blob(st):
     """The stage's script, read into RAM when it loads: wave and ground
     counts, then waves (wave_t, 9 bytes) and ground units (ground_t, 6)."""
-    waves, ground = st.get("waves", []), sorted(st.get("ground", []))
+    waves, ground = sorted(st.get("waves", []), key=lambda w: w[0]), sorted(st.get("ground", []))
     assert len(waves) <= 48 and len(ground) <= 64, "more than stage.h's WAVES_MAX or GROUND_MAX"
     out = bytearray([len(waves), len(ground)])
     for at, t, c, x, dx, count, gap, param in waves:
@@ -127,6 +128,11 @@ def write_stage(st, preview):
     the TILES and SKY palettes) and boss<N>.bin (its boss, with the LAYER,
     BOSS and BOSS_WRECK palettes). Items with "boss": True go in the second."""
     n = st["n"]
+    if "sky_check" in st:
+        smap, solid, sky_speed = st["sky_check"]
+        bad = airpath.plan(airpath.Sky(smap, solid, sky_speed), st["waves"])
+        if bad:
+            sys.exit(airpath.report(n, bad))
     d = IMAGES / f"stage{n}"
     d.mkdir(exist_ok=True)
     for old in ("bank.json", "palettes.bin"):
@@ -151,7 +157,7 @@ def write_stage(st, preview):
     checks = sorted({w[1] for w in st.get("waves", [])} | {g[2] for g in st.get("ground", [])})
     data = [HEADER] + [f"_Static_assert({t} == {ENEMY_TYPES.index(t)}, \"gen_art.py's ENEMY_TYPES is out of date\");"
                        for t in checks]
-    (GEN / f"stage{n}_data.h").write_text("\n".join(data) + "\n" + st.get("data_h", "") + "\n")
+    (GEN / f"stage{n}_data.h").write_text("\n".join(data) + "\n")
     if preview:
         for name, (img, pal_) in st.get("previews", {}).items():
             from preview import preview as pv

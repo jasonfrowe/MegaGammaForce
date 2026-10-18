@@ -22,6 +22,8 @@
 
 #define S6_SKY_MAP 11976
 
+#define S6_SKY_CLEAR 15480
+
 #define B6_HULL_TILES 0
 #define B6_HULL_TILES_W 16
 #define B6_HULL_TILES_H 16
@@ -54,7 +56,7 @@
 #define B6_PORTRAIT_FRAMES 1
 #define B6_PORTRAIT_FRAME_BYTES 128
 
-#define S6_BANK_BYTES 15480
+#define S6_BANK_BYTES 16064
 #define B6_BANK_BYTES 11712
 #define S6_MAP_ROWS 208
 #define S6_MAP_COLS 12
