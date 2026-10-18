@@ -175,6 +175,10 @@ GLYPHS = {
     "A": [".XXX.", "X...X", "X...X", "XXXXX", "X...X", "X...X", "X...X"],
     "G": [".XXXX", "X....", "X....", "X.XXX", "X...X", "X...X", ".XXXX"],
     "E": ["XXXXX", "X....", "X....", "XXXX.", "X....", "X....", "XXXXX"],
+    "W": ["X...X", "X...X", "X...X", "X.X.X", "X.X.X", "XX.XX", "X...X"],
+    "R": ["XXXX.", "X...X", "X...X", "XXXX.", "X.X..", "X..X.", "X...X"],
+    "N": ["X...X", "XX..X", "X.X.X", "X..XX", "X...X", "X...X", "X...X"],
+    "I": [".XXX.", "..X..", "..X..", "..X..", "..X..", "..X..", ".XXX."],
     "1": ["..X..", ".XX..", "..X..", "..X..", "..X..", "..X..", ".XXX."],
     "2": [".XXX.", "X...X", "....X", "...X.", "..X..", ".X...", "XXXXX"],
     "3": ["XXXX.", "....X", "....X", ".XXX.", "....X", "....X", "XXXX."],
@@ -227,3 +231,13 @@ def portrait(img, size=16):
     nb = pad[:-2, 1:-1] | pad[2:, 1:-1] | pad[1:-1, :-2] | pad[1:-1, 2:]
     out[(~filled) & nb] = 1
     return [out]
+
+
+def warning():
+    """"WARNING", 88x16, cut into a 64 and a 24 wide piece (sprites are at
+    most 64 wide), drawn doubled. The same art flashes gold with palette
+    SHOTS and red with ENEMY_RED, whose entries 5-9 line up with it."""
+    s = Sprite(88, 16)
+    _glyphs(s, "WARNING", 2, 1)
+    img = s.render(BANNER_MATS, gloss=0.4, outline=6)
+    return [img[:, :64].copy()], [img[:, 64:].copy()]

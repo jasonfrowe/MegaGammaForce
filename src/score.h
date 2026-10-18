@@ -8,7 +8,6 @@
 
 extern uint8_t score_d[SCORE_DIGITS]; /* most significant first */
 extern uint8_t hiscore_d[SCORE_DIGITS];
-#define SCORE_EXTEND_EVERY 100000 /* an extra life at each multiple */
 extern uint8_t score_extends; /* extra lives earned, not yet handed out */
 
 /*

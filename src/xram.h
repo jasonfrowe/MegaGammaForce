@@ -247,7 +247,7 @@ typedef struct
 #define HSPR_STAGE 19    /* the stage number */
 #define HSPR_HYPER 20    /* the Hyper Sword's ready sign */
 #define HSPR_PORTRAIT 21 /* the boss */
-#define HSPR_BANNER 22   /* "STAGE", then its number, doubled */
+#define HSPR_BANNER 22   /* "STAGE" and its number, or "WARNING", doubled */
 #define HSPR_N 24
 
 /* HUD text grid, 8x8 font on the 320x240 canvas. */
@@ -299,6 +299,8 @@ typedef struct
     uint8_t img_digits[DIGITS_FRAMES][DIGITS_FRAME_BYTES];
     uint8_t img_banner[BANNER_FRAMES][BANNER_FRAME_BYTES];
     uint8_t img_bannernum[BANNERNUM_FRAMES][BANNERNUM_FRAME_BYTES];
+    uint8_t img_warn_a[WARN_A_FRAMES][WARN_A_FRAME_BYTES];
+    uint8_t img_warn_b[WARN_B_FRAMES][WARN_B_FRAME_BYTES];
     uint8_t sfx_data[SFX_DATA_MAX];
     /* XRAM_BANK, the rest of XRAM, follows: the current stage's own art,
      * loaded from the ROM when the stage starts (see stage.c). */
@@ -337,6 +339,8 @@ _Static_assert((XRAM_OPL & 0xFF) == 0, "The OPL2 registers must start on a page 
 #define XRAM_IMG_DIGITS offsetof(xram_layout_t, img_digits)
 #define XRAM_IMG_BANNER offsetof(xram_layout_t, img_banner)
 #define XRAM_IMG_BANNERNUM offsetof(xram_layout_t, img_bannernum)
+#define XRAM_IMG_WARN_A offsetof(xram_layout_t, img_warn_a)
+#define XRAM_IMG_WARN_B offsetof(xram_layout_t, img_warn_b)
 #define XRAM_SFX_DATA offsetof(xram_layout_t, sfx_data)
 #define XRAM_BANK sizeof(xram_layout_t)
 /* The top page of XRAM is left free. */

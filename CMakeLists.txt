@@ -49,6 +49,8 @@ mgf_sheet(icons 16 16)
 mgf_sheet(digits 8 16)
 mgf_sheet(banner 64 16)
 mgf_sheet(bannernum 16 16)
+mgf_sheet(warn_a 64 16)
+mgf_sheet(warn_b 24 16)
 
 rp6502_asset(MegaGammaForce XRAM(XRAM_PALETTES) images/palettes.bin)
 rp6502_asset(MegaGammaForce XRAM(XRAM_SFX_DATA) music/sfx.bin)

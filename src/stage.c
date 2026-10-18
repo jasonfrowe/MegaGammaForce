@@ -283,6 +283,20 @@ static void banner(bool show)
     n->y_pos_px = 62;
 }
 
+/* "WARNING" across the playfield, doubled, flashing red and gold. */
+static void warning_banner(bool red)
+{
+    mode5_csprite_t *a = &hspr[HSPR_BANNER], *b = &hspr[HSPR_BANNER + 1];
+    uint16_t pal = PAL_ADDR(red ? PAL_ENEMY_RED : PAL_SHOTS);
+    int16_t x = PF_X + (PF_W - 176) / 2;
+    spr_setup(a, XRAM_IMG_WARN_A, pal, WH(64, 16), OPT4 | MODE5_HDOUBLE | MODE5_VDOUBLE);
+    a->x_pos_px = x;
+    a->y_pos_px = 62;
+    spr_setup(b, XRAM_IMG_WARN_B, pal, WH(24, 16), OPT4 | MODE5_HDOUBLE | MODE5_VDOUBLE);
+    b->x_pos_px = x + 128;
+    b->y_pos_px = 62;
+}
+
 void stage_reset(void)
 {
     stage_phase = SP_INTRO;
@@ -365,7 +379,8 @@ void stage_update(uint8_t scroll)
             stage_phase = SP_WARNING;
             phase_timer = 0;
             music_stop();
-            stage_message("WARNING", stage->warning, 200);
+            stage_message(0, stage->warning, 200);
+            warning_banner(true);
             sfx_enemy(SFX_WARNING, SFX_PRI_TOP);
         }
         break;
@@ -373,16 +388,15 @@ void stage_update(uint8_t scroll)
         run_groups();
         if (phase_timer == 100)
             sfx_enemy(SFX_WARNING, SFX_PRI_TOP);
-        if (phase_timer & 16)
-            hud_center(12, "WARNING", HC_RED);
-        else
-            hud_center(12, "WARNING", HC_YELLOW);
+        if ((phase_timer & 15) == 0)
+            warning_banner(!(phase_timer & 16));
         if (phase_timer > 200) {
             stage_phase = SP_BOSS;
             phase_timer = 0;
             msg_timer = 0;
             hud_clear_row(12);
             hud_clear_row(14);
+            banner(false);
             boss_start(stage->boss);
             music_play(stage->boss_music);
         }

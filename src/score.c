@@ -16,8 +16,10 @@ uint8_t chain_count;
 uint16_t chain_last_bonus;
 uint8_t score_extends;
 
-/* The next extend, in hundred-thousands. */
-static uint8_t next_extend;
+/* The next extend, in tens of thousands: 50,000, 100,000, then every 100,000. */
+#define EXTEND_FIRST 5
+#define EXTEND_EVERY 10
+static uint16_t next_extend;
 
 static bool score_dirty, chain_dirty;
 
@@ -40,7 +42,7 @@ void score_reset(void)
     chain_color = COL_GRAY;
     chain_last_bonus = 0;
     score_extends = 0;
-    next_extend = 1;
+    next_extend = EXTEND_FIRST;
     score_dirty = chain_dirty = true;
 }
 
@@ -65,9 +67,9 @@ void score_add(uint16_t pts)
     }
     if (carry)
         memset(score_d, 9, sizeof(score_d)); /* counter stop */
-    uint8_t hundred_k = (uint8_t)(score_d[0] * 10 + score_d[1]);
-    while (next_extend <= hundred_k) {
-        next_extend++;
+    uint16_t ten_k = (uint16_t)(score_d[0] * 100 + score_d[1] * 10 + score_d[2]);
+    while (next_extend <= ten_k) {
+        next_extend = next_extend < EXTEND_EVERY ? EXTEND_EVERY : next_extend + EXTEND_EVERY;
         score_extends++;
     }
     if (memcmp(score_d, hiscore_d, SCORE_DIGITS) > 0)

@@ -410,7 +410,7 @@ void weapon_xp(uint8_t xp)
     }
 }
 
-/* Extra lives from the score: one each 100,000 points. */
+/* Extra lives from the score: at 50,000, 100,000, then every 100,000 (score.c). */
 static void extends(void)
 {
     if (extend_timer && --extend_timer == 0)

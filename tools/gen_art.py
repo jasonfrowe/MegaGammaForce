@@ -135,6 +135,7 @@ def main():
     assert len(dart + saucer + drone + turret) == 16 and len(tank) == 8
 
     banner_word, banner_nums = hud.banner()
+    warn_a, warn_b = hud.warning()
 
     # name, palette (for the PNG only), frames, {frame-index names}
     sheets = [
@@ -158,6 +159,8 @@ def main():
         ("digits", palettes.SHOTS, hud.digits(False) + hud.digits(True), {"GOLD": 10}),
         ("banner", palettes.SHOTS, banner_word, {}),
         ("bannernum", palettes.SHOTS, banner_nums, {}),
+        ("warn_a", palettes.SHOTS, warn_a, {}),
+        ("warn_b", palettes.SHOTS, warn_b, {}),
     ]
 
     h = [HEADER, "#ifndef GEN_ASSETS_H", "#define GEN_ASSETS_H", ""]

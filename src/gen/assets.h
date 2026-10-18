@@ -117,6 +117,16 @@
 #define BANNERNUM_FRAMES 3
 #define BANNERNUM_FRAME_BYTES 128
 
+#define WARN_A_W 64
+#define WARN_A_H 16
+#define WARN_A_FRAMES 1
+#define WARN_A_FRAME_BYTES 512
+
+#define WARN_B_W 24
+#define WARN_B_H 16
+#define WARN_B_FRAMES 1
+#define WARN_B_FRAME_BYTES 192
+
 #define PAL_PLAYER 0
 #define PAL_SHOTS 1
 #define PAL_ENEMY_RED 2

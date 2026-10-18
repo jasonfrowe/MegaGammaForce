@@ -16,7 +16,7 @@ Start / pause    Enter / P      Start
 The sword absorbs pink bullets and charges the Hyper Sword.
 Destroy three enemies of one color in a row to build the chain;
 keep hitting that color to keep it paying, or switch after a full set.
-Extra life every 100,000 points.
+Extra lives at 50,000 and 100,000 points, then every 100,000.
 Shoot each boss apart before its core for 100% destruction.
 Left and right on the title screen choose the starting stage.
 Three stages: the Sky Fortress, the Neon Spires and the Iron Tide,

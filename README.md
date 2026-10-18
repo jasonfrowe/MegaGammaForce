@@ -102,7 +102,7 @@ of the new color; if you switch in the middle of a set, the chain breaks.
 The three pips under CHAIN show the current run. Losing a ship loses the
 chain, and the Hyper Sword charge with it.
 
-Every 100,000 points earns an extra life (EXTEND!), up to seven ships.
+Extra lives (EXTEND!) come at 50,000 and 100,000 points, then every 100,000 after that, up to seven ships.
 
 ### The stages
 
