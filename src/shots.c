@@ -16,7 +16,7 @@ static uint8_t snext;
 
 /*
  * Damage per hit. Tuned against the Vulcan (3 per bolt every 4 frames,
- * 45 per second), the strongest weapon:
+ * 45 per second, every 3 from LV4), the strongest weapon:
  *   Spread  1 x 5 orbs every 10 frames  30/s if all hit, ~18/s typical
  *   Homing  1 x 2 darts every 24 frames  5/s, but it never misses
  *   Back    1 per side shot

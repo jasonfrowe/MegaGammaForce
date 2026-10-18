@@ -254,7 +254,9 @@ static void fire(uint8_t w)
     case WP_VULCAN:
         if (fire_cd == 0 && shots_count(SK_VULCAN) < 8 + 2 * wp_level[w]) {
             shot_fire(SK_VULCAN, nx, (uint8_t)(ny - 4), ANG_UP, 128);
-            fire_cd = cd(w, 4);
+            /* Its rate tops out early: it is the strongest gun as it is. */
+            static const uint8_t vulcan_cd[WP_LEVELS] = {4, 4, 4, 3, 3};
+            fire_cd = vulcan_cd[wp_level[w]];
             sfx_player(SFX_VULCAN, SFX_PRI_FIRE);
         }
         break;

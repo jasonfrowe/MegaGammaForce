@@ -81,8 +81,18 @@ static const uint8_t socket[BP_N][2] = {
 /* Where the ship stops: the reactor in reach near the top of the screen. */
 #define FINAL_Y Q4(76 - S3_REACTOR_OY)
 
+/* At most this many bullets in the air: on real hardware the VGA runs out
+ * of time for sprites on a scanline long before the 64 bullet slots fill. */
+#define BULLET_CAP 36
+
 static uint8_t bay_t[2];
 static uint8_t spin;
+
+/* Room for n more bullets under the cap. */
+static bool room(uint8_t n)
+{
+    return bullet_count + n <= BULLET_CAP;
+}
 
 static void tile(uint8_t col, uint8_t row, uint8_t t)
 {
@@ -133,13 +143,13 @@ static void bay(uint8_t b)
     if (part_dead[i])
         return;
     uint8_t c = bay_t[b]++;
-    if (c == 120)
+    if (c == 176)
         bay_tiles(b, true);
     else if ((c == 144 || c == 156) && pl_state == PL_ALIVE) {
         int8_t slot = enemy_spawn(ET_DART, b ? COL_BLUE : COL_RED, part_px[i], part_py[i], 0);
         (void)slot;
         sfx_enemy(SFX_ENEMY_FIRE, SFX_PRI_EVENT);
-    } else if (c == 170) {
+    } else if (c == 226) {
         bay_tiles(b, false);
         bay_t[b] = 0;
     }
@@ -159,7 +169,7 @@ static void attack(void)
         if (part_dead[i])
             continue;
         uint8_t a = boss_aim(i);
-        if ((uint8_t)(t + i * 13) % 75 == 0 && part_py[i] > 0 && part_py[i] < PF_H)
+        if ((t + i * 17) % 100 == 0 && part_py[i] > 0 && part_py[i] < PF_H && room(1))
             bullet_fire(part_px[i], part_py[i], a, 30, BK_BLUE);
     }
     /* Main guns: slow, heavy fans of blue. */
@@ -167,22 +177,22 @@ static void attack(void)
         if (part_dead[i])
             continue;
         uint8_t a = boss_aim(i);
-        if ((t + (i - BP_GUN_A) * 70) % 140 == 0 && part_py[i] > 0 && part_py[i] < PF_H) {
-            bullet_fan(part_px[i] + (COS8(a) >> 3), part_py[i] + (SIN8(a) >> 3), a, 24, BK_BLUE_BIG, 5, 12);
+        if ((t + (i - BP_GUN_A) * 75) % 150 == 0 && part_py[i] > 0 && part_py[i] < PF_H && room(4)) {
+            bullet_fan(part_px[i] + (COS8(a) >> 3), part_py[i] + (SIN8(a) >> 3), a, 24, BK_BLUE_BIG, 4, 14);
             sfx_enemy(SFX_ENEMY_FIRE, SFX_PRI_EVENT);
         }
     }
     /* Bridge: wide pink sprays, there for the sword. */
-    if (!part_dead[BP_BRIDGE] && t % 110 == 55 && part_py[BP_BRIDGE] > 0)
-        bullet_fan(part_px[BP_BRIDGE], part_py[BP_BRIDGE] + 24, ANG_DOWN, 26, BK_PINK, 7, 10);
+    if (!part_dead[BP_BRIDGE] && t % 125 == 62 && part_py[BP_BRIDGE] > 0 && room(6))
+        bullet_fan(part_px[BP_BRIDGE], part_py[BP_BRIDGE] + 24, ANG_DOWN, 26, BK_PINK, 6, 11);
     /* Reactor: spirals once the bridge falls, or as time runs on. */
     if (part_dead[BP_BRIDGE] || t > 3600 || angry) {
         int16_t x = part_px[BP_REACTOR], y = part_py[BP_REACTOR];
-        if (t % (angry ? 5 : 7) == 0) {
+        if (t % (angry ? 7 : 9) == 0 && room(3)) {
             bullet_fire(x, y, spin, 22, (t & 16) ? BK_PINK : BK_BLUE);
             bullet_fire(x, y, (uint8_t)(spin + 85), 22, BK_BLUE);
             bullet_fire(x, y, (uint8_t)(spin + 170), 22, (t & 16) ? BK_BLUE : BK_PINK);
-            spin += 9;
+            spin += 11;
         }
     }
 }
