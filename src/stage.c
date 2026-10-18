@@ -24,6 +24,8 @@
 #include "gen/stage5_data.h"
 #include "gen/stage6.h"
 #include "gen/stage6_data.h"
+#include "gen/stage7.h"
+#include "gen/stage7_data.h"
 
 #define N(a) ((uint8_t)(sizeof(a) / sizeof((a)[0])))
 
@@ -153,6 +155,22 @@ static const stage_def_t stage_defs[] = {
         .fade_from = 200,
         .fade_to = 1600,
         .boss = &boss6,
+    },
+    {
+        .bank = "ROM:stage7.bin",
+        .boss_bank = "ROM:boss7.bin",
+        .name = "STAGE 7",
+        .title = "SEA OF TRANQUILITY",
+        .warning = "MASS DRIVER CHARGING",
+        .music = "ROM:Stage7.vgm",
+        .boss_music = "ROM:Boss7.vgm",
+        .speed = 160,
+        .gspr_n = 12,
+        .tiles = S7_TILES,
+        .map = S7_MAP,
+        .map_rows = S7_MAP_ROWS,
+        .loop_rows = S7_MAP_LOOP_ROWS,
+        .boss = &boss7,
     },
 };
 _Static_assert(N(stage_defs) == STAGE_COUNT, "a stage in the art has no stage_defs entry, or the other way");

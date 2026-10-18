@@ -1,0 +1,24 @@
+{
+ "palettes": "images/stage7/stage_palettes.bin",
+ "items": [
+  {
+   "bin": "images/stage7/script.bin",
+   "offset": 0,
+   "size": 360
+  },
+  {
+   "png": "images/stage7/tiles.png",
+   "w": 16,
+   "h": 16,
+   "frames": 55,
+   "offset": 360,
+   "size": 7040
+  },
+  {
+   "bin": "images/stage7/map.bin",
+   "offset": 7400,
+   "size": 2496
+  }
+ ],
+ "size": 9896
+}

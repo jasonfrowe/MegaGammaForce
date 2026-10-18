@@ -202,3 +202,35 @@ S6_WAVES = [
     (2660, "ET_DART", "COL_BLUE", 96, 0, 3, 10, 130),
     (2780, "ET_SAUCER", "COL_RED", 96, 0, 3, 14, 50),
 ]
+
+# Stage 7, Sea of Tranquility: open sky over the bases, so the air is
+# thick with gunships and wasps; rovers and turrets below.
+S7_WAVES = [
+    (120, "ET_WASP", "COL_RED", 50, 0, 3, 14, 30),
+    (160, "ET_WASP", "COL_RED", 142, 0, 3, 14, 30),
+    (300, "ET_DART", "COL_YELLOW", 30, 24, 3, 12, 100),
+    (360, "ET_DART", "COL_YELLOW", 162, -24, 3, 12, 100),
+    (500, "ET_GUNSHIP", "COL_GRAY", 60, 0, 1, 1, 50),
+    (530, "ET_GUNSHIP", "COL_GRAY", 132, 0, 1, 1, 80),
+    (680, "ET_SAUCER", "COL_BLUE", 96, 0, 3, 16, 60),
+    (820, "ET_DRONE", "COL_RED", 50, 46, 3, 24, 64),
+    (960, "ET_WASP", "COL_YELLOW", 20, 26, 6, 9, 30),
+    (1100, "ET_DART", "COL_BLUE", 172, -26, 6, 8, 110),
+    (1240, "ET_GUNSHIP", "COL_GRAY", 96, 0, 1, 1, 60),
+    (1380, "ET_SAUCER", "COL_RED", 50, 0, 3, 16, 40),
+    (1410, "ET_SAUCER", "COL_YELLOW", 140, 0, 3, 16, 40),
+    (1560, "ET_DRONE", "COL_BLUE", 60, 0, 1, 1, 70),
+    (1580, "ET_DRONE", "COL_BLUE", 132, 0, 1, 1, 70),
+    (1600, "ET_DRONE", "COL_BLUE", 96, 0, 1, 1, 50),
+    (1740, "ET_WASP", "COL_RED", 96, 0, 6, 8, 44),
+    (1880, "ET_DART", "COL_YELLOW", 30, 18, 6, 8, 120),
+    (2020, "ET_GUNSHIP", "COL_GRAY", 50, 0, 1, 1, 50),
+    (2050, "ET_GUNSHIP", "COL_GRAY", 142, 0, 1, 1, 80),
+    (2200, "ET_WASP", "COL_BLUE", 30, 0, 3, 8, 24),
+    (2210, "ET_WASP", "COL_RED", 96, 0, 3, 8, 24),
+    (2220, "ET_WASP", "COL_YELLOW", 162, 0, 3, 8, 24),
+    (2380, "ET_SAUCER", "COL_BLUE", 96, 0, 3, 14, 50),
+    (2520, "ET_DART", "COL_RED", 20, 30, 6, 7, 110),
+    (2660, "ET_DRONE", "COL_YELLOW", 40, 56, 3, 22, 60),
+    (2790, "ET_GUNSHIP", "COL_GRAY", 96, 0, 1, 1, 60),
+]

@@ -132,6 +132,18 @@ TRACKS: list = [
         mood=MoodPreset(key_root=9, scale="minor", bpm=176, intensity=0.95, target_seconds=120.0, lead_octave=5),
     ),
     TrackSpec(
+        resource="Stage7",
+        description="Stage 7, Sea of Tranquility",
+        aliases=["stage7", "level7"],
+        mood=MoodPreset(key_root=7, scale="minor", bpm=148, intensity=0.8, target_seconds=150.0, lead_octave=5),
+    ),
+    TrackSpec(
+        resource="Boss7",
+        description="Boss battle, MASS DRIVER",
+        aliases=["boss7"],
+        mood=MoodPreset(key_root=4, scale="minor", bpm=184, intensity=1.0, target_seconds=120.0, lead_octave=5),
+    ),
+    TrackSpec(
         resource="Gameover",
         description="Game over",
         aliases=["gameover"],

@@ -21,8 +21,10 @@ import boss2
 import city
 import crawler
 import desert
+import driver
 import hud
 import logo
+import luna
 import orbit
 import ocean
 import palettes
@@ -336,5 +338,44 @@ def stage6():
     }
 
 
+def stage7():
+    gt, gmap, bunkers, roads = luna.stage7_ground()
+    ht, hids, hmap = driver.hull()
+    pal = {"TILES": luna.LUNA, "LAYER": driver.DRIVER, "BOSS": driver.BOSS7, "BOSS_WRECK": driver.BOSS7_WRECK}
+    units = []
+    for i, (r, c) in enumerate(sorted(bunkers)):
+        y = (r + 1) * 16
+        if 300 < y < WAVES_END:
+            units.append((y, (c + 1) * 16, "ET_TURRET", COLOR[i % 3], 0))
+    # A rover on every road, alternating ways, colors in threes.
+    for k, r in enumerate(sorted(roads)):
+        y = r * 16 + 8
+        if 300 < y < WAVES_END - 100:
+            left = k % 2 == 1
+            units.append((y, 200 if left else 0, "ET_TANK", COLOR[(k // 3) % 3], (0x80 if left else 0) | 10))
+    defines = map_defines("MAP", gmap, LOOP_ROWS_DEFAULT)
+    defines.update({"TILES_N": len(gt), "SKY_ROWS": 0, "HULL_TILES_N": len(ht)})
+    hull_defines(defines, driver, hids, ("crater", "crater_big0"))
+    return {
+        "n": 7,
+        "palettes": pal,
+        "items": [
+            {"name": "tiles", "frames": gt, "pal": luna.LUNA},
+            {"name": "map", "data": gmap.astype(np.uint8).tobytes()},
+            {"name": "hull_tiles", "boss": True, "frames": ht, "pal": driver.DRIVER},
+            {"name": "hull_map", "boss": True, "data": hmap.astype(np.uint8).tobytes()},
+            {"name": "boss_breech", "boss": True, "frames": driver.breech(), "pal": driver.BOSS7},
+            {"name": "boss_cap", "boss": True, "frames": driver.capacitor(), "pal": driver.BOSS7},
+            {"name": "boss_muzzle", "boss": True, "frames": driver.muzzle(), "pal": driver.BOSS7},
+            {"name": "boss_turret", "boss": True, "frames": boss.turret(), "pal": driver.BOSS7},
+            {"name": "portrait", "boss": True, "frames": hud.portrait(driver.muzzle()[1]), "pal": driver.BOSS7},
+        ],
+        "defines": defines,
+        "waves": waves.S7_WAVES,
+        "ground": units,
+        "previews": {"ground": (tilemap_image(gt, gmap), luna.LUNA), "hull": (tilemap_image(ht, hmap), driver.DRIVER)},
+    }
+
+
 def all_stages():
-    return [stage1(), stage2(), stage3(), stage4(), stage5(), stage6()]
+    return [stage1(), stage2(), stage3(), stage4(), stage5(), stage6(), stage7()]
