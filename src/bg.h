@@ -13,8 +13,17 @@ uint8_t bg_update(void);
 void bg_commit(void);
 void bg_set_speed(uint8_t speed_q8); /* pixels per frame in 1/256 */
 
-/* Is there a solid sky tile (a tower the ship crashes into) at this game pixel? */
+/*
+ * Towers. On a stage whose sky has solid tiles (bg_hazard), the ship
+ * crashes into them, most shots and every enemy bullet stop at them, and
+ * flying enemies steer around them. Missiles, plasma, the swords and the
+ * hyper beam pass through.
+ */
+extern bool bg_hazard;
+/* Is there a solid sky tile at this game pixel? */
 bool bg_sky_hit(int16_t gx, int16_t gy);
+/* The same, at a bullet-space pixel. */
+bool bg_sky_hit_bs(uint8_t bx, uint8_t by);
 
 /* A boss takes over plane 1's layer: a w x h tile map, PAL_LAYER colors.
  * bg_layer_move() places its top left in game pixels. */

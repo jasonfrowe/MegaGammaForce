@@ -1,3 +1,4 @@
+#include "bg.h"
 #include "fx.h"
 #include "game.h"
 #include "shots.h"
@@ -198,6 +199,12 @@ void shots_update(void)
         uint8_t x = (uint8_t)(sx[i] >> 8);
         uint8_t y = (uint8_t)(sy[i] >> 8);
         if (x < 20 || x > 236 || y < 4 || y > 250) {
+            kill(i);
+            continue;
+        }
+        /* Towers stop shots; homing missiles fly over them. */
+        if (bg_hazard && k != SK_MISSILE && bg_sky_hit_bs(x, y)) {
+            fx_spark(x, y);
             kill(i);
             continue;
         }

@@ -1,4 +1,5 @@
 #include "bullets.h"
+#include "bg.h"
 #include "fx.h"
 #include "game.h"
 #include "player.h"
@@ -92,6 +93,11 @@ void bullets_update(void)
         uint8_t x = (uint8_t)(bx[i] >> 8);
         uint8_t y = (uint8_t)(by[i] >> 8);
         if (x < 20 || x > 236 || y < 2 || y > 250) {
+            kill(i);
+            continue;
+        }
+        /* A tower stops a bullet; half of them are checked each frame. */
+        if (bg_hazard && ((i ^ frame_count) & 1) && bg_sky_hit_bs(x, y)) {
             kill(i);
             continue;
         }

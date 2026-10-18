@@ -99,6 +99,12 @@ Every 100,000 points earns an extra life (EXTEND!), up to seven ships.
 Score, lives and the chain carry from one stage to the next. Clearing
 stage 3 ends the game.
 
+Stage 2's towers stand as high as you fly. Flying into one is fatal, and
+they stop your Vulcan, Spread, Homing darts and the Wide Shot's rear shots,
+and every enemy bullet too, so they make cover as well as walls. Homing
+Missiles and Homing Plasma reach over them, and so do the swords. Flying
+enemies steer around them.
+
 ### The bosses
 
 Every boss is built from parts, each with its own armor. Shooting a part

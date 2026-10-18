@@ -172,7 +172,7 @@ def stage3():
             {"name": "boss_turret", "frames": boss.turret(), "pal": ship.BOSS3},
         ],
         "defines": defines,
-        "data_h": ground_table(3, units) + solid_table(3, "sky", [], len(st)),
+        "data_h": ground_table(3, units),
         "previews": {"ground": (tilemap_image(gt, gmap), ocean.OCEAN), "sky": (tilemap_image(st, smap), ocean.SKY),
                      "hull": (tilemap_image(ht, hmap), ship.HULL)},
     }

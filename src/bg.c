@@ -20,6 +20,7 @@
 
 uint16_t bg_distance;
 bool bg_looping;
+bool bg_hazard;
 
 static int16_t view_top;  /* ground map pixel row at the top of the screen */
 static uint16_t map_h_px, loop_h_px;
@@ -103,6 +104,7 @@ void bg_load(void)
     loop_h_px = s->loop_rows * TILE;
 
     sky_on = s->sky_rows != 0;
+    bg_hazard = sky_on && s->sky_solid;
     if (sky_on) {
         sky_map = XRAM_BANK + s->sky_map;
         sky_solid = s->sky_solid;
@@ -158,6 +160,8 @@ uint8_t bg_update(void)
             sky_top = 0;
         layer_dirty = true;
     }
+    if (sky_top <= 0)
+        bg_hazard = false; /* the sky's last screen is empty */
 
     /* Palette cycling: water shimmers, lights run, lamps blink. */
     if (++cycle_timer >= 16) {
@@ -168,18 +172,31 @@ uint8_t bg_update(void)
     return px;
 }
 
+static bool solid_at(uint8_t gx, uint8_t gy)
+{
+    uint16_t row = (uint16_t)(sky_top + gy) >> 4;
+    uint8_t tile = xram0_peek8(sky_map + row * 12 + (gx >> 4));
+    return (sky_solid[tile >> 3] >> (tile & 7)) & 1;
+}
+
 bool bg_sky_hit(int16_t gx, int16_t gy)
 {
-    if (!sky_on || gx < 0 || gx >= PF_W || gy < 0 || gy >= PF_H)
+    if (!bg_hazard || gx < 0 || gx >= PF_W || gy < 0 || gy >= PF_H)
         return false;
-    uint16_t row = (uint16_t)(sky_top + gy) >> 4;
-    uint8_t tile = xram0_peek8(sky_map + row * 12 + ((uint8_t)gx >> 4));
-    return (sky_solid[tile >> 3] >> (tile & 7)) & 1;
+    return solid_at((uint8_t)gx, (uint8_t)gy);
+}
+
+bool bg_sky_hit_bs(uint8_t bx, uint8_t by)
+{
+    uint8_t gx = (uint8_t)(bx - BS_X), gy = (uint8_t)(by - BS_Y);
+    if (!bg_hazard || gx >= PF_W || gy >= PF_H)
+        return false;
+    return solid_at(gx, gy);
 }
 
 void bg_layer_show(uint16_t map, uint8_t w, uint8_t h, uint16_t tiles)
 {
-    sky_on = false;
+    sky_on = bg_hazard = false;
     layer_config(map, w, h, tiles, PAL_LAYER);
     layer_dirty = false;
 }
@@ -192,7 +209,7 @@ void bg_layer_move(int16_t gx, int16_t gy)
 
 void bg_layer_hide(void)
 {
-    sky_on = false;
+    sky_on = bg_hazard = false;
     layer_dirty = false;
     xram0_poke16(XRAM_LAYER_CONFIG + offsetof(mode2_config_t, y_pos_px), LAYER_OFF_Y);
 }

@@ -18,5 +18,4 @@ static const ground_t s3_ground[S3_GROUND_N] = {
     {2456, 56, ET_GUNBOAT, COL_RED, 0},
     {2648, 24, ET_GUNBOAT, COL_RED, 0},
 };
-static const uint8_t s3_sky_solid[3] = {0x00, 0x00, 0x00};
 

@@ -1,3 +1,4 @@
+#include "bg.h"
 #include "bullets.h"
 #include "enemies.h"
 #include "fx.h"
@@ -37,6 +38,7 @@ static uint8_t e_type[EN_N], e_color[EN_N], e_hp[EN_N], e_state[EN_N], e_flash[E
 static uint16_t e_timer[EN_N];
 static int16_t e_x[EN_N], e_y[EN_N], e_vx[EN_N], e_vy[EN_N], e_base[EN_N];
 static uint8_t e_aim[EN_N];
+static int8_t e_dodge[EN_N]; /* which way it is sidestepping a tower, or 0 */
 
 static const uint8_t color_pal[4] = {PAL_ENEMY_RED, PAL_ENEMY_BLUE, PAL_ENEMY_YELLOW, PAL_ENEMY_GRAY};
 
@@ -87,6 +89,7 @@ int8_t enemy_spawn(uint8_t type, uint8_t color, int16_t gx, int16_t gy, uint8_t 
         e_vx[j] = 0;
         e_vy[j] = 0;
         e_aim[j] = 0;
+        e_dodge[j] = 0;
         spr_setup(sprite_of(j), t->img, PAL_ADDR(color_pal[color]), WH(t->w, t->h), OPT4);
         return (int8_t)j;
     }
@@ -117,6 +120,50 @@ static void destroy(uint8_t i)
     if (bonus)
         stage_chain_popup(bonus);
     kill(i);
+}
+
+/*
+ * Flying enemies steer around towers. When one is coming down on them from
+ * above, or lies ahead, they sidestep toward the nearer clear side and keep
+ * going that way until they are past it; weavers narrow their weave while
+ * they do. One that still touches a tower is pushed out along its edge.
+ */
+static void avoid_towers(uint8_t i)
+{
+    int16_t gx = e_x[i] >> 4, gy = e_y[i] >> 4;
+    if (gy < 0)
+        return;
+    int8_t d = (int8_t)(etypes[e_type[i]].hh + 4);
+    bool inside = bg_sky_hit(gx, gy);
+    /* Look well ahead: up the screen for towers scrolling down on it, down
+     * the screen for those it is flying toward, and to both sides. */
+    bool threat = inside || bg_sky_hit(gx, gy - d - 28) || bg_sky_hit(gx - d, gy - d - 12) ||
+                  bg_sky_hit(gx + d, gy - d - 12) ||
+                  (e_vy[i] >= 0 && (bg_sky_hit(gx, gy + d + 36) || bg_sky_hit(gx - d, gy + d + 16) ||
+                                    bg_sky_hit(gx + d, gy + d + 16)));
+    if (!threat) {
+        e_dodge[i] = 0;
+        return;
+    }
+    if (e_dodge[i] == 0) {
+        /* The nearer side that is clear of the tower. */
+        e_dodge[i] = gx < PF_W / 2 ? -1 : 1;
+        for (int16_t off = 16; off <= 64; off += 16) {
+            bool l = gx - off > 8 && !bg_sky_hit(gx - off, gy - d - 12) && !bg_sky_hit(gx - off, gy + d + 16);
+            bool r = gx + off < PF_W - 8 && !bg_sky_hit(gx + off, gy - d - 12) && !bg_sky_hit(gx + off, gy + d + 16);
+            if (l != r) {
+                e_dodge[i] = l ? -1 : 1;
+                break;
+            }
+            if (l)
+                break;
+        }
+    }
+    if (e_type[i] == ET_SAUCER || e_type[i] == ET_WASP)
+        e_param[i] = (uint8_t)(e_param[i] - (e_param[i] >> 2));
+    int16_t step = e_dodge[i] * (inside ? 128 : 64); /* 4 px every other frame, 8 to get out */
+    e_x[i] += step;
+    e_base[i] += step;
 }
 
 void enemy_damage(uint8_t i, uint8_t dmg)
@@ -281,6 +328,8 @@ void enemies_update(uint8_t scroll)
         think(i);
         if (EN_GROUND(type))
             e_y[i] += (int16_t)scroll << 4;
+        else if (bg_hazard && ((i ^ frame_count) & 1))
+            avoid_towers(i);
         e_x[i] += e_vx[i];
         e_y[i] += e_vy[i];
         if (e_y[i] > Q4(PF_H + 40) || e_x[i] < Q4(-40) || e_x[i] > Q4(PF_W + 40) ||
