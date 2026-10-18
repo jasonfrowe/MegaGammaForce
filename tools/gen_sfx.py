@@ -202,6 +202,16 @@ def extend():
     return s.off()
 
 
+def levelup():
+    """Weapon level up: a bright rising run, quicker than the chain chime."""
+    s = Sfx(7).patch(mod_mult=1, mod_tl=10, mod_dr=5, car_mult=2, car_dr=4, car_sl=4, car_rr=6, feedback=3,
+                     connection=1)
+    for f in (784.0, 987.8, 1174.7, 1568.0):
+        s.on(f).wait(35).off().wait(6)
+    s.on(1975.5).wait(120)
+    return s.off()
+
+
 def enemy_fire():
     return Sfx(8).patch(mod_mult=2, mod_tl=22, car_dr=6, car_sl=4, car_rr=8, feedback=2).sweep(600, 260, 70, 7).off()
 
@@ -244,6 +254,7 @@ SFX = [
     ("CLEAR", clear),
     ("LOCK", lock),
     ("EXTEND", extend),
+    ("LEVELUP", levelup),
     ("ENEMY_FIRE", enemy_fire),
     ("EXPLODE", explode),
     ("BIG_EXPLODE", big_explode),

@@ -66,8 +66,24 @@ From strongest to weakest:
 Damage per second, against the Vulcan's 45: Spread 30 (all five orbs
 hitting), Sword 22, Homing Plasma 7.5, Homing 7.5. Homing Missiles do 8 per
 locked target per sweep of the ring, about a second: enough to destroy
-darts, wasps, saucers and ground turrets in one hit. The
-table is in `src/shots.c` and `src/player.c`.
+darts, wasps, saucers and ground turrets in one hit. These are the LV1
+numbers; the table is in `src/shots.c` and `src/player.c`.
+
+### Weapon levels
+
+As in Radiant Silvergun, each gun and the Radiant Sword gains experience
+from what it destroys: a point or two for small fry, more for gunships,
+gunboats and boss parts. The kill goes to the weapon that fired the shot.
+At 15, 40, 80 and 150 experience the weapon goes up a level, to LV5, and
+LEVEL UP! flashes in the playfield. The HUD shows the level and the
+progress to the next under the weapon's name.
+
+Every level fires faster, up to twice the LV1 rate at LV5. On top of that,
+Spread fires seven orbs from LV3, Homing Missiles lock and sweep faster,
+and the sword also hits harder. The Vulcan, already the strongest, gains
+experience at half the rate, so the weaker weapons are the ones worth
+using to level up. Levels carry over between stages and reset with a new
+game.
 
 ### The chain
 
@@ -110,6 +126,8 @@ enemies steer around them.
 Every boss is built from parts, each with its own armor. Shooting a part
 off raises the DESTROY percentage; destroying the core ends the fight.
 Strip everything else first for **100% destruction** and a perfect bonus.
+Every hit on a boss scores 20 points a point of damage. Destroying one
+plays the victory music over the results.
 Absorb big pink bullets with the sword to charge the Hyper Sword. Take
 too long and the boss escapes.
 
@@ -217,6 +235,7 @@ to try with `--style`:
 | 13 **fusion** | Sax or synth lead, electric piano stabs, slap bass with octave pops and ghost notes, a busy funk kit |
 
 Stage 2 uses eurobeat, stage 3 fusion and the battleship fmrock; the stage 2 boss reuses `Boss.vgm`.
+`Victory.vgm` (and its `.fur`) comes from RPDemo as it is, and plays once after a boss is destroyed.
 All four are in 4/4. On a 6/8 track (the boss), they keep the same eighth-note
 pulse, so they play 1.5 times as fast.
 

@@ -10,6 +10,7 @@
 
 static vgm_player_t player;
 static const char *current;
+static bool once; /* stop at the end instead of looping */
 
 void music_init(void)
 {
@@ -36,10 +37,17 @@ void music_play(const char *path)
     if (path && current && strcmp(path, current) == 0)
         return;
     music_stop();
+    once = false;
     if (!path)
         return;
     if (vgm_open(&player, path))
         current = path;
+}
+
+void music_play_once(const char *path)
+{
+    music_play(path);
+    once = true;
 }
 
 void music_update(void)
@@ -48,6 +56,6 @@ void music_update(void)
     if (player.fd < 0)
         return;
     vgm_update(&player, 735u, &ended);
-    if (ended && !vgm_restart(&player))
+    if (ended && (once || !vgm_restart(&player)))
         music_stop();
 }

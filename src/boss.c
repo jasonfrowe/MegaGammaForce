@@ -115,6 +115,7 @@ static void destroy_part(uint8_t i, bool scored)
     if (scored) {
         boss_destruction += p->weight;
         score_add(p->score);
+        weapon_xp((uint8_t)(2 + (p->weight >> 1)));
     }
     if (def->destroyed)
         def->destroyed(i);
@@ -131,7 +132,7 @@ void boss_damage(uint8_t i, uint8_t dmg)
     flash[i] = 3;
     if ((boss_t & 7) == 0)
         sfx_enemy(SFX_BOSS_HIT, SFX_PRI_FIRE);
-    score_add(10);
+    score_add((uint16_t)dmg * 20); /* every hit on the boss scores */
     if (part_hp[i] <= dmg) {
         destroy_part(i, true);
         if (i == def->core) {

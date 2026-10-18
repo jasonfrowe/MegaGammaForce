@@ -91,15 +91,16 @@ def stage2():
     st, smap, solid, towers = city.stage2_sky(sky_rows)
     pal = {"TILES": city.CITY, "SKY": city.SKY, "BOSS": palettes.BOSS2, "BOSS_WRECK": palettes.BOSS2_WRECK}
     units = []
-    for i, (r, c) in enumerate(sorted(pads)):
+    # A gun on every other pad; the rest stay empty.
+    for i, (r, c) in enumerate(sorted(pads)[::2]):
         y = (r + 1) * 16
         if 300 < y < WAVES_END:
             units.append((y, (c + 1) * 16, "ET_TURRET", COLOR[i % 3], 0))
-    # Tanks on every other road, alternating directions, colors in threes.
+    # Tanks on every fourth road, alternating directions, colors in threes.
     k = 0
     for r in roads:
         y = r * 16 + 8
-        if y < 500 or y > WAVES_END - 100 or (r // city.BLOCK) % 2:
+        if y < 500 or y > WAVES_END - 100 or (r // city.BLOCK) % 4:
             continue
         left = k % 2 == 1
         units.append((y, 200 if left else 0, "ET_TANK", COLOR[(k // 3) % 3], (0x80 if left else 0) | 10))

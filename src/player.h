@@ -22,6 +22,20 @@ enum
 
 #define SWORD_GAUGE_MAX 48
 
+/*
+ * Weapon levels, after Radiant Silvergun: each gun and the sword gains
+ * experience from what it destroys, and every level fires faster (twice
+ * as fast at the top). The Vulcan, the strongest, learns at half the rate,
+ * so the weaker weapons are worth using to level them.
+ */
+#define WP_LEVELS 5 /* shown LV1 to LV5 */
+extern uint8_t wp_level[10]; /* 0 to WP_LEVELS - 1, by weapon */
+/* The weapon dealing the damage being applied right now: set before
+ * tgt_damage(), so a kill can be credited to it. */
+extern uint8_t hit_weapon;
+/* Credit hit_weapon with experience for a kill. */
+void weapon_xp(uint8_t xp);
+
 enum
 {
     PL_ALIVE,

@@ -69,7 +69,7 @@ foreach(n 1 2 3)
 endforeach()
 
 # Music, streamed from the ROM while playing.
-foreach(track Title Stage1 Boss Stage2 Stage3 Boss3)
+foreach(track Title Stage1 Boss Stage2 Stage3 Boss3 Victory)
     if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/music/${track}.vgm)
         rp6502_asset(MegaGammaForce ${track}.vgm music/${track}.vgm)
     endif()

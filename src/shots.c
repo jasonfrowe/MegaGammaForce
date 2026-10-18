@@ -4,6 +4,7 @@
 #include "shots.h"
 #include "sprites.h"
 #include "targets.h"
+#include "player.h"
 #include "util.h"
 
 #define SH_N SPR_SHOT_N
@@ -59,6 +60,9 @@ static void set_velocity(uint8_t i)
     svy[i] = vel88(SIN8(sang[i]), sspeed[i]);
 }
 
+/* The weapon that fired each shot, to credit its kills. */
+static uint8_t sweap[SH_N];
+
 void shot_fire(uint8_t kind, uint8_t bx, uint8_t by, uint8_t angle, uint8_t speed)
 {
     int8_t j = alloc();
@@ -66,6 +70,7 @@ void shot_fire(uint8_t kind, uint8_t bx, uint8_t by, uint8_t angle, uint8_t spee
         return;
     uint8_t i = (uint8_t)j;
     skind[i] = kind;
+    sweap[i] = pl_weapon;
     sx[i] = (uint16_t)bx << 8;
     sy[i] = (uint16_t)by << 8;
     sang[i] = angle;
@@ -114,6 +119,7 @@ void shot_missile(uint8_t bx, uint8_t by, uint8_t angle, uint8_t ref)
         return;
     uint8_t i = (uint8_t)j;
     skind[i] = SK_MISSILE;
+    sweap[i] = WP_MISSILE;
     sx[i] = (uint16_t)bx << 8;
     sy[i] = (uint16_t)by << 8;
     sang[i] = angle;
@@ -212,6 +218,7 @@ void shots_update(void)
         if (t < 0 && k == SK_VULCAN)
             t = tgt_hit(x, (uint8_t)(y + 8)); /* the bolt is 16 tall */
         if (t >= 0) {
+            hit_weapon = sweap[i];
             tgt_damage((uint8_t)t, kind_dmg[k]);
             fx_spark(x, y);
             kill(i);

@@ -149,8 +149,13 @@ static void enter_results(void)
     hud_u16(21, 14, results_bonus, 5, HC_YELLOW, HC_CLEAR);
     if (boss_destruction >= 100)
         hud_center(17, "PERFECT DESTRUCTION!", HC_PINK);
-    music_stop();
-    sfx_player(SFX_CLEAR, SFX_PRI_TOP);
+    /* Victory music for a destroyed boss; the jingle alone when it got away. */
+    if (boss_escaped) {
+        music_stop();
+        sfx_player(SFX_CLEAR, SFX_PRI_TOP);
+    } else {
+        music_play_once("ROM:Victory.vgm");
+    }
 }
 
 static void enter_gameover(void)

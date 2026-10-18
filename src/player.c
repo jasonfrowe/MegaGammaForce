@@ -27,8 +27,21 @@ static uint8_t invuln;
 static uint8_t dead_timer;
 static uint8_t fire_cd;
 static uint8_t sword_tick;
-static uint8_t shown_weapon = 0xFF, shown_gauge = 0xFF, shown_lives = 0xFF;
-static uint8_t extend_timer;
+static uint8_t shown_weapon = 0xFF, shown_gauge = 0xFF, shown_lives = 0xFF, shown_level = 0xFF;
+static uint8_t extend_timer, level_timer;
+
+uint8_t wp_level[10];
+uint8_t hit_weapon;
+static uint8_t wp_xp[10];
+/* Experience to reach each level. */
+static const uint8_t level_xp[WP_LEVELS] = {0, 15, 40, 80, 150};
+#define LEVEL_ROW 19
+
+/* A firing interval at the current weapon's level: x1 down to x1/2. */
+static uint8_t cd(uint8_t w, uint8_t base)
+{
+    return (uint8_t)((base * (8 - wp_level[w]) + 7) >> 3);
+}
 
 #define LIVES_MAX 7 /* as many as the HUD shows */
 #define EXTEND_ROW 18
@@ -40,10 +53,11 @@ static uint8_t extend_timer;
  * the ring starts again with fresh locks.
  */
 #define LOCK_N (SPR_LOCK_N - SPR_LOCK_RING)
-#define LOCK_DELAY 12
+#define LOCK_DELAY 12 /* less 2 a level */
 #define RING_MIN 10
 #define RING_MAX 96
-#define RING_REST 16 /* frames at full size before the next sweep */
+#define RING_GROW 3  /* pixels a frame, plus 1 a level */
+#define RING_REST 16 /* frames at full size before the next sweep, less 2 a level */
 static uint8_t ring_r, ring_rest;
 static uint8_t lock_n;
 static uint8_t lock_ref[LOCK_N], lock_timer[LOCK_N]; /* timer 0 = missile away */
@@ -78,8 +92,8 @@ static void missiles(void)
         ring_r = RING_MIN;
         lock_n = 0;
     } else if (ring_r < RING_MAX) {
-        ring_r += 3;
-    } else if (++ring_rest >= RING_REST) {
+        ring_r += (uint8_t)(RING_GROW + wp_level[WP_MISSILE]);
+    } else if (++ring_rest >= RING_REST - 2 * wp_level[WP_MISSILE]) {
         ring_rest = 0;
         ring_r = RING_MIN;
         lock_n = 0;
@@ -93,7 +107,7 @@ static void missiles(void)
         uint16_t d = ax > ay ? (uint16_t)ax + (ay >> 1) : (uint16_t)ay + (ax >> 1);
         if (d <= ring_r && !locked(tgt_ref[i])) {
             lock_ref[lock_n] = tgt_ref[i];
-            lock_timer[lock_n] = LOCK_DELAY;
+            lock_timer[lock_n] = (uint8_t)(LOCK_DELAY - 2 * wp_level[WP_MISSILE]);
             lock_n++;
             sfx_player(SFX_LOCK, SFX_PRI_FIRE);
         }
@@ -177,7 +191,10 @@ void player_reset(void)
     sword_gauge = 0;
     hyper_timer = 0;
     pl_weapon = WP_VULCAN;
-    shown_weapon = shown_gauge = shown_lives = 0xFF;
+    for (uint8_t w = 0; w < 10; w++)
+        wp_level[w] = wp_xp[w] = 0;
+    level_timer = 0;
+    shown_weapon = shown_gauge = shown_lives = shown_level = 0xFF;
     extend_timer = 0;
     player_respawn();
     invuln = 0;
@@ -216,6 +233,7 @@ void sword_absorb(void)
 /* Damage every target overlapping the sword box. */
 static void sword_strike(uint8_t dmg)
 {
+    hit_weapon = hyper_timer ? WP_HYPER : WP_SWORD;
     for (uint8_t i = 0; i < tgt_n; i++) {
         if (tgt_x1[i] > sword_x0 && tgt_x0[i] < sword_x1 && tgt_y1[i] > sword_y0 && tgt_y0[i] < sword_y1)
             tgt_damage(i, dmg);
@@ -232,9 +250,9 @@ static void fire(uint8_t w)
 
     switch (w) {
     case WP_VULCAN:
-        if (fire_cd == 0 && shots_count(SK_VULCAN) < 8) {
+        if (fire_cd == 0 && shots_count(SK_VULCAN) < 8 + 2 * wp_level[w]) {
             shot_fire(SK_VULCAN, nx, (uint8_t)(ny - 4), ANG_UP, 128);
-            fire_cd = 4;
+            fire_cd = cd(w, 4);
             sfx_player(SFX_VULCAN, SFX_PRI_FIRE);
         }
         break;
@@ -242,23 +260,25 @@ static void fire(uint8_t w)
         missiles();
         break;
     case WP_HOMING:
-        if (fire_cd == 0 && shots_count(SK_HOMING) < 8) {
-            /* One dart every 8 frames, alternating sides: 7.5 damage/s. */
+        if (fire_cd == 0 && shots_count(SK_HOMING) < 8 + 2 * wp_level[w]) {
+            /* One dart every 8 frames, alternating sides: 7.5 damage/s at LV1. */
             static bool side;
             side = !side;
             if (side)
                 shot_fire(SK_HOMING, (uint8_t)(pl_bx - 10), pl_by, ANG_UP - 40, 60);
             else
                 shot_fire(SK_HOMING, (uint8_t)(pl_bx + 10), pl_by, ANG_UP + 40, 60);
-            fire_cd = 8;
+            fire_cd = cd(w, 8);
             sfx_player(SFX_HOMING, SFX_PRI_FIRE);
         }
         break;
     case WP_SPREAD:
         if (fire_cd == 0) {
-            for (int8_t a = -24; a <= 24; a += 12)
+            /* Five orbs; seven from LV3. */
+            int8_t step = wp_level[w] >= 2 ? 8 : 12;
+            for (int8_t a = -24; a <= 24; a += step)
                 shot_fire(SK_SPREAD, nx, ny, (uint8_t)(ANG_UP + a), 88);
-            fire_cd = 10;
+            fire_cd = cd(w, 10);
             sfx_player(SFX_SPREAD, SFX_PRI_FIRE);
         }
         break;
@@ -269,7 +289,7 @@ static void fire(uint8_t w)
             shot_fire(SK_BACK, (uint8_t)(pl_bx + 6), pl_by, ANG_DOWN - 36, 80);
             shot_fire(SK_BACK, (uint8_t)(pl_bx - 8), pl_by, 128 + 12, 80);
             shot_fire(SK_BACK, (uint8_t)(pl_bx + 8), pl_by, (uint8_t)(0 - 12), 80);
-            fire_cd = 8;
+            fire_cd = cd(w, 8);
             sfx_player(SFX_SPREAD, SFX_PRI_FIRE);
         }
         break;
@@ -285,10 +305,11 @@ static void fire(uint8_t w)
                 uint8_t jx = (uint8_t)((rng8() & 7) - 3);
                 shot_spark((uint8_t)(nx + ((dx * f) >> 6) + (int8_t)jx), (uint8_t)(ny + ((dy * f) >> 6)));
             }
-            /* Weakest weapon: it locks on by itself, 1 every 8 frames = 7.5/s. */
+            /* Weakest weapon: it locks on by itself, 1 every 8 frames = 7.5/s at LV1. */
             if (fire_cd == 0) {
+                hit_weapon = WP_PLASMA;
                 tgt_damage((uint8_t)t, 1);
-                fire_cd = 8;
+                fire_cd = cd(w, 8);
                 sfx_player(SFX_PLASMA, SFX_PRI_FIRE);
             }
         } else {
@@ -338,6 +359,7 @@ static void update_sword(uint8_t w, int16_t sx, int16_t sy)
         }
         if ((sword_tick & 3) == 2) { /* beam 2 every 4 frames, 30/s */
             uint8_t x0 = (uint8_t)(pl_bx - 14), x1 = (uint8_t)(pl_bx + 14);
+            hit_weapon = WP_HYPER;
             for (uint8_t i = 0; i < tgt_n; i++)
                 if (tgt_x1[i] > x0 && tgt_x0[i] < x1 && tgt_y0[i] < pl_by)
                     tgt_damage(i, 2);
@@ -350,10 +372,38 @@ static void update_sword(uint8_t w, int16_t sx, int16_t sy)
         sword_x1 = pl_bx < 231 ? (uint8_t)(pl_bx + 24) : 255;
         sword_y0 = pl_by > 36 ? (uint8_t)(pl_by - 36) : 0;
         sword_y1 = (uint8_t)(pl_by - 4);
-        if ((sword_tick & 7) == 0)
-            sword_strike(3); /* 22/s; it also absorbs pink bullets */
+        /* 3 every 8 frames = 22/s at LV1, faster and harder each level;
+         * it also absorbs pink bullets. fire() counts fire_cd down. */
+        if (fire_cd == 0) {
+            sword_strike((uint8_t)(3 + (wp_level[WP_SWORD] >> 1)));
+            fire_cd = cd(WP_SWORD, 8);
+        }
         if ((sword_tick & 15) == 0)
             sfx_player(SFX_SWORD, SFX_PRI_FIRE);
+    }
+}
+
+void weapon_xp(uint8_t xp)
+{
+    uint8_t w = hit_weapon;
+    if (w == WP_NONE || w >= WP_HYPER || w == WP_ALL)
+        return;
+    uint8_t lv = wp_level[w];
+    if (lv >= WP_LEVELS - 1)
+        return;
+    if (w == WP_VULCAN)
+        xp = (uint8_t)((xp + 1) >> 1); /* the strongest gun learns slowest */
+    uint16_t x = (uint16_t)wp_xp[w] + xp;
+    wp_xp[w] = x > 255 ? 255 : (uint8_t)x;
+    if (wp_xp[w] >= level_xp[lv + 1]) {
+        wp_level[w] = ++lv;
+        /* "SPREAD LV3" in the playfield for a moment. */
+        char msg[] = "LEVEL UP! LV ";
+        msg[12] = (char)('1' + lv);
+        hud_clear_row(LEVEL_ROW);
+        hud_center(LEVEL_ROW, msg, HC_GREEN);
+        level_timer = 90;
+        sfx_player(SFX_LEVELUP, SFX_PRI_EVENT);
     }
 }
 
@@ -362,6 +412,8 @@ static void extends(void)
 {
     if (extend_timer && --extend_timer == 0)
         hud_clear_row(EXTEND_ROW);
+    if (level_timer && --level_timer == 0)
+        hud_clear_row(LEVEL_ROW);
     if (!score_extends || (pl_state == PL_DEAD && pl_lives == 0))
         return;
     score_extends--;
@@ -504,6 +556,32 @@ void player_hud(bool force)
         hud_fill(33, 4, 7, ' ', HC_WHITE, HC_PANEL);
         hud_text(33, 3, weapon_name[w][0], HC_WHITE, HC_PANEL);
         hud_text(33, 4, weapon_name[w][1], HC_WHITE, HC_PANEL);
+    }
+    /* The weapon's level, and its progress to the next one. */
+    uint8_t lw = w == WP_ALL ? WP_VULCAN : w;
+    uint8_t shown = 0xFE;
+    uint8_t halves = 0;
+    if (lw && lw < WP_HYPER) {
+        uint8_t lv = wp_level[lw];
+        if (lv < WP_LEVELS - 1) {
+            uint8_t lo = level_xp[lv], hi = level_xp[lv + 1];
+            halves = (uint8_t)((uint16_t)(wp_xp[lw] - lo) * 6 / (hi - lo));
+        }
+        shown = (uint8_t)((lw << 4) | (lv << 3) | halves);
+    }
+    if (shown != shown_level || force) {
+        shown_level = shown;
+        hud_fill(33, 5, 7, ' ', HC_WHITE, HC_PANEL);
+        if (shown != 0xFE) {
+            uint8_t lv = wp_level[lw];
+            char t[] = "LV1";
+            t[2] = (char)('1' + lv);
+            hud_text(33, 5, t, lv ? HC_GREEN : HC_GRAY, HC_PANEL);
+            if (lv >= WP_LEVELS - 1)
+                hud_text(37, 5, "MAX", HC_YELLOW, HC_PANEL);
+            else
+                hud_bar(37, 5, 3, halves, HC_GREEN);
+        }
     }
     uint8_t g = sword_gauge;
     if (g != shown_gauge || force) {

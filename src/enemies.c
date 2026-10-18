@@ -116,6 +116,7 @@ static void destroy(uint8_t i)
         sfx_enemy(SFX_EXPLODE, SFX_PRI_DESTROY);
     }
     score_add(t->score);
+    weapon_xp((uint8_t)(1 + (t->hp >> 2)));
     uint16_t bonus = chain_kill(e_color[i]);
     if (bonus)
         stage_chain_popup(bonus);
