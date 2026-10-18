@@ -10,6 +10,7 @@
 extern mode5_csprite_t spr[SPR_COUNT];
 extern mode5_csprite_t gspr[GSPR_MAX];
 extern uint8_t gspr_n; /* ground sprites the current stage shows */
+extern mode5_csprite_t hspr[HSPR_N]; /* HUD graphics on plane 2 */
 
 #define WH(w, h) MODE5_SIZE(w, h)
 #define OPT4 MODE5_4BPP

@@ -553,12 +553,22 @@ static const char *const weapon_name[10][2] = {
 void player_hud(bool force)
 {
     uint8_t w = hyper_timer ? WP_HYPER : pl_weapon;
+    /*
+     * Right panel, top: the weapon's icon with its level and progress
+     * beside it, and its name below.
+     *   rows 2-3  [icon] LV3 / progress bar
+     *   rows 4-5  name
+     */
     if (w != shown_weapon || force) {
         shown_weapon = w;
-        hud_fill(33, 3, 7, ' ', HC_WHITE, HC_PANEL);
+        mode5_csprite_t *s = &hspr[HSPR_ICON];
+        spr_setup(s, XRAM_IMG_ICONS + w * ICONS_FRAME_BYTES, PAL_ADDR(PAL_SHOTS), WH(16, 16), OPT4);
+        s->x_pos_px = 33 * 8;
+        s->y_pos_px = 2 * 8;
         hud_fill(33, 4, 7, ' ', HC_WHITE, HC_PANEL);
-        hud_text(33, 3, weapon_name[w][0], HC_WHITE, HC_PANEL);
-        hud_text(33, 4, weapon_name[w][1], HC_WHITE, HC_PANEL);
+        hud_fill(33, 5, 7, ' ', HC_WHITE, HC_PANEL);
+        hud_text(33, 4, weapon_name[w][0], HC_WHITE, HC_PANEL);
+        hud_text(33, 5, weapon_name[w][1], HC_WHITE, HC_PANEL);
     }
     /* The weapon's level, and its progress to the next one. */
     uint8_t lw = w == WP_ALL ? WP_VULCAN : w;
@@ -568,22 +578,23 @@ void player_hud(bool force)
         uint8_t lv = wp_level[lw];
         if (lv < WP_LEVELS - 1) {
             uint16_t lo = level_xp[lv], hi = level_xp[lv + 1];
-            halves = (uint8_t)((uint16_t)(wp_xp[lw] - lo) * 6 / (hi - lo));
+            halves = (uint8_t)((uint16_t)(wp_xp[lw] - lo) * 8 / (hi - lo));
         }
         shown = (uint8_t)((lw << 4) | (lv << 3) | halves);
     }
     if (shown != shown_level || force) {
         shown_level = shown;
-        hud_fill(33, 5, 7, ' ', HC_WHITE, HC_PANEL);
+        hud_fill(35, 2, 5, ' ', HC_WHITE, HC_PANEL);
+        hud_fill(35, 3, 5, ' ', HC_WHITE, HC_PANEL);
         if (shown != 0xFE) {
             uint8_t lv = wp_level[lw];
             char t[] = "LV1";
             t[2] = (char)('1' + lv);
-            hud_text(33, 5, t, lv ? HC_GREEN : HC_GRAY, HC_PANEL);
+            hud_text(36, 2, t, lv ? HC_GREEN : HC_GRAY, HC_PANEL);
             if (lv >= WP_LEVELS - 1)
-                hud_text(37, 5, "MAX", HC_YELLOW, HC_PANEL);
+                hud_text(36, 3, "MAX", HC_YELLOW, HC_PANEL);
             else
-                hud_bar(37, 5, 3, halves, HC_GREEN);
+                hud_bar(36, 3, 4, halves, HC_GREEN);
         }
     }
     uint8_t g = sword_gauge;
@@ -595,10 +606,16 @@ void player_hud(bool force)
     }
     if (g >= SWORD_GAUGE_MAX && (frame_count & 7) == 0)
         shown_gauge = 0xFF; /* keep the full gauge flashing */
+    /* Lives: "03 x" and a mini ship. */
     if (pl_lives != shown_lives || force) {
         shown_lives = pl_lives;
-        hud_fill(33, 11, 7, ' ', HC_WHITE, HC_PANEL);
-        for (uint8_t i = 0; i < pl_lives && i < 7; i++)
-            hud_fill((uint8_t)(33 + i), 11, 1, 0x1E, HC_CYAN, HC_PANEL);
+        char t[] = "00 x";
+        t[0] = (char)('0' + pl_lives / 10);
+        t[1] = (char)('0' + pl_lives % 10);
+        hud_text(33, 12, t, pl_lives ? HC_WHITE : HC_RED, HC_PANEL);
+        mode5_csprite_t *s = &hspr[HSPR_LIFE];
+        spr_setup(s, XRAM_IMG_MINISHIP, PAL_ADDR(PAL_PLAYER), WH(16, 16), OPT4);
+        s->x_pos_px = 37 * 8 + 2;
+        s->y_pos_px = 12 * 8 - 4;
     }
 }

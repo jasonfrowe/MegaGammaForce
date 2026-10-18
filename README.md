@@ -112,6 +112,7 @@ Every 100,000 points earns an extra life (EXTEND!), up to seven ships.
 | 2 | **Neon Spires**, a city at night | Tall towers to dodge (flying into one is fatal), tanks on the roads, wasps | SPIRE WARDEN |
 | 3 | **Iron Tide**, open ocean and jungle islands | Gunboats, island bunkers | Battleship LEVIATHAN |
 
+On the title screen, left and right choose the stage a game starts on.
 Score, lives and the chain carry from one stage to the next. Clearing
 stage 3 ends the game.
 

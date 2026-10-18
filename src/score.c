@@ -4,6 +4,7 @@
 #include "game.h"
 #include "hud.h"
 #include "score.h"
+#include "sprites.h"
 
 uint8_t score_d[SCORE_DIGITS];
 uint8_t hiscore_d[SCORE_DIGITS] = {0, 0, 5, 0, 0, 0, 0};
@@ -114,8 +115,6 @@ void chain_break(void)
     chain_dirty = true;
 }
 
-static const uint8_t color_hc[4] = {HC_RED, HC_BLUE, HC_YELLOW, HC_GRAY};
-
 void score_hud(bool force)
 {
     if (score_dirty || force) {
@@ -127,11 +126,15 @@ void score_hud(bool force)
         chain_dirty = false;
         hud_text(0, 10, "x", HC_GRAY, HC_PANEL);
         hud_u16(1, 10, chain_level, 2, chain_level ? HC_WHITE : HC_DIM, HC_PANEL);
-        /* Three pips: filled in the set's color as the set builds. */
-        uint8_t fg = color_hc[chain_color];
+        /* Three gems (HUD sprites), lit in the run's color as it builds. */
+        static const uint8_t gem_pal[4] = {PAL_ENEMY_RED, PAL_ENEMY_BLUE, PAL_ENEMY_YELLOW, PAL_ENEMY_GRAY};
         for (uint8_t i = 0; i < 3; i++) {
             bool lit = i < chain_count;
-            hud_fill((uint8_t)(1 + i * 2), 11, 1, lit ? 0xFE : 0xF9, lit ? fg : HC_DIM, HC_PANEL);
+            mode5_csprite_t *s = &hspr[HSPR_GEM + i];
+            spr_setup(s, XRAM_IMG_GEM + (lit ? GEM_FRAME_BYTES : 0), PAL_ADDR(lit ? gem_pal[chain_color] : PAL_ENEMY_GRAY),
+                      WH(8, 8), OPT4);
+            s->x_pos_px = (int16_t)((1 + i * 2) * 8);
+            s->y_pos_px = 11 * 8;
         }
         hud_u16(1, 13, chain_last_bonus, 5, HC_ORANGE, HC_PANEL);
     }

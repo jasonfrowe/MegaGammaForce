@@ -18,6 +18,7 @@ Destroy three enemies of one color in a row to build the chain;
 keep hitting that color to keep it paying, or switch after a full set.
 Extra life every 100,000 points.
 Shoot each boss apart before its core for 100% destruction.
+Left and right on the title screen choose the starting stage.
 Three stages: the Sky Fortress, the Neon Spires and the Iron Tide,
 where the battleship LEVIATHAN waits. Don't fly into the Neon Spires'
 towers. They block most shots and enemy bullets, but missiles and

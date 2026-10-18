@@ -86,6 +86,21 @@
 #define EXPL32_FRAMES 6
 #define EXPL32_FRAME_BYTES 512
 
+#define MINISHIP_W 16
+#define MINISHIP_H 16
+#define MINISHIP_FRAMES 1
+#define MINISHIP_FRAME_BYTES 128
+
+#define GEM_W 8
+#define GEM_H 8
+#define GEM_FRAMES 2
+#define GEM_FRAME_BYTES 32
+
+#define ICONS_W 16
+#define ICONS_H 16
+#define ICONS_FRAMES 10
+#define ICONS_FRAME_BYTES 128
+
 #define PAL_PLAYER 0
 #define PAL_SHOTS 1
 #define PAL_ENEMY_RED 2

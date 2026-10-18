@@ -68,6 +68,7 @@ extern volatile uint8_t first_stage; /* where a new game starts, for testing */
 /* Make stage n current and load its bank, behind a black curtain. */
 void stage_load(uint8_t n);
 bool stage_is_last(void);
+const char *stage_title(uint8_t n);
 void stage_reset(void);
 /* Runs the script for this frame; scroll is the pixels scrolled. */
 void stage_update(uint8_t scroll);

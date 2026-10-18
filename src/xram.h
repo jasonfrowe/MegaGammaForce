@@ -238,6 +238,12 @@ typedef struct
  * shows as many of them as it needs (stage_def_t.gspr_n), up to this. */
 #define GSPR_MAX 16
 
+/* Plane 2 sprite list: HUD graphics, in front of the text panels. */
+#define HSPR_ICON 0 /* the weapon's icon */
+#define HSPR_LIFE 1 /* the ship beside the lives count */
+#define HSPR_GEM 2  /* three chain gems */
+#define HSPR_N 5
+
 /* HUD text grid, 8x8 font on the 320x240 canvas. */
 #define HUD_COLS 40
 #define HUD_ROWS 30
@@ -261,6 +267,7 @@ typedef struct
     mode1_config_t hud_config;
     mode5_csprite_t spr[SPR_COUNT];
     mode5_csprite_t gspr[GSPR_MAX];
+    mode5_csprite_t hspr[HSPR_N];
     mode1_4bpp_data_t hud[HUD_ROWS][HUD_COLS];
 
     /* Loaded from the ROM by CMakeLists.txt. The last PAL_STAGE_N
@@ -280,6 +287,9 @@ typedef struct
     uint8_t img_bullet16[BULLET16_FRAMES][BULLET16_FRAME_BYTES];
     uint8_t img_expl16[EXPL16_FRAMES][EXPL16_FRAME_BYTES];
     uint8_t img_expl32[EXPL32_FRAMES][EXPL32_FRAME_BYTES];
+    uint8_t img_miniship[MINISHIP_FRAMES][MINISHIP_FRAME_BYTES];
+    uint8_t img_gem[GEM_FRAMES][GEM_FRAME_BYTES];
+    uint8_t img_icons[ICONS_FRAMES][ICONS_FRAME_BYTES];
     uint8_t sfx_data[SFX_DATA_MAX];
     /* XRAM_BANK, the rest of XRAM, follows: the current stage's own art,
      * loaded from the ROM when the stage starts (see stage.c). */
@@ -295,6 +305,7 @@ _Static_assert((XRAM_OPL & 0xFF) == 0, "The OPL2 registers must start on a page 
 #define XRAM_HUD_CONFIG offsetof(xram_layout_t, hud_config)
 #define XRAM_SPR offsetof(xram_layout_t, spr)
 #define XRAM_GSPR offsetof(xram_layout_t, gspr)
+#define XRAM_HSPR offsetof(xram_layout_t, hspr)
 #define XRAM_HUD offsetof(xram_layout_t, hud)
 #define XRAM_PALETTES offsetof(xram_layout_t, palettes)
 #define XRAM_IMG_PLAYER offsetof(xram_layout_t, img_player)
@@ -311,6 +322,9 @@ _Static_assert((XRAM_OPL & 0xFF) == 0, "The OPL2 registers must start on a page 
 #define XRAM_IMG_BULLET16 offsetof(xram_layout_t, img_bullet16)
 #define XRAM_IMG_EXPL16 offsetof(xram_layout_t, img_expl16)
 #define XRAM_IMG_EXPL32 offsetof(xram_layout_t, img_expl32)
+#define XRAM_IMG_MINISHIP offsetof(xram_layout_t, img_miniship)
+#define XRAM_IMG_GEM offsetof(xram_layout_t, img_gem)
+#define XRAM_IMG_ICONS offsetof(xram_layout_t, img_icons)
 #define XRAM_SFX_DATA offsetof(xram_layout_t, sfx_data)
 #define XRAM_BANK sizeof(xram_layout_t)
 /* The top page of XRAM is left free. */

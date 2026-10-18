@@ -32,6 +32,7 @@ import numpy as np  # noqa: E402
 
 import enemies  # noqa: E402
 import fx  # noqa: E402
+import hud  # noqa: E402
 import palettes  # noqa: E402
 import ships  # noqa: E402
 import stages  # noqa: E402
@@ -149,6 +150,9 @@ def main():
         ("bullet16", palettes.BULLET_PINK, fx.bullet16_frames(), {}),
         ("expl16", palettes.EXPLOSION, fx.explosion_frames(16, 3), {}),
         ("expl32", palettes.EXPLOSION, fx.explosion_frames(32, 5), {}),
+        ("miniship", palettes.PLAYER, hud.mini_ship(), {}),
+        ("gem", palettes.ENEMY_RED, hud.gems(), {}),
+        ("icons", palettes.SHOTS, hud.weapon_icons(), {}),
     ]
 
     h = [HEADER, "#ifndef GEN_ASSETS_H", "#define GEN_ASSETS_H", ""]

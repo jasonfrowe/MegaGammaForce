@@ -64,11 +64,21 @@ static void draw_labels(void)
     hud_text(0, 12, "BONUS", HC_GRAY, HC_PANEL);
     hud_text(0, 26, "STAGE", HC_GRAY, HC_PANEL);
     hud_u16(0, 27, (uint16_t)(stage_num + 1), 2, HC_WHITE, HC_PANEL);
-    hud_text(33, 2, "WEAPON", HC_CYAN, HC_PANEL);
     hud_text(33, 6, "SWORD", HC_CYAN, HC_PANEL);
     hud_text(33, 10, "LIVES", HC_CYAN, HC_PANEL);
     score_hud(true);
     player_hud(true);
+}
+
+/* The title's stage select: left and right choose where a game starts. */
+static void title_stage(void)
+{
+    char t[] = "<  STAGE 1  >";
+    t[9] = (char)('1' + first_stage);
+    hud_clear_row(16);
+    hud_center(16, t, HC_CYAN);
+    hud_clear_row(17);
+    hud_center(17, stage_title(first_stage), HC_WHITE);
 }
 
 static void enter_title(void)
@@ -89,10 +99,11 @@ static void enter_title(void)
     }
     hud_center(13, "THE GAMMA CORE RISES.", HC_GRAY);
     hud_center(14, "ONE SHIP. NO RETREAT.", HC_GRAY);
-    hud_center(20, "Z VULCAN  X HOMING", HC_GRAY);
-    hud_center(21, "C SPREAD  SPACE SWORD", HC_GRAY);
-    hud_center(22, "Z+X+C HYPER SWORD", HC_GRAY);
-    hud_center(23, "COMBINE Z X C FOR MORE", HC_GRAY);
+    title_stage();
+    hud_center(22, "Z VULCAN  X HOMING", HC_GRAY);
+    hud_center(23, "C SPREAD  SPACE SWORD", HC_GRAY);
+    hud_center(24, "Z+X+C HYPER SWORD", HC_GRAY);
+    hud_center(25, "COMBINE Z X C FOR MORE", HC_GRAY);
     hud_text(0, 5, "HISCORE", HC_CYAN, HC_PANEL);
     hud_digits(0, 6, hiscore_d, SCORE_DIGITS, HC_YELLOW);
     music_play("ROM:Title.vgm");
@@ -234,9 +245,14 @@ int main(void)
         case GS_TITLE:
             bg_update();
             gtimer++;
-            hud_center(17, (gtimer & 32) ? "PRESS START" : "           ", HC_WHITE);
-            if (in_pressed & (IN_START | IN_FIRE))
+            hud_center(19, (gtimer & 32) ? "PRESS START" : "           ", HC_YELLOW);
+            if (in_pressed & (IN_LEFT | IN_RIGHT)) {
+                first_stage = (uint8_t)((first_stage + (in_pressed & IN_LEFT ? STAGE_COUNT - 1 : 1)) % STAGE_COUNT);
+                title_stage();
+                sfx_player(SFX_LOCK, SFX_PRI_EVENT);
+            } else if (in_pressed & (IN_START | IN_FIRE)) {
                 enter_play();
+            }
             break;
         case GS_PLAY:
             play_frame();

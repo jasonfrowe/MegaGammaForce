@@ -233,6 +233,11 @@ void stage_load(uint8_t n)
     bg_load();
 }
 
+const char *stage_title(uint8_t n)
+{
+    return stage_defs[n].title;
+}
+
 bool stage_is_last(void)
 {
     return stage_num + 1 >= STAGE_COUNT;
