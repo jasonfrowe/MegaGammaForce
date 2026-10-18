@@ -23,9 +23,11 @@ import crawler
 import desert
 import hud
 import logo
+import orbit
 import ocean
 import palettes
 import ship
+import station
 import tiles
 import waves
 import wyrm
@@ -297,5 +299,42 @@ def stage5():
     }
 
 
+def stage6():
+    gt, gmap = orbit.stage6_ground()
+    sky_speed = 6
+    # Satellites from where the ground's limb is about to come into view.
+    sat_from = (1300 * sky_speed // 4) // 16
+    st, smap, solid = orbit.stage6_sky(sky_stage_rows(sky_speed), sat_from)
+    ht, hids, hmap = station.hull()
+    pal = {"TILES": orbit.ORBIT, "SKY": orbit.ORBIT_SKY, "LAYER": station.STATION, "BOSS": station.BOSS6,
+           "BOSS_WRECK": station.BOSS6_WRECK}
+    defines = map_defines("MAP", gmap, LOOP_ROWS_DEFAULT)
+    defines.update({"TILES_N": len(gt), "SKY_ROWS": smap.shape[0], "SKY_SPEED": sky_speed, "SKY_TILES_N": len(st),
+                    "HULL_TILES_N": len(ht), "FADE_FIRST": orbit.FADE_FIRST, "FADE_N": orbit.FADE_N})
+    hull_defines(defines, station, hids, ("crater", "crater_big0"))
+    return {
+        "n": 6,
+        "palettes": pal,
+        "items": [
+            {"name": "tiles", "frames": gt, "pal": orbit.ORBIT},
+            {"name": "map", "data": gmap.astype(np.uint8).tobytes()},
+            {"name": "sky_tiles", "frames": st, "pal": orbit.ORBIT_SKY},
+            {"name": "sky_map", "data": smap.astype(np.uint8).tobytes()},
+            {"name": "hull_tiles", "boss": True, "frames": ht, "pal": station.STATION},
+            {"name": "hull_map", "boss": True, "data": hmap.astype(np.uint8).tobytes()},
+            {"name": "boss_core", "boss": True, "frames": station.core(), "pal": station.BOSS6},
+            {"name": "boss_sat", "boss": True, "frames": station.satellite(), "pal": station.BOSS6},
+            {"name": "boss_turret", "boss": True, "frames": boss.turret(), "pal": station.BOSS6},
+            {"name": "portrait", "boss": True, "frames": hud.portrait(station.portrait_art()), "pal": station.BOSS6},
+        ],
+        "defines": defines,
+        "waves": waves.S6_WAVES,
+        "ground": [],
+        "data_h": solid_table(6, "sky", solid, len(st)),
+        "previews": {"ground": (tilemap_image(gt, gmap), orbit.ORBIT), "sky": (tilemap_image(st, smap), orbit.ORBIT_SKY),
+                     "hull": (tilemap_image(ht, hmap), station.STATION)},
+    }
+
+
 def all_stages():
-    return [stage1(), stage2(), stage3(), stage4(), stage5()]
+    return [stage1(), stage2(), stage3(), stage4(), stage5(), stage6()]

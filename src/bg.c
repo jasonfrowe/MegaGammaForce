@@ -44,6 +44,14 @@ static bool pal_dirty;
 static uint16_t shade[CYCLED][3]; /* entries 2-4 */
 static uint16_t lamp[CYCLED][2];  /* entries 13-14 */
 
+/* Fading ground colors (stage_def_t's fade): as captured, and how bright
+ * they are now in sixteenths. */
+#define FADE_MAX 8
+#define FADE_MIN 5
+static uint16_t fade_base[FADE_MAX];
+static uint8_t fade_level;
+static bool fade_dirty;
+
 #define LAMP_RED_DIM ((uint16_t)(COLOR_FROM_RGB8(80, 10, 20) | COLOR_ALPHA_MASK))
 #define LAMP_GREEN_DIM ((uint16_t)(COLOR_FROM_RGB8(30, 90, 70) | COLOR_ALPHA_MASK))
 
@@ -93,6 +101,7 @@ void bg_capture_palettes(void)
         lamp[p][0] = xram0_peek16(base + 13 * 2);
         lamp[p][1] = xram0_peek16(base + 14 * 2);
     }
+    xram0_read(fade_base, PAL_ADDR(PAL_TILES) + stage->fade_first * 2, stage->fade_n * 2);
 }
 
 void bg_load(void)
@@ -135,6 +144,8 @@ void bg_reset(void)
     speed = 128;
     sky_top = (int16_t)(stage->sky_rows * TILE - PF_H);
     sky_frac = 0;
+    fade_level = 16;
+    fade_dirty = stage->fade_n != 0; /* undo the last attempt's fade */
 }
 
 void bg_set_speed(uint8_t speed_q8)
@@ -171,6 +182,16 @@ uint8_t bg_update(void)
         cycle_timer = 0;
         cycle_phase = (uint8_t)((cycle_phase + 1) & 3);
         pal_dirty = true;
+        const stage_def_t *s = stage;
+        if (s->fade_n && bg_distance > s->fade_from) {
+            uint8_t lv = FADE_MIN;
+            if (bg_distance < s->fade_to)
+                lv = (uint8_t)(16 - (bg_distance - s->fade_from) * (16 - FADE_MIN) / (s->fade_to - s->fade_from));
+            if (lv != fade_level) {
+                fade_level = lv;
+                fade_dirty = true;
+            }
+        }
     }
     return px;
 }
@@ -223,6 +244,20 @@ void bg_commit(void)
     if (layer_dirty && sky_on) {
         layer_dirty = false;
         xram0_poke16(XRAM_LAYER_CONFIG + offsetof(mode2_config_t, y_pos_px), (uint16_t)(-sky_top));
+    }
+    if (fade_dirty) {
+        fade_dirty = false;
+        RIA.addr0 = PAL_ADDR(PAL_TILES) + stage->fade_first * 2;
+        RIA.step0 = 1;
+        for (uint8_t i = 0; i < stage->fade_n; i++) {
+            uint16_t c = fade_base[i];
+            uint16_t r = (uint16_t)(((c & 31) * fade_level) >> 4);
+            uint16_t g = (uint16_t)((((c >> 6) & 31) * fade_level) >> 4);
+            uint16_t b = (uint16_t)(((c >> 11) * fade_level) >> 4);
+            c = (uint16_t)((b << 11) | (g << 6) | r | COLOR_ALPHA_MASK);
+            RIA.rw0 = (uint8_t)c;
+            RIA.rw0 = (uint8_t)(c >> 8);
+        }
     }
     if (pal_dirty) {
         pal_dirty = false;

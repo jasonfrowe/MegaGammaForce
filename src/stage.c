@@ -22,6 +22,8 @@
 #include "gen/stage4_data.h"
 #include "gen/stage5.h"
 #include "gen/stage5_data.h"
+#include "gen/stage6.h"
+#include "gen/stage6_data.h"
 
 #define N(a) ((uint8_t)(sizeof(a) / sizeof((a)[0])))
 
@@ -125,6 +127,32 @@ static const stage_def_t stage_defs[] = {
         .sky_speed = S5_SKY_SPEED,
         .sky_solid = s5_sky_solid,
         .boss = &boss5,
+    },
+    {
+        .bank = "ROM:stage6.bin",
+        .boss_bank = "ROM:boss6.bin",
+        .name = "STAGE 6",
+        .title = "ASCENT",
+        .warning = "HALO STATION IN ORBIT",
+        .music = "ROM:Stage6.vgm",
+        .boss_music = "ROM:Boss6.vgm",
+        .speed = 160,
+        .gspr_n = 8,
+        .tiles = S6_TILES,
+        .map = S6_MAP,
+        .map_rows = S6_MAP_ROWS,
+        .loop_rows = S6_MAP_LOOP_ROWS,
+        .sky_tiles = S6_SKY_TILES,
+        .sky_map = S6_SKY_MAP,
+        .sky_rows = S6_SKY_ROWS,
+        .sky_speed = S6_SKY_SPEED,
+        .sky_solid = s6_sky_solid,
+        /* The ocean and clouds darken as the ship climbs, until the limb. */
+        .fade_first = S6_FADE_FIRST,
+        .fade_n = S6_FADE_N,
+        .fade_from = 200,
+        .fade_to = 1600,
+        .boss = &boss6,
     },
 };
 _Static_assert(N(stage_defs) == STAGE_COUNT, "a stage in the art has no stage_defs entry, or the other way");

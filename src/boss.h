@@ -19,6 +19,7 @@ typedef struct boss_def boss_def_t;
 
 #define BOSS_PARTS_MAX SPR_BOSS_N
 #define NO_PARENT 0xFF
+#define NO_SOCKET 0xFF
 
 enum
 {
@@ -100,7 +101,8 @@ typedef struct
 {
     uint16_t map, tiles; /* XRAM addresses */
     uint8_t w, h;        /* in tiles */
-    const uint8_t (*socket)[2]; /* each part's top left tile: column, row */
+    const uint8_t (*socket)[2]; /* each part's top left tile: column, row,
+                                 * or NO_SOCKET for one not on the hull */
     uint8_t crater;      /* tile written over a one-tile part */
     uint8_t crater_big;  /* the first of four, over a larger part */
 } hull_t;

@@ -273,5 +273,57 @@
     "exported_vgm": true,
     "date": "2026-10-18",
     "command": ".venv/bin/python tools/generate_music.py --track boss5 --seed 505 --style 11 --vol 0,0,0,0,0,0,0 --patch 3F,07,A6,32,FD,FE,FF --prog 2,3 --export-vgm"
+  },
+  "Stage6": {
+    "seed": 606,
+    "style": 13,
+    "style_name": "fusion",
+    "vol": "0,0,0,0,0,0,0",
+    "patch": "41,84,A5,32,FD,FE,FF",
+    "roles": "lead,arp,bass,pad,kick,snare,hat",
+    "mood": {
+      "key_root": 2,
+      "scale": "minor",
+      "bpm": 156,
+      "intensity": 0.85,
+      "target_seconds": 150.0,
+      "lead_octave": 5,
+      "arp_octave": 4,
+      "bass_octave": 2,
+      "use_drums": true,
+      "meter": "4/4",
+      "form": "song"
+    },
+    "prog": "0,2",
+    "bpm": null,
+    "exported_vgm": true,
+    "date": "2026-10-18",
+    "command": ".venv/bin/python tools/generate_music.py --track stage6 --seed 606 --style 13 --vol 0,0,0,0,0,0,0 --patch 41,84,A5,32,FD,FE,FF --prog 0,2 --export-vgm"
+  },
+  "Boss6": {
+    "seed": 606,
+    "style": 9,
+    "style_name": "silvergun",
+    "vol": "0,0,0,0,0,0,0",
+    "patch": "44,2C,3A,31,2F,FE,37",
+    "roles": "lead,arp,bass,pad,kick,snare,hat",
+    "mood": {
+      "key_root": 9,
+      "scale": "minor",
+      "bpm": 176,
+      "intensity": 0.95,
+      "target_seconds": 120.0,
+      "lead_octave": 5,
+      "arp_octave": 4,
+      "bass_octave": 2,
+      "use_drums": true,
+      "meter": "4/4",
+      "form": "song"
+    },
+    "prog": "6,1",
+    "bpm": null,
+    "exported_vgm": true,
+    "date": "2026-10-18",
+    "command": ".venv/bin/python tools/generate_music.py --track boss6 --seed 606 --style 9 --vol 0,0,0,0,0,0,0 --patch 44,2C,3A,31,2F,FE,37 --prog 6,1 --export-vgm"
   }
 }

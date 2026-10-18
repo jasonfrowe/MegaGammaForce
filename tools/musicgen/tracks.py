@@ -120,6 +120,18 @@ TRACKS: list = [
         mood=MoodPreset(key_root=6, scale="minor", bpm=172, intensity=0.95, target_seconds=120.0, lead_octave=5),
     ),
     TrackSpec(
+        resource="Stage6",
+        description="Stage 6, Ascent",
+        aliases=["stage6", "level6"],
+        mood=MoodPreset(key_root=2, scale="minor", bpm=156, intensity=0.85, target_seconds=150.0, lead_octave=5),
+    ),
+    TrackSpec(
+        resource="Boss6",
+        description="Boss battle, HALO STATION",
+        aliases=["boss6"],
+        mood=MoodPreset(key_root=9, scale="minor", bpm=176, intensity=0.95, target_seconds=120.0, lead_octave=5),
+    ),
+    TrackSpec(
         resource="Gameover",
         description="Game over",
         aliases=["gameover"],

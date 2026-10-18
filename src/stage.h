@@ -60,6 +60,10 @@ typedef struct
     uint16_t sky_tiles, sky_map, sky_rows;
     uint8_t sky_speed;
     const uint8_t *sky_solid; /* a bit per tile: solid towers, or 0 for none */
+    /* Ground palette entries fade_first.. (fade_n of them, 0 for none) dim
+     * toward black as the scroll goes from fade_from to fade_to pixels. */
+    uint8_t fade_first, fade_n;
+    uint16_t fade_from, fade_to;
     const boss_def_t *boss;
 } stage_def_t;
 

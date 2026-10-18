@@ -240,7 +240,7 @@ static void destroy_part(uint8_t i, bool scored)
         weapon_xp((uint8_t)(2 + (p->weight >> 1)));
     }
     const hull_t *h = def->hull;
-    if (h) {
+    if (h && h->socket[i][0] != NO_SOCKET) {
         /* A crater in the hull where it stood. */
         uint16_t at = h->map + h->socket[i][1] * h->w + h->socket[i][0];
         if (p->w >= 32) {
@@ -367,7 +367,9 @@ void boss_update(void)
             boss_y += 20;
             if ((state_t & 7) == 0) {
                 uint8_t c = (uint8_t)(1 + rng8() % (h->w - 2)), r = (uint8_t)(rng8() % h->h);
-                xram0_poke8(h->map + r * h->w + c, h->crater);
+                uint16_t at = h->map + r * h->w + c;
+                if (xram0_peek8(at)) /* not where the hull has a hole */
+                    xram0_poke8(at, h->crater);
                 fx_explode((boss_x >> 4) - h->w * 8 + c * 16 + 8, (boss_y >> 4) - h->h * 8 + r * 16 + 8, 1);
             }
         }
