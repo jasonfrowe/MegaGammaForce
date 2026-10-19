@@ -2,8 +2,8 @@
 
 A vertical shoot-'em-up for the [Picocomputer 6502](https://picocomputer.github.io/)
 in the spirit of *Radiant Silvergun*: three weapons that combine into
-seven attacks, a color chain, and three stages, each ending in a boss you
-take apart piece by piece.
+seven attacks, a color chain, weapons that level up, and nine stages, each
+ending in a boss you take apart piece by piece, plus a boss rush mode.
 Written in C with [llvm-mos](https://llvm-mos.org/).
 
 <!-- rp6502
@@ -74,15 +74,16 @@ numbers; the table is in `src/shots.c` and `src/player.c`.
 As in Radiant Silvergun, each gun and the Radiant Sword gains experience
 from what it destroys: a point or two for small fry, more for gunships,
 gunboats and boss parts. The kill goes to the weapon that fired the shot.
-At 15, 40, 80 and 150 experience the weapon goes up a level, to LV5, and
+At 50, 150, 300 and 500 experience the weapon goes up a level, to LV5, and
 LEVEL UP! flashes in the playfield. The HUD shows the level and the
 progress to the next under the weapon's name.
 
-Every level fires faster, up to twice the LV1 rate at LV5. On top of that,
-Spread fires seven orbs from LV3, Homing Missiles lock and sweep faster,
-and the sword also hits harder. The Vulcan, already the strongest, gains
-experience at half the rate, so the weaker weapons are the ones worth
-using to level up. Levels carry over between stages and reset with a new
+Most weapons fire faster with every level, up to twice the LV1 rate at
+LV5, and the sword also hits harder. Homing Missiles lock and sweep
+faster. The Spread fires seven orbs from LV3 and hits harder from LV4, but
+its rate only climbs a little. The Vulcan, already the strongest, gains
+experience at half the rate and speeds up only at LV4, so the weaker
+weapons are the ones worth using to level up. Levels carry over between stages and reset with a new
 game.
 
 ### The chain
@@ -281,6 +282,7 @@ results.
 | `tools/mkbank.py` | Run by the build: packs `images/stage<N>/` into `ROM:stage<N>.bin` and `ROM:boss<N>.bin` |
 | `tools/gen_sfx.py` | OPL2 sound effects in `music/sfx.bin`, `src/gen/sfx_ids.h` |
 | `tools/generate_music.py` | OPL2 music via Furnace (from RPDemo's composer): `music/fur_levels/*.fur` and `music/*.vgm` |
+| `tools/export_vgm.py` | Exports hand-edited `music/fur_levels/*.fur` to `music/*.vgm` with Furnace's headless exporter |
 | `tools/gen_tables.py` | Trig tables in `src/gen/tables.c` |
 | `tools/png2bin.py` | Run by the build: PNG sheets to VGA image data |
 
@@ -288,6 +290,26 @@ The PNG sheets are indexed 16-color images with frames side by side, so
 they open directly in Aseprite. Edit and save one, rebuild, and your
 change is in the game; a stage's sheets must keep their frame size and
 count. Running `gen_art.py` again overwrites them.
+
+### The soundtrack
+
+The music was generated first, then remastered by hand in Furnace. The
+edited projects are `music/fur_levels/*.fur`, one per track
+(`Stage1.fur` becomes `music/Stage1.vgm`). To change a track, edit its
+`.fur` in Furnace, then export everything and rebuild:
+
+```sh
+python3 tools/export_vgm.py              # every .fur
+python3 tools/export_vgm.py Boss Title   # or just these
+cmake --build --preset llvm-mos/Release
+```
+
+The remastered tracks no longer match `music/music_manifest.json`.
+Running `generate_music.py` without `--scratch` writes over them, so use
+it only for new material. The rest of this section describes how the
+original tracks were generated.
+
+#### The generator
 
 The title, stage 1 and stage 1 boss music use style 9, **silvergun**, written for this game in
 `tools/musicgen/silvergun.py`: orchestral-epic instead of RPDemo's
@@ -346,8 +368,8 @@ and the choice is recorded in the manifest:
 #### Trying out new music
 
 The `.vgm` files in `music/` are what the game plays. The build packs
-`music/Title.vgm`, `Stage1.vgm` and `Boss.vgm` into the ROM as they are,
-so nothing else needs converting. The `.fur` files are only for editing
+every track's `music/<Track>.vgm` into the ROM as it is, so nothing else
+needs converting. The `.fur` files are only for editing
 in Furnace.
 
 Add `--scratch` to try ideas without touching the game's tracks. Takes go
