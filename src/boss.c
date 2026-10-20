@@ -23,7 +23,7 @@ enum
     BS_DONE,
 };
 
-uint16_t boss_t;
+uint16_t boss_t, boss_fight_t;
 int16_t boss_x, boss_y;
 int16_t part_px[BOSS_PARTS_MAX], part_py[BOSS_PARTS_MAX];
 uint16_t part_hp[BOSS_PARTS_MAX];
@@ -97,7 +97,7 @@ static void script_attack(void)
 static void script_fight(void)
 {
     const motion_t *m = def->motion;
-    uint16_t t = boss_t;
+    uint16_t t = boss_fight_t;
     boss_x = Q4(PF_W / 2) + (int16_t)(((int16_t)SIN8((uint8_t)(t >> m->rate_x)) * m->amp_x) >> 3);
     boss_y = Q4(m->y) + (int16_t)(((int16_t)SIN8((uint8_t)(t >> m->rate_y)) * m->amp_y) >> 3);
     /* Turrets track the player. */
@@ -172,7 +172,7 @@ void boss_start(const boss_def_t *d)
 {
     def = d;
     state = BS_ENTER;
-    boss_t = state_t = 0;
+    boss_t = boss_fight_t = state_t = 0;
     boss_x = Q4(PF_W / 2);
     boss_y = Q4(-60);
     boss_destruction = 0;
@@ -338,9 +338,11 @@ void boss_update(void)
         if (def->enter ? def->enter() : script_enter()) {
             state = BS_FIGHT;
             state_t = 0;
+            boss_fight_t = 0xFFFF; /* 0 on the first fight frame */
         }
         break;
     case BS_FIGHT:
+        boss_fight_t++;
         if (def->fight)
             def->fight();
         else

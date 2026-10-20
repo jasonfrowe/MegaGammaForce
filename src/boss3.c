@@ -202,7 +202,7 @@ static void fight(void)
     /* Sails on, slowly, until the reactor is in reach; sways a little. */
     if (boss_y < FINAL_Y)
         boss_y += 1;
-    boss_x = Q4(PF_W / 2) + (int16_t)(((int16_t)SIN8((uint8_t)(boss_t >> 2)) * 6) >> 3);
+    boss_x = Q4(PF_W / 2) + (int16_t)(((int16_t)SIN8((uint8_t)(boss_fight_t >> 2)) * 6) >> 3);
     attack();
 }
 

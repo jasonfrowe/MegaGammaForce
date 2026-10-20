@@ -140,6 +140,8 @@ struct boss_def
 
 /* Shared with the boss scripts. */
 extern uint16_t boss_t;           /* frames since the boss appeared */
+extern uint16_t boss_fight_t;     /* frames since the fight began: time the sway
+                                   * with this, so it starts where the entry ends */
 extern int16_t boss_x, boss_y;    /* Q4 center, game space */
 extern int16_t part_px[BOSS_PARTS_MAX], part_py[BOSS_PARTS_MAX]; /* game pixels */
 extern uint16_t part_hp[BOSS_PARTS_MAX];

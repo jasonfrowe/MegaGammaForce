@@ -100,7 +100,7 @@ static void attack(void)
 
 static void fight(void)
 {
-    uint16_t t = boss_t;
+    uint16_t t = boss_fight_t;
     boss_x = Q4(PF_W / 2) + (int16_t)(((int16_t)SIN8((uint8_t)(t >> 1)) * 20) >> 3);
     boss_y = Q4(66) + (int16_t)(((int16_t)SIN8((uint8_t)(t >> 2)) * 6) >> 3);
     attack();
