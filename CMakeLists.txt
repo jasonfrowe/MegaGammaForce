@@ -4,13 +4,8 @@ include(${CMAKE_CURRENT_LIST_DIR}/tools/rp6502.cmake)
 
 project(MegaGammaForce C CXX ASM)
 
-# Asset tools run in the project's .venv (pip install -r requirements.txt).
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.venv/bin/python)
-    set(ART_PYTHON ${CMAKE_CURRENT_SOURCE_DIR}/.venv/bin/python)
-else()
-    find_package(Python3 REQUIRED COMPONENTS Interpreter)
-    set(ART_PYTHON ${Python3_EXECUTABLE})
-endif()
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+set(ART_PYTHON ${Python3_EXECUTABLE})
 
 add_executable(MegaGammaForce)
 rp6502_map(MegaGammaForce src/xram.h "XRAM_.*" "XRAM_IMG_.*|XRAM_SFX_DATA|XRAM_KEYBOARD|XRAM_GAMEPAD|XRAM_HUD|XRAM_BANK.*")

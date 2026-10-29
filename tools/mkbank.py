@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pack one of a stage's ROM files, from what gen_art.py wrote.
+"""Pack one of a stage's ROM files from its JSON manifest.
 
 stage<N>.bin is the stage's TILES and SKY palettes, then its script,
 ground and sky; boss<N>.bin is the LAYER, BOSS and BOSS_WRECK palettes,
@@ -39,7 +39,7 @@ def main():
             label = it["bin"]
         if len(data) != it["size"]:
             sys.exit(f"{label}: {len(data)} bytes, but the game expects {it['size']} "
-                     f"(an edited sheet must keep its frame size and count; run tools/gen_art.py to change them)")
+                     f"(an edited sheet must keep its frame size and count)")
         out += data
     with open(dst, "wb") as f:
         f.write(out)
