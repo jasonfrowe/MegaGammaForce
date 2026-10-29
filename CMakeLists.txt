@@ -17,7 +17,7 @@ function(mgf_sheet name w h)
         OUTPUT ${out}
         COMMAND ${ART_PYTHON} ${CMAKE_CURRENT_SOURCE_DIR}/tools/png2bin.py
             ${CMAKE_CURRENT_SOURCE_DIR}/images/${name}.png ${out} ${w} ${h}
-        DEPENDS tools/png2bin.py images/${name}.png
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tools/png2bin.py ${CMAKE_CURRENT_SOURCE_DIR}/images/${name}.png
         VERBATIM
     )
     string(TOUPPER ${name} up)
@@ -60,7 +60,7 @@ function(mgf_bank n kind)
         OUTPUT ${out}
         COMMAND ${ART_PYTHON} ${CMAKE_CURRENT_SOURCE_DIR}/tools/mkbank.py
             ${CMAKE_CURRENT_SOURCE_DIR}/images/stage${n}/${kind}.json ${out}
-        DEPENDS tools/mkbank.py tools/png2bin.py ${deps}
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tools/mkbank.py ${CMAKE_CURRENT_SOURCE_DIR}/tools/png2bin.py ${deps}
         VERBATIM
     )
     rp6502_asset(MegaGammaForce ${kind}${n}.bin ${out})
