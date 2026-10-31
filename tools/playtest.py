@@ -93,7 +93,7 @@ def main():
     text = re.sub(r"\{(\w+)(?:\+(\d+))?\}", sub, text)
     with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as f:
         f.write(text)
-    cmd = [str(EMU), str(ROM), "--seed", args.seed, "--mute", "--script", f.name]
+    cmd = [str(EMU), str(ROM), "--memseed", args.seed, "--mute", "--script", f.name]
     if args.phi2:
         cmd += ["--phi2", args.phi2]
     r = subprocess.run(cmd)
