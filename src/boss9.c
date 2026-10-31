@@ -33,15 +33,15 @@ enum
 #define IMG(name) (XRAM_BOSS + B9_##name)
 #define AT(name) S9_##name##_OX, S9_##name##_OY
 #define TUR(n) {AT(TUR##n), 16, 16, 7, 7, 80, 4, IMG(BOSS_TURRET), 0, PK_TURRET, NO_PARENT, 1000}
-#define PRISM {0, 0, 32, 32, 10, 10, 120, 6, IMG(BOSS_PRISM), 0, PK_SPRITE, NO_PARENT, 2500}
+#define PRISM {0, 0, 32, 32, 10, 10, 80, 6, IMG(BOSS_PRISM), 0, PK_SPRITE, NO_PARENT, 2500}
 #define CANNON(n) {AT(n), 32, 32, 12, 12, 220, 12, IMG(BOSS_CANNON), 0, PK_SPRITE, NO_PARENT, 4000}
 
 static const part_t parts[BP_N] = {
     TUR(0), TUR(1), TUR(2), TUR(3),
     PRISM, PRISM, PRISM, PRISM,
     CANNON(CANNON_L), CANNON(CANNON_R),
-    [BP_EMITTER] = {AT(EMITTER), 32, 32, 11, 13, 300, 14, IMG(BOSS_EMITTER), 0, PK_SPRITE, NO_PARENT, 5000},
-    [BP_CORE] = {AT(CORE), 32, 32, 12, 12, 1000, 26, IMG(BOSS_CORE), 0, PK_SPRITE, NO_PARENT, 20000},
+    [BP_EMITTER] = {AT(EMITTER), 32, 32, 11, 13, 220, 14, IMG(BOSS_EMITTER), 0, PK_SPRITE, NO_PARENT, 5000},
+    [BP_CORE] = {AT(CORE), 32, 32, 12, 12, 700, 26, IMG(BOSS_CORE), 0, PK_SPRITE, NO_PARENT, 20000},
 };
 
 #define SOCK(name) {S9_##name##_COL, S9_##name##_ROW}
@@ -97,7 +97,7 @@ static const pattern_t patterns[] = {
     {BP_CORE, PT_SPIRAL, BK_PINK, 20, 9, 0, 2, 13, WHEN_DEAD, BP_EMITTER},
     /* ...and hurt, it burns. */
     {BP_CORE, PT_SPIRAL, BK_BLUE, 22, 6, 3, 3, 7, WHEN_ANGRY, 0},
-    {BP_CORE, PT_RING, BK_PINK, 22, 70, 35, 18, 5, WHEN_LATE, 0},
+    {BP_CORE, PT_RING, BK_PINK, 22, 70, 35, 12, 7, WHEN_LATE, 0},
 };
 
 static void frame(uint8_t i, mode5_csprite_t *s)

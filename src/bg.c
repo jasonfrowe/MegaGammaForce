@@ -57,9 +57,9 @@ static bool fade_dirty;
  * lies dark, a filament, then flickers faster and faster in warning, then
  * erupts, then fades; B half a cycle behind A, so they take turns.
  */
-#define FLARE_WARN 144
-#define FLARE_ERUPT 208
-#define FLARE_FADE 248
+#define FLARE_WARN 136
+#define FLARE_ERUPT 216
+#define FLARE_FADE 244
 enum
 {
     FL_DARK,

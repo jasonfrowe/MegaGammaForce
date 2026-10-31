@@ -4,19 +4,19 @@
   {
    "bin": "images/stage9/script.bin",
    "offset": 0,
-   "size": 290
+   "size": 246
   },
   {
    "png": "images/stage9/tiles.png",
    "w": 16,
    "h": 16,
    "frames": 46,
-   "offset": 290,
+   "offset": 246,
    "size": 5888
   },
   {
    "bin": "images/stage9/map.bin",
-   "offset": 6178,
+   "offset": 6134,
    "size": 2496
   },
   {
@@ -24,14 +24,14 @@
    "w": 16,
    "h": 16,
    "frames": 55,
-   "offset": 8674,
+   "offset": 8630,
    "size": 7040
   },
   {
    "bin": "images/stage9/sky_map.bin",
-   "offset": 15714,
+   "offset": 15670,
    "size": 3504
   }
  ],
- "size": 19218
+ "size": 19174
 }
