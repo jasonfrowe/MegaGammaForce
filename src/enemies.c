@@ -31,7 +31,7 @@ static const etype_t etypes[] = {
     [ET_TURRET] = {8, 300, 7, 7, 16, 16, XRAM_IMG_ENEMY16 + ENEMY16_TURRET * ENEMY16_FRAME_BYTES, ENEMY16_FRAME_BYTES, 1},
     [ET_TANK] = {10, 400, 7, 6, 16, 16, XRAM_IMG_ENEMY16 + ENEMY16_TANK * ENEMY16_FRAME_BYTES, ENEMY16_FRAME_BYTES, 1},
     [ET_WASP] = {3, 150, 6, 6, 16, 16, XRAM_IMG_ENEMY16 + ENEMY16_WASP * ENEMY16_FRAME_BYTES, ENEMY16_FRAME_BYTES, 2},
-    [ET_GUNBOAT] = {40, 1500, 8, 14, 32, 32, XRAM_IMG_ENEMY32 + ENEMY32_GUNBOAT * ENEMY32_FRAME_BYTES, ENEMY32_FRAME_BYTES,
+    [ET_GUNBOAT] = {24, 1200, 8, 14, 32, 32, XRAM_IMG_ENEMY32 + ENEMY32_GUNBOAT * ENEMY32_FRAME_BYTES, ENEMY32_FRAME_BYTES,
                     2},
     /* Stage art: only stage 4 has trains, so its file holds them. */
     [ET_TRAIN] = {24, 800, 7, 14, 32, 32, XRAM_BANK + S4_TRAIN, S4_TRAIN_FRAME_BYTES, 1},
@@ -388,14 +388,14 @@ static void think(uint8_t i)
         break;
     case ET_GUNBOAT:
         /* Sails up against the scroll; aimed fans and a pink ring. */
-        e_vy[i] = -5;
+        e_vy[i] = -3;
         if (alive && on_screen(i)) {
             uint8_t c = (uint8_t)((t + i * 23) % 120);
             if (c == 0)
                 bullet_fan(gx, gy - 8, aim_at_player(i), 26, BK_BLUE, 3, 14);
             else if (c == 60) {
-                for (uint8_t k = 0; k < 10; k++)
-                    bullet_fire(gx, gy, (uint8_t)(k * 26 + (t & 31)), 22, BK_PINK);
+                for (uint8_t k = 0; k < 8; k++)
+                    bullet_fire(gx, gy, (uint8_t)(k * 32 + (t & 31)), 22, BK_PINK);
                 sfx_enemy(SFX_ENEMY_FIRE, SFX_PRI_FIRE);
             }
         }

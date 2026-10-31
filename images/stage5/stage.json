@@ -4,19 +4,19 @@
   {
    "bin": "images/stage5/script.bin",
    "offset": 0,
-   "size": 398
+   "size": 306
   },
   {
    "png": "images/stage5/tiles.png",
    "w": 16,
    "h": 16,
    "frames": 29,
-   "offset": 398,
+   "offset": 306,
    "size": 3712
   },
   {
    "bin": "images/stage5/map.bin",
-   "offset": 4110,
+   "offset": 4018,
    "size": 2496
   },
   {
@@ -24,24 +24,24 @@
    "w": 16,
    "h": 16,
    "frames": 54,
-   "offset": 6606,
+   "offset": 6514,
    "size": 6912
   },
   {
    "bin": "images/stage5/sky_map.bin",
-   "offset": 13518,
+   "offset": 13426,
    "size": 3504
   },
   {
    "bin": "images/stage5/sky_clear.bin",
-   "offset": 17022,
+   "offset": 16930,
    "size": 584
   },
   {
    "bin": "images/stage5/sky_fine.bin",
-   "offset": 17606,
+   "offset": 17514,
    "size": 108
   }
  ],
- "size": 17714
+ "size": 17622
 }
